@@ -1,0 +1,1660 @@
+{
+  "sheets": {
+    "estruturas": "pedido1.jpg",
+    "asteroides": "pedido2.jpg",
+    "icones": "pedido4.jpg",
+    "logo-wide": "pedido5-p1.jpg",
+    "logo-stacked": "pedido5-p2.jpg",
+    "app-icon": "pedido5-p3.jpg",
+    "favicon-a": "pedido5-p4.jpg",
+    "favicon-b": "pedido5-p5.jpg",
+    "naves": "pedido7-p1.jpg",
+    "drones": "pedido7-p2.jpg",
+    "personagens": "pedido7-p3.jpg",
+    "anim": "pedido6.jpg",
+    "ui1": "pedido3-p1.jpg",
+    "ui2": "pedido3-p2.jpg",
+    "loading": "pedido5-p7.jpg",
+    "social": "pedido5-p6.jpg",
+    "est2a": "pedido8-p1.jpg",
+    "est2b": "pedido8-p2.jpg",
+    "tiers": "pedido9.jpg",
+    "cena": "pedido10.jpg",
+    "itens": "pedido11.jpg",
+    "fundos": "pedido12.jpg",
+    "mundo": "pedido13.jpg",
+    "mega": "pedido14.jpg",
+    "ui-frames": "refeito1.jpg",
+    "ui-buttons": "refeito2.jpg",
+    "eco-icones": "PedidoNovo1.jpg",
+    "eco-a": "PedidoNovo2-EconomiaA.jpg",
+    "eco-b": "PedidoNovo2-EconomiaB.jpg",
+    "eco-c": "PedidoNovo2-EconomiaC.jpg",
+    "diario": "diario.jpg",
+    "min-a1": "mineracao-a1.jpg",
+    "min-a2": "mineracao-a2.jpg",
+    "min-a3": "mineracao-a3.jpg",
+    "min-b": "mineracao-b.jpg"
+  },
+  "items": [
+    {
+      "name": "building-miner",
+      "sheet": "estruturas",
+      "rect": [
+        0,
+        0,
+        480,
+        384
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-solar",
+      "sheet": "estruturas",
+      "rect": [
+        480,
+        0,
+        480,
+        384
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-refinery",
+      "sheet": "estruturas",
+      "rect": [
+        960,
+        0,
+        448,
+        384
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-storage",
+      "sheet": "estruturas",
+      "rect": [
+        0,
+        384,
+        500,
+        384
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-factory",
+      "sheet": "estruturas",
+      "rect": [
+        500,
+        384,
+        540,
+        384
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-fission",
+      "sheet": "estruturas",
+      "rect": [
+        1040,
+        384,
+        368,
+        384
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "logo-wide",
+      "sheet": "logo-wide",
+      "maxSize": 512,
+      "minFrac": 0.01,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      }
+    },
+    {
+      "name": "logo-stacked",
+      "sheet": "logo-stacked",
+      "maxSize": 512,
+      "minFrac": 0.01,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      }
+    },
+    {
+      "name": "app-icon",
+      "sheet": "app-icon",
+      "maxSize": 256,
+      "minFrac": 0.002,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      }
+    },
+    {
+      "name": "favicon-star",
+      "sheet": "favicon-a",
+      "maxSize": 64,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      }
+    },
+    {
+      "name": "favicon-core",
+      "sheet": "favicon-b",
+      "maxSize": 64
+    },
+    {
+      "name": "ui-toast-info",
+      "sheet": "ui2",
+      "at": [
+        108,
+        385
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "ui-toast-warn",
+      "sheet": "ui2",
+      "at": [
+        298,
+        384
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "ui-toast-bad",
+      "sheet": "ui2",
+      "at": [
+        488,
+        384
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "ui-progress-frame",
+      "sheet": "ui2",
+      "at": [
+        531,
+        180
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "ui-progress-cyan",
+      "sheet": "ui2",
+      "at": [
+        530,
+        218
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "ui-progress-green",
+      "sheet": "ui2",
+      "at": [
+        530,
+        249
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "ui-progress-orange",
+      "sheet": "ui2",
+      "at": [
+        530,
+        280
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 256
+    },
+    {
+      "name": "bg-stars-far",
+      "sheet": "fundos",
+      "crop": [
+        2,
+        2,
+        481,
+        236
+      ]
+    },
+    {
+      "name": "bg-nebula-blue-small",
+      "sheet": "fundos",
+      "crop": [
+        972,
+        2,
+        482,
+        236
+      ]
+    },
+    {
+      "name": "bg-nebula-blue",
+      "sheet": "fundos",
+      "crop": [
+        2,
+        242,
+        724,
+        236
+      ]
+    },
+    {
+      "name": "bg-nebula-purple",
+      "sheet": "fundos",
+      "crop": [
+        730,
+        242,
+        724,
+        236
+      ]
+    },
+    {
+      "name": "bg-nebula-orange",
+      "sheet": "fundos",
+      "crop": [
+        2,
+        482,
+        724,
+        236
+      ]
+    },
+    {
+      "name": "bg-stars-near",
+      "sheet": "fundos",
+      "rect": [
+        487,
+        2,
+        481,
+        236
+      ],
+      "keepSize": true,
+      "minFrac": 0.0001,
+      "maxSize": 481
+    },
+    {
+      "name": "bg-dust",
+      "sheet": "fundos",
+      "rect": [
+        730,
+        482,
+        724,
+        236
+      ],
+      "keepSize": true,
+      "minFrac": 0.0001,
+      "key": {
+        "bgFactor": 0.7,
+        "fringeFactor": 0.9,
+        "fringePasses": 1
+      },
+      "maxSize": 724
+    },
+    {
+      "name": "terrain-rocky",
+      "sheet": "mundo",
+      "crop": [
+        720,
+        2,
+        336,
+        194
+      ]
+    },
+    {
+      "name": "terrain-ice",
+      "sheet": "mundo",
+      "crop": [
+        1072,
+        2,
+        334,
+        194
+      ]
+    },
+    {
+      "name": "terrain-desert",
+      "sheet": "mundo",
+      "crop": [
+        720,
+        212,
+        336,
+        184
+      ]
+    },
+    {
+      "name": "terrain-ocean",
+      "sheet": "mundo",
+      "crop": [
+        1072,
+        212,
+        334,
+        184
+      ]
+    },
+    {
+      "name": "terrain-jungle",
+      "sheet": "mundo",
+      "crop": [
+        720,
+        414,
+        336,
+        184
+      ]
+    },
+    {
+      "name": "terrain-volcanic-alien",
+      "sheet": "mundo",
+      "crop": [
+        1072,
+        414,
+        334,
+        184
+      ]
+    },
+    {
+      "name": "scene-system-map",
+      "sheet": "mega",
+      "crop": [
+        722,
+        2,
+        684,
+        278
+      ]
+    },
+    {
+      "name": "scene-galaxy-map",
+      "sheet": "mega",
+      "crop": [
+        722,
+        296,
+        684,
+        322
+      ]
+    },
+    {
+      "name": "scene-system-map-b",
+      "sheet": "mega",
+      "crop": [
+        2,
+        392,
+        700,
+        374
+      ]
+    },
+    {
+      "name": "ui-panel",
+      "sheet": "ui-frames",
+      "at": [
+        300,
+        380
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 300
+    },
+    {
+      "name": "ui-card",
+      "sheet": "ui-frames",
+      "at": [
+        765,
+        240
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 150
+    },
+    {
+      "name": "ui-tooltip",
+      "sheet": "ui-frames",
+      "at": [
+        1160,
+        200
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 190
+    },
+    {
+      "name": "ui-frame-wide",
+      "sheet": "ui-frames",
+      "at": [
+        985,
+        590
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 380
+    },
+    {
+      "name": "icon-influence",
+      "sheet": "eco-icones",
+      "rect": [
+        40,
+        220,
+        300,
+        330
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "item-module",
+      "sheet": "eco-icones",
+      "rect": [
+        380,
+        220,
+        310,
+        330
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "icon-reputation",
+      "sheet": "eco-icones",
+      "rect": [
+        730,
+        240,
+        290,
+        290
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "icon-blockade",
+      "sheet": "eco-icones",
+      "rect": [
+        1050,
+        210,
+        330,
+        350
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "building-embassy",
+      "sheet": "eco-a",
+      "rect": [
+        0,
+        40,
+        400,
+        340
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-module-line",
+      "sheet": "eco-a",
+      "rect": [
+        380,
+        50,
+        340,
+        340
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-quantum-lab",
+      "sheet": "eco-a",
+      "rect": [
+        720,
+        80,
+        320,
+        300
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-arcology",
+      "sheet": "eco-a",
+      "rect": [
+        1040,
+        30,
+        360,
+        660
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-embassy-t2",
+      "sheet": "eco-b",
+      "rect": [
+        20,
+        10,
+        530,
+        390
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-module-line-t2",
+      "sheet": "eco-b",
+      "rect": [
+        560,
+        20,
+        500,
+        380
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-quantum-lab-t2",
+      "sheet": "eco-b",
+      "rect": [
+        540,
+        400,
+        440,
+        350
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-arcology-t2",
+      "sheet": "eco-b",
+      "rect": [
+        1030,
+        10,
+        370,
+        720
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-embassy-t3",
+      "sheet": "eco-c",
+      "rect": [
+        20,
+        10,
+        640,
+        370
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-module-line-t3",
+      "sheet": "eco-c",
+      "rect": [
+        700,
+        10,
+        690,
+        380
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-quantum-lab-t3",
+      "sheet": "eco-c",
+      "rect": [
+        20,
+        390,
+        640,
+        370
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-arcology-t3",
+      "sheet": "eco-c",
+      "rect": [
+        1060,
+        380,
+        330,
+        320
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "diario-01",
+      "sheet": "diario",
+      "crop": [
+        9,
+        8,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-02",
+      "sheet": "diario",
+      "crop": [
+        360,
+        8,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-03",
+      "sheet": "diario",
+      "crop": [
+        710,
+        8,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-04",
+      "sheet": "diario",
+      "crop": [
+        1061,
+        8,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-05",
+      "sheet": "diario",
+      "crop": [
+        9,
+        215,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-06",
+      "sheet": "diario",
+      "crop": [
+        360,
+        215,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-07",
+      "sheet": "diario",
+      "crop": [
+        710,
+        215,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-08",
+      "sheet": "diario",
+      "crop": [
+        1061,
+        215,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-09",
+      "sheet": "diario",
+      "crop": [
+        9,
+        416,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-10",
+      "sheet": "diario",
+      "crop": [
+        360,
+        416,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-11",
+      "sheet": "diario",
+      "crop": [
+        710,
+        416,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-12",
+      "sheet": "diario",
+      "crop": [
+        1061,
+        416,
+        340,
+        176
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "diario-13",
+      "sheet": "diario",
+      "crop": [
+        9,
+        616,
+        340,
+        128
+      ],
+      "maxSize": 680,
+      "upscale": true
+    },
+    {
+      "name": "building-deep-drill",
+      "sheet": "min-a1",
+      "rect": [
+        0,
+        0,
+        470,
+        768
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-titanium-forge",
+      "sheet": "min-a1",
+      "rect": [
+        470,
+        0,
+        470,
+        768
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-crystal-array",
+      "sheet": "min-a1",
+      "rect": [
+        940,
+        0,
+        468,
+        768
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-deep-drill-t2",
+      "sheet": "min-a2",
+      "rect": [
+        0,
+        0,
+        470,
+        768
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-titanium-forge-t2",
+      "sheet": "min-a2",
+      "rect": [
+        470,
+        0,
+        470,
+        768
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-crystal-array-t2",
+      "sheet": "min-a2",
+      "rect": [
+        940,
+        0,
+        468,
+        768
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-deep-drill-t3",
+      "sheet": "min-a3",
+      "rect": [
+        0,
+        0,
+        470,
+        768
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-titanium-forge-t3",
+      "sheet": "min-a3",
+      "rect": [
+        470,
+        0,
+        470,
+        768
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "building-crystal-array-t3",
+      "sheet": "min-a3",
+      "rect": [
+        940,
+        0,
+        468,
+        768
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "vein-ferrous",
+      "sheet": "min-b",
+      "rect": [
+        30,
+        270,
+        220,
+        220
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "vein-cuprous",
+      "sheet": "min-b",
+      "rect": [
+        250,
+        270,
+        220,
+        220
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "vein-auriferous",
+      "sheet": "min-b",
+      "rect": [
+        470,
+        270,
+        220,
+        220
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "vein-titanic",
+      "sheet": "min-b",
+      "rect": [
+        690,
+        270,
+        220,
+        220
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "vein-crystalline",
+      "sheet": "min-b",
+      "rect": [
+        910,
+        270,
+        220,
+        220
+      ],
+      "maxSize": 128
+    },
+    {
+      "name": "vein-motherlode",
+      "sheet": "min-b",
+      "rect": [
+        1130,
+        270,
+        220,
+        220
+      ],
+      "maxSize": 128
+    }
+  ],
+  "grids": [
+    {
+      "sheet": "asteroides",
+      "cols": 4,
+      "rows": 2,
+      "maxSize": 384,
+      "inset": 0,
+      "names": [
+        "asteroid-main-big",
+        "asteroid-main-damaged-1",
+        "asteroid-main-damaged-2",
+        "asteroid-main-damaged-3",
+        "asteroid-ice",
+        "asteroid-metallic",
+        "asteroid-crystal-large",
+        "asteroid-volcanic"
+      ]
+    },
+    {
+      "sheet": "naves",
+      "cols": 3,
+      "rows": 3,
+      "inset": 7,
+      "maxSize": 256,
+      "names": [
+        "ship-cargo",
+        "ship-mining",
+        "ship-research",
+        "ship-colony",
+        "ship-industrial",
+        "ship-explorer",
+        "ship-freighter",
+        "ship-fighter",
+        "ship-capital"
+      ]
+    },
+    {
+      "sheet": "drones",
+      "cols": 3,
+      "rows": 2,
+      "inset": 7,
+      "maxSize": 192,
+      "names": [
+        "drone-drill",
+        "drone-mining",
+        "drone-transport",
+        "drone-drill-b",
+        "drone-transport-b",
+        "drone-maintenance"
+      ]
+    },
+    {
+      "sheet": "personagens",
+      "cols": 5,
+      "rows": 2,
+      "inset": 4,
+      "maxSize": 128,
+      "names": [
+        "char-colonist",
+        "char-engineer",
+        "char-scientist",
+        "char-technician",
+        "char-pilot",
+        "char-colonist-idle",
+        "char-colonist-walk-1",
+        "char-colonist-walk-2",
+        "char-colonist-wave",
+        "char-pilot-cheer"
+      ]
+    },
+    {
+      "sheet": "icones",
+      "cols": 10,
+      "rows": 5,
+      "inset": 7,
+      "maxSize": 64,
+      "minFrac": 0.05,
+      "names": [
+        null,
+        "nav-mining",
+        "nav-options",
+        [
+          "nav-energy",
+          "icon-energy"
+        ],
+        [
+          "nav-market",
+          "icon-credits"
+        ],
+        [
+          "nav-research",
+          "icon-science"
+        ],
+        "nav-civilization",
+        "icon-jet",
+        "nav-expansion",
+        "icon-lock-gold",
+        "icon-lock",
+        "icon-star",
+        "icon-arrow-up",
+        "icon-check",
+        "icon-warning",
+        "icon-error",
+        "icon-info",
+        "icon-sell",
+        "icon-buy",
+        "icon-clock",
+        "icon-exotic",
+        "icon-fuel",
+        "icon-astronaut",
+        "icon-radar-dish",
+        "icon-radar-dish-2",
+        "nav-industry",
+        "icon-crate",
+        "icon-no-power",
+        "icon-pause",
+        "icon-play",
+        "nav-overview",
+        "icon-radar",
+        "icon-power-plug",
+        "icon-food",
+        "icon-sprout",
+        "icon-sprout-2",
+        "icon-control-panel",
+        "icon-chip",
+        "icon-tool",
+        "icon-happiness",
+        "icon-device",
+        "icon-battery",
+        "icon-antenna",
+        "icon-button-red",
+        "nav-catalog",
+        "icon-trophy",
+        "nav-map",
+        "nav-lab",
+        "icon-tool-2",
+        "icon-happiness-2"
+      ]
+    },
+    {
+      "sheet": "est2a",
+      "cols": 5,
+      "rows": 3,
+      "inset": 4,
+      "maxSize": 256,
+      "names": [
+        "building-ice-extractor",
+        "building-foundry",
+        "building-shipyard",
+        "building-industrial-complex",
+        "building-battery",
+        "building-battery-b",
+        "building-orbital-collector",
+        "building-power-grid",
+        "building-hospital",
+        "building-university",
+        "building-research-dome",
+        "building-market",
+        "building-comms",
+        "building-comms-b",
+        "building-maintenance"
+      ]
+    },
+    {
+      "sheet": "est2b",
+      "cols": 5,
+      "rows": 3,
+      "inset": 4,
+      "maxSize": 256,
+      "names": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        "building-chemical-plant",
+        "building-observatory",
+        "building-asteroid-crusher",
+        "building-cleanroom",
+        "building-fusion-ring",
+        "building-spaceport-hub",
+        "building-hydroponics",
+        "building-hq-tower",
+        "building-refinery-complex",
+        "building-harbor"
+      ]
+    },
+    {
+      "sheet": "tiers",
+      "cols": 6,
+      "rows": 2,
+      "inset": 6,
+      "insetB": 34,
+      "maxSize": 320,
+      "names": [
+        "building-miner-t2",
+        "building-solar-t2",
+        "building-refinery-t2",
+        "building-storage-t2",
+        "building-factory-t2",
+        "building-fission-t2",
+        "building-miner-t3",
+        "building-solar-t3",
+        "building-refinery-t3",
+        "building-storage-t3",
+        "building-factory-t3",
+        "building-fission-t3"
+      ]
+    },
+    {
+      "sheet": "cena",
+      "cols": 8,
+      "rows": 2,
+      "inset": 3,
+      "insetB": 30,
+      "maxSize": 192,
+      "names": [
+        "conveyor-sw-ne-a",
+        "conveyor-sw-ne-b",
+        "conveyor-nw-se-a",
+        "conveyor-nw-se-b",
+        "pipe-energy-sw-ne-a",
+        "pipe-energy-sw-ne-b",
+        "pipe-energy-nw-se-a",
+        "pipe-energy-nw-se-b",
+        "pipe-energy-corner",
+        "deco-antenna-off",
+        "deco-antenna-on",
+        "deco-crates",
+        "deco-lamp",
+        "deco-flag",
+        "deco-valve",
+        "deco-rocks"
+      ],
+      "rowY": [
+        [
+          2,
+          230
+        ],
+        [
+          266,
+          486
+        ]
+      ],
+      "minFrac": 0.1
+    },
+    {
+      "sheet": "itens",
+      "cols": 6,
+      "rows": 3,
+      "inset": 4,
+      "insetB": [
+        46,
+        44,
+        40
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "names": [
+        "ingot-iron",
+        "ingot-copper",
+        "ingot-gold",
+        "ingot-aluminum",
+        "ingot-titanium",
+        "ingot-steel",
+        "item-alloy",
+        "item-circuit",
+        "item-battery",
+        "item-motor",
+        "item-robot-part",
+        "item-advanced-component",
+        "node-cyan",
+        "node-amber",
+        "node-violet",
+        "node-green",
+        "node-red",
+        "node-silver"
+      ],
+      "keyByName": {
+        "node-violet": {
+          "bgFactor": 0.3,
+          "fringeFactor": 0.45,
+          "fringePasses": 1
+        }
+      }
+    },
+    {
+      "sheet": "mundo",
+      "area": [
+        0,
+        0,
+        692,
+        386
+      ],
+      "cols": 5,
+      "rows": 3,
+      "inset": 3,
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "names": [
+        "planet-atmosphere-blue",
+        "planet-atmosphere-orange",
+        "planet-atmosphere-green",
+        "planet-atmosphere-violet",
+        "planet-atmosphere-red",
+        "planet-clouds-1",
+        "planet-clouds-2",
+        "planet-clouds-3",
+        "planet-clouds-4",
+        "planet-clouds-5",
+        "planet-ring-thin",
+        "planet-ring-wide",
+        "planet-ring-double",
+        "planet-ring-belt",
+        "planet-ring-ice"
+      ],
+      "keyByName": {
+        "planet-atmosphere-violet": {
+          "bgFactor": 0.3,
+          "fringeFactor": 0.45,
+          "fringePasses": 1
+        }
+      }
+    },
+    {
+      "sheet": "mundo",
+      "area": [
+        0,
+        622,
+        692,
+        146
+      ],
+      "cols": 6,
+      "rows": 1,
+      "inset": 2,
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "names": [
+        "star-red-dwarf",
+        "star-yellow",
+        "star-blue-giant",
+        "star-white-dwarf",
+        "star-neutron",
+        "star-orange"
+      ],
+      "minFrac": 0.2
+    },
+    {
+      "sheet": "mundo",
+      "area": [
+        716,
+        668,
+        692,
+        100
+      ],
+      "cols": 6,
+      "rows": 1,
+      "inset": 8,
+      "maxSize": 64,
+      "names": [
+        "region-asteroid",
+        "region-planet",
+        "region-station",
+        "region-nebula",
+        "region-belt",
+        "region-system"
+      ],
+      "silhouette": true,
+      "minFrac": 0.1
+    },
+    {
+      "sheet": "mega",
+      "area": [
+        0,
+        0,
+        705,
+        386
+      ],
+      "cols": 4,
+      "rows": 2,
+      "inset": 4,
+      "insetB": [
+        26,
+        28
+      ],
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "names": [
+        "mega-dyson-1",
+        "mega-dyson-2",
+        "mega-dyson-3",
+        "mega-dyson-4",
+        "mega-gate",
+        "mega-orbital-ring",
+        "mega-shipyard",
+        "mega-engine"
+      ],
+      "minFrac": 0.0004
+    },
+    {
+      "sheet": "mega",
+      "area": [
+        705,
+        630,
+        703,
+        138
+      ],
+      "cols": 5,
+      "rows": 1,
+      "inset": 3,
+      "insetB": 24,
+      "maxSize": 192,
+      "names": [
+        "event-comet",
+        "event-meteor-shower",
+        "event-solar-flare",
+        "event-derelict-ship",
+        "event-trader"
+      ]
+    },
+    {
+      "sheet": "ui-buttons",
+      "cols": 2,
+      "rows": 3,
+      "inset": 6,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "maxSize": 220,
+      "names": [
+        "ui-btn-normal",
+        "ui-btn-hover",
+        "ui-btn-active",
+        "ui-btn-disabled",
+        "ui-btn-buy",
+        "ui-btn-buy-hover"
+      ]
+    }
+  ],
+  "strips": [
+    {
+      "sheet": "anim",
+      "prefix": "anim-drill",
+      "y": [
+        0,
+        82
+      ],
+      "xCenters": [
+        64,
+        192,
+        320,
+        448,
+        576,
+        704,
+        832,
+        960
+      ],
+      "cellW": 126,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-beam",
+      "y": [
+        82,
+        166
+      ],
+      "xCenters": [
+        64,
+        192,
+        320,
+        448,
+        576,
+        704,
+        832,
+        960
+      ],
+      "cellW": 126,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-forge",
+      "y": [
+        166,
+        246
+      ],
+      "xCenters": [
+        64,
+        192,
+        320,
+        448
+      ],
+      "cellW": 126,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-smoke",
+      "y": [
+        196,
+        288
+      ],
+      "xCenters": [
+        557,
+        643,
+        729,
+        818,
+        904,
+        986
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-smokeb",
+      "y": [
+        248,
+        334
+      ],
+      "xCenters": [
+        42,
+        128,
+        213,
+        298,
+        383,
+        469
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-solar",
+      "y": [
+        312,
+        412
+      ],
+      "xCenters": [
+        554,
+        640,
+        725,
+        810,
+        896,
+        981
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-reactor",
+      "y": [
+        334,
+        416
+      ],
+      "xCenters": [
+        42,
+        128,
+        213,
+        298,
+        383,
+        469
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-construct",
+      "y": [
+        416,
+        492
+      ],
+      "xCenters": [
+        42,
+        128,
+        213,
+        298,
+        383,
+        469
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-rockchip",
+      "y": [
+        420,
+        506
+      ],
+      "xCenters": [
+        554,
+        640,
+        725,
+        810,
+        896,
+        981
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-rockchipb",
+      "y": [
+        506,
+        572
+      ],
+      "xCenters": [
+        42,
+        128,
+        213,
+        298,
+        383,
+        469
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    },
+    {
+      "sheet": "anim",
+      "prefix": "anim-flash",
+      "y": [
+        506,
+        572
+      ],
+      "xCenters": [
+        554,
+        640,
+        725,
+        810,
+        896,
+        981
+      ],
+      "cellW": 84,
+      "minFrac": 0.01,
+      "maxSize": 128
+    }
+  ],
+  "photos": [
+    {
+      "file": "pedido5-p7.jpg",
+      "out": "loading-art.jpg",
+      "width": 1376
+    },
+    {
+      "file": "pedido5-p6.jpg",
+      "out": "social-preview.jpg",
+      "width": 1200,
+      "height": 630
+    }
+  ]
+}

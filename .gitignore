@@ -1,0 +1,10 @@
+node_modules
+dist
+sprites-preview.png
+*.log
+
+*.exe
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/

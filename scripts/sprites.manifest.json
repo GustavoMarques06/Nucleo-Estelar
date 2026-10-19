@@ -1,0 +1,552 @@
+{
+  "sheets": {
+    "planetas": "planetas.jpg",
+    "minerios": "minerios.jpg"
+  },
+  "checker": {
+    "minerios": {
+      "bands": [
+        [
+          88,
+          122
+        ],
+        [
+          166,
+          206
+        ]
+      ],
+      "chroma": 12
+    }
+  },
+  "sprites": [
+    {
+      "name": "planet-habitable",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        4,
+        6,
+        144,
+        144
+      ]
+    },
+    {
+      "name": "planet-desert",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        374,
+        6,
+        146,
+        144
+      ]
+    },
+    {
+      "name": "planet-moon",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        706,
+        6,
+        144,
+        144
+      ],
+      "circle": [
+        778,
+        77,
+        66
+      ]
+    },
+    {
+      "name": "planet-grey",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        1072,
+        6,
+        146,
+        144
+      ]
+    },
+    {
+      "name": "planet-dark",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        1258,
+        6,
+        146,
+        144
+      ]
+    },
+    {
+      "name": "planet-ringed",
+      "sheet": "planetas",
+      "mode": "checker",
+      "rect": [
+        10,
+        156,
+        250,
+        152
+      ]
+    },
+    {
+      "name": "planet-gas",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        416,
+        158,
+        152,
+        148
+      ]
+    },
+    {
+      "name": "planet-neptune",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        746,
+        158,
+        152,
+        148
+      ]
+    },
+    {
+      "name": "planet-alien",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        1102,
+        158,
+        150,
+        148
+      ]
+    },
+    {
+      "name": "planet-ice",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        2,
+        318,
+        146,
+        146
+      ]
+    },
+    {
+      "name": "planet-ice-peaks",
+      "sheet": "planetas",
+      "mode": "checker",
+      "rect": [
+        156,
+        312,
+        148,
+        152
+      ]
+    },
+    {
+      "name": "planet-volcanic",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        368,
+        318,
+        146,
+        146
+      ]
+    },
+    {
+      "name": "planet-volcanic-active",
+      "sheet": "planetas",
+      "mode": "checker",
+      "rect": [
+        532,
+        312,
+        150,
+        152
+      ]
+    },
+    {
+      "name": "planet-ocean-islands",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        718,
+        318,
+        148,
+        146
+      ]
+    },
+    {
+      "name": "planet-ocean",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        882,
+        318,
+        148,
+        146
+      ]
+    },
+    {
+      "name": "planet-jungle",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        1102,
+        318,
+        150,
+        146
+      ]
+    },
+    {
+      "name": "planet-jungle-rivers",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        1260,
+        318,
+        146,
+        146
+      ]
+    },
+    {
+      "name": "planet-rocky",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        438,
+        482,
+        124,
+        124
+      ]
+    },
+    {
+      "name": "moon-grey",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        8,
+        482,
+        124,
+        124
+      ],
+      "circle": [
+        69,
+        544,
+        56
+      ]
+    },
+    {
+      "name": "moon-snow",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        150,
+        482,
+        124,
+        124
+      ]
+    },
+    {
+      "name": "moon-lava",
+      "sheet": "planetas",
+      "mode": "circle",
+      "rect": [
+        296,
+        482,
+        124,
+        124
+      ]
+    },
+    {
+      "name": "asteroid-main",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        282,
+        83
+      ]
+    },
+    {
+      "name": "asteroid-brown",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        293,
+        290
+      ]
+    },
+    {
+      "name": "asteroid-grey",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        298,
+        197
+      ]
+    },
+    {
+      "name": "rock-grey-s",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        90,
+        18
+      ]
+    },
+    {
+      "name": "rock-grey-m",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        36,
+        79
+      ]
+    },
+    {
+      "name": "rock-dark-round",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        34,
+        407
+      ]
+    },
+    {
+      "name": "ore-iron",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        95,
+        73
+      ]
+    },
+    {
+      "name": "ore-copper",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        108,
+        205
+      ]
+    },
+    {
+      "name": "ore-gold",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1231,
+        716
+      ]
+    },
+    {
+      "name": "vein-cyan",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        409,
+        298
+      ]
+    },
+    {
+      "name": "vein-orange",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        749,
+        309
+      ]
+    },
+    {
+      "name": "vein-orange-big",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        995,
+        281
+      ]
+    },
+    {
+      "name": "vein-violet",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1231,
+        296
+      ]
+    },
+    {
+      "name": "vein-violet-big",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1326,
+        275
+      ]
+    },
+    {
+      "name": "crystal-cyan",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        552,
+        12
+      ]
+    },
+    {
+      "name": "crystal-cyan-2",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1021,
+        565
+      ]
+    },
+    {
+      "name": "crystal-violet",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1227,
+        568
+      ]
+    },
+    {
+      "name": "crystal-amber",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1007,
+        637
+      ]
+    },
+    {
+      "name": "crystal-amber-2",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1091,
+        637
+      ]
+    },
+    {
+      "name": "raw-cyan-shard",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        893,
+        574
+      ]
+    },
+    {
+      "name": "raw-cyan-gem",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1089,
+        570
+      ]
+    },
+    {
+      "name": "raw-amber-shard",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1168,
+        570
+      ]
+    },
+    {
+      "name": "raw-amber-gem",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        952,
+        643
+      ]
+    },
+    {
+      "name": "raw-violet-cluster",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1295,
+        570
+      ]
+    },
+    {
+      "name": "raw-violet-gem",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        953,
+        717
+      ]
+    },
+    {
+      "name": "raw-violet-shard",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1020,
+        709
+      ]
+    },
+    {
+      "name": "raw-gold-nugget",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1283,
+        642
+      ]
+    },
+    {
+      "name": "raw-gold-pile",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1354,
+        645
+      ]
+    },
+    {
+      "name": "raw-silver-ingot",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1293,
+        719
+      ]
+    },
+    {
+      "name": "raw-brown-chunk",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1157,
+        715
+      ]
+    },
+    {
+      "name": "icon-alloys",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1293,
+        719
+      ]
+    },
+    {
+      "name": "icon-components",
+      "sheet": "minerios",
+      "mode": "component",
+      "seed": [
+        1157,
+        715
+      ]
+    }
+  ]
+}

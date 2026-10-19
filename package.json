@@ -1,0 +1,37 @@
+{
+  "name": "nucleo-estelar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Núcleo Estelar — tycoon espacial idle em pixel art para navegador.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && node scripts/optimize-dist.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "sprites": "node scripts/extract-sprites.mjs && node scripts/extract-keyed.mjs && node scripts/make-placeholders.mjs",
+    "sprites:preview": "node scripts/extract-sprites.mjs --preview sprites-preview.png",
+    "check": "tsc --noEmit && vitest run",
+    "audit": "node scripts/audit.cjs",
+    "soak": "node scripts/soak.cjs"
+  },
+  "dependencies": {
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
+    "pixi.js": "^8.22.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

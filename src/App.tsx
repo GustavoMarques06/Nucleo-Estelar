@@ -1,0 +1,158 @@
+import { useEffect, useState } from 'react';
+import type { GameState } from './game/types';
+import { useGame } from './game/store';
+import { startGameLoop } from './game/loop';
+import { UPGRADES } from './game/data/upgrades';
+import { canAfford } from './game/engine/costs';
+import { isUpgradeVisible } from './game/engine/modifiers';
+import { ascensionUnlocked, endingReached } from './game/engine/progression';
+import { startAudio } from './audio';
+import { TopBar } from './ui/TopBar';
+import { SceneView } from './ui/SceneView';
+import { Advisor } from './ui/Advisor';
+import { ActionBar } from './ui/ActionBar';
+import { BuildingsPanel } from './ui/panels/BuildingsPanel';
+import { UpgradesPanel } from './ui/panels/UpgradesPanel';
+import { MarketPanel } from './ui/panels/MarketPanel';
+import { OptionsPanel } from './ui/panels/OptionsPanel';
+import { CivilizationPanel } from './ui/panels/CivilizationPanel';
+import { ExpansionPanel } from './ui/panels/ExpansionPanel';
+import { MegaprojectsPanel } from './ui/panels/MegaprojectsPanel';
+import { AscensionPanel } from './ui/panels/AscensionPanel';
+import { RecordsPanel } from './ui/panels/RecordsPanel';
+import { MapPanel } from './ui/panels/MapPanel';
+import { DiplomacyPanel } from './ui/panels/DiplomacyPanel';
+import { FinancePanel } from './ui/panels/FinancePanel';
+import { TranscendencePanel } from './ui/panels/TranscendencePanel';
+import { DronesSection } from './ui/panels/DronesSection';
+import { DepositSection } from './ui/panels/DepositSection';
+import { MapView } from './ui/MapView';
+import { EndingModal } from './ui/EndingModal';
+import { OfflineModal, StoryModal, Toasts } from './ui/Overlays';
+import { Buffs, EventCard } from './ui/EventCard';
+import { Icon } from './ui/Icon';
+import { Splash } from './ui/Splash';
+import { Tips } from './ui/Tips';
+import { FocusBoard } from './ui/FocusBoard';
+
+type Tab = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
+  | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
+
+interface TabDef { id: Tab; label: string; icon: string; visible?: (s: GameState) => boolean }
+
+// Abas agrupadas por tema. Cada categoria de estrutura aparece numa única aba, e cada aba aparece só quando
+// a fase dela chega (GDD: a complexidade é gradual).
+const GROUPS: { label: string; tabs: TabDef[] }[] = [
+  { label: 'Produção', tabs: [
+    { id: 'mining', label: 'Mineração', icon: 'nav-mining' },
+    { id: 'industry', label: 'Indústria', icon: 'nav-industry', visible: s => s.stats.totalMined >= 40 || s.buildings.refinery > 0 },
+    { id: 'energy', label: 'Energia', icon: 'nav-energy', visible: s => s.buildings.miner > 0 || s.stats.totalMined >= 20 },
+    { id: 'logistics', label: 'Logística', icon: 'icon-crate', visible: s => s.stats.totalMined >= 80 || s.buildings.storage > 0 },
+  ] },
+  { label: 'Sociedade', tabs: [
+    { id: 'research', label: 'Pesquisa', icon: 'nav-research' },
+    { id: 'civilization', label: 'Civilização', icon: 'nav-civilization', visible: s => !!s.upgrades.habitats },
+    { id: 'commerce', label: 'Comércio', icon: 'nav-market' },
+    { id: 'finance', label: 'Finanças', icon: 'nav-overview', visible: s => s.stats.earned >= 300 },
+  ] },
+  { label: 'Galáxia', tabs: [
+    { id: 'expansion', label: 'Expansão', icon: 'nav-expansion', visible: s => !!s.upgrades.shipbuilding },
+    { id: 'map', label: 'Mapa', icon: 'nav-map', visible: s => s.locations.length > 0 || s.expeditions.length > 0 },
+    { id: 'diplomacy', label: 'Diplomacia', icon: 'region-system', visible: s => !!s.upgrades.diplomacy },
+    { id: 'megaprojects', label: 'Megaprojetos', icon: 'mega-dyson-4', visible: s => !!s.upgrades.fusion },
+  ] },
+  { label: 'Legado', tabs: [
+    { id: 'ascension', label: 'Ascensão', icon: 'icon-star', visible: s => ascensionUnlocked(s) || !!s.upgrades.megaEngineering },
+    { id: 'transcendence', label: 'Transcendência', icon: 'star-white-dwarf', visible: s => endingReached(s) || (s.megaprojects.core ?? 0) >= 5 },
+    { id: 'records', label: 'Registro', icon: 'icon-trophy' },
+    { id: 'options', label: 'Opções', icon: 'nav-options' },
+  ] },
+];
+
+function Panel({ tab }: { tab: Tab }) {
+  switch (tab) {
+    case 'mining': return <div className="panel-body"><DepositSection /><BuildingsPanel category="mining" intro="Extração de matéria-prima: minério e água." /></div>;
+    case 'industry': return <BuildingsPanel category="industry" intro="Transforma matéria-prima em produtos de maior valor." />;
+    case 'energy': return <BuildingsPanel category="energy" intro="Geração de energia para todas as máquinas." />;
+    case 'logistics': return <><BuildingsPanel category="logistics" intro="Armazenamento e produção de drones." /><div className="panel-body drones"><DronesSection /></div></>;
+    case 'research': return <UpgradesPanel />;
+    case 'civilization': return <CivilizationPanel />;
+    case 'commerce': return <MarketPanel />;
+    case 'finance': return <FinancePanel />;
+    case 'expansion': return <ExpansionPanel />;
+    case 'map': return <MapPanel />;
+    case 'diplomacy': return <DiplomacyPanel />;
+    case 'transcendence': return <TranscendencePanel />;
+    case 'megaprojects': return <MegaprojectsPanel />;
+    case 'ascension': return <AscensionPanel />;
+    case 'records': return <RecordsPanel />;
+    case 'options': return <OptionsPanel />;
+  }
+}
+
+export function App() {
+  const [tab, setTab] = useState<Tab>('mining');
+  const [sceneReady, setSceneReady] = useState(false);
+  const game = useGame(s => s.game);
+  const behind = useGame(s => (s.report?.upkeep.ratio ?? 1) < 0.999);
+  const reduce = game.settings.reduceMotion;
+
+  useEffect(() => startGameLoop(), []);
+  useEffect(() => startAudio(), []);
+  const focus = game.settings.focus;
+  useEffect(() => { document.body.classList.toggle('reduce-motion', reduce); }, [reduce]);
+  useEffect(() => { document.body.classList.toggle('focus-mode', focus); }, [focus]);
+
+  const groups = GROUPS.map(g => ({ ...g, tabs: g.tabs.filter(t => !t.visible || t.visible(game)) })).filter(g => g.tabs.length);
+  const tabs = groups.flatMap(g => g.tabs);
+  const current = tabs.find(t => t.id === tab) ?? tabs[0];
+  const researchReady = UPGRADES.some(u => isUpgradeVisible(u, game) && canAfford(game, u.cost));
+  const contractReady = game.contracts.some(c => game.resources[c.res] >= c.amount);
+  const questReady = game.quests.some(q => game.resources[q.res] >= q.amount);
+  // Título da aba mostra quantos alertas pedem atenção (útil com o jogo em segundo plano).
+  const alerts = game.crises.length + (game.event ? 1 : 0) + game.contracts.filter(c => game.resources[c.res] >= c.amount).length + (researchReady ? 1 : 0) + (behind ? 1 : 0) + game.quests.filter(q => game.resources[q.res] >= q.amount).length;
+  useEffect(() => { document.title = alerts > 0 ? `(${alerts}) Núcleo Estelar` : 'Núcleo Estelar'; }, [alerts]);
+
+  return (
+    <div className={`app ${focus ? 'focus' : ''}`}>
+      <TopBar />
+      <nav className="sidenav" aria-label="Seções">
+        {groups.map(g => (
+          <div key={g.label} className="nav-group">
+            <span className="nav-group-label">{g.label}</span>
+            {g.tabs.map(t => (
+              <button key={t.id} className={`nav-item ${current.id === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)} aria-current={current.id === t.id}>
+                <Icon name={t.icon} size={28} /> <span>{t.label}</span>
+                {t.id === 'research' && researchReady && <i className="dot" aria-label="pesquisa disponível" />}
+                {t.id === 'diplomacy' && questReady && <i className="dot" aria-label="pedido de facção pronto para entregar" />}
+                {t.id === 'commerce' && contractReady && <i className="dot" aria-label="contrato pronto para entregar" />}
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
+      <main className="stage">
+        <div className="scene-wrap">
+          {/* Modo foco: sem a cena Pixi (libera a GPU); o painel de alertas ocupa o lugar dela. */}
+          {!focus && <SceneView onReady={() => setSceneReady(true)} />}
+          {current.id === 'map' && <MapView />}
+          {focus && current.id !== 'map' && <FocusBoard goTo={setTab} />}
+          {!focus && <Buffs />}
+          {!focus && <EventCard />}
+        </div>
+        <Tips />
+        <ActionBar />
+        <Advisor />
+      </main>
+      <section className="panel" aria-label={current.label}>
+        <h2 className="panel-title"><Icon name={current.icon} size={28} />{current.label}</h2>
+        <Panel tab={current.id} />
+      </section>
+      <Toasts />
+      <Splash ready={sceneReady || focus} />
+      <OfflineModal />
+      <StoryModal />
+      <EndingModal onTranscend={() => setTab('transcendence')} />
+    </div>
+  );
+}
