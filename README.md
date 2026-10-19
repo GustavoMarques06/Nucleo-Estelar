@@ -228,6 +228,6 @@ Todos os sprites vêm de pranchas geradas por IA (em `Assets/`) e são recortado
 
 <div align="center">
 
-Feito por [**Gustavo Marques**](https://github.com/GustavoMarques06) com a ajuda do [Claude Code](https://claude.com/claude-code).
+Feito por [**Gustavo Marques**](https://github.com/GustavoMarques06).
 
 </div>
