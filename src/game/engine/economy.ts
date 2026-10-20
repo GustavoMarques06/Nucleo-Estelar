@@ -9,6 +9,7 @@ import {
   isUpgradeVisible, prodMult, recipeOf, storageCap, throttleOf, workforce, type Caps, type Modifiers,
 } from './modifiers';
 import { bulkCost, canAfford, payCost } from './costs';
+import { eraIndex, wellbeing } from './civilization';
 import { advanceExpeditions, advanceTerraform, autoLaunch, outpostYield } from './expansion';
 import { advanceContracts, autoFulfill } from './contracts';
 import { advanceCrises } from './crises';
@@ -236,6 +237,8 @@ function runPopulation(t: Tick): { cap: number; status: PopStatus; foodNeed: num
   const popCap = housingCap(s, m);
   let pop = s.resources.population;
   const foodNeed = pop * BALANCE.foodPerPerson;
+  // Bem-estar (comida, moradia, trabalho, saúde, energia): ±10% em impostos e crescimento.
+  const wb = wellbeing(s, { foodNeed, cap: popCap, workRatio: t.workRatio, energyRatio: t.energyRatio, healthUnlocked: isBuildingUnlocked(BUILDING_BY_ID.hospital, s) }).factor;
   let status: PopStatus = popCap > 0 || pop > 0 ? 'stable' : 'none';
   if (status !== 'none' && dt > 0) {
     const need = foodNeed * dt;
@@ -252,12 +255,14 @@ function runPopulation(t: Tick): { cap: number; status: PopStatus; foodNeed: num
       status = 'housing';
     } else if (pop < popCap - EPS) {
       if (s.resources.food > EPS) {
-        pop = Math.min(popCap, pop + (BALANCE.growthFlat + (popCap - pop) * BALANCE.growthRate) * m.popGrowth * dt);
+        pop = Math.min(popCap, pop + (BALANCE.growthFlat + (popCap - pop) * BALANCE.growthRate) * m.popGrowth * wb * dt);
         status = 'growing';
       } else status = 'starving';
     } else status = 'housing';
     s.resources.population = Math.max(0, pop);
-    gain(s, 'credits', s.resources.population * BALANCE.taxPerPerson * m.tax * m.outputAll * dt, Infinity);
+    gain(s, 'credits', s.resources.population * BALANCE.taxPerPerson * m.tax * wb * m.outputAll * dt, Infinity);
+    const era = eraIndex(s);
+    if (era > s.civ.best) s.civ.best = era;
   }
   t.track?.('population');
   return { cap: popCap, status, foodNeed };

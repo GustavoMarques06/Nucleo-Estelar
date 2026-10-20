@@ -2,6 +2,7 @@ import type { BuildingId, GameState, ResId, TickReport } from '../types';
 import { BUILDINGS, BUILDING_BY_ID } from '../data/buildings';
 import { RESOURCES } from '../data/resources';
 import { UPGRADES } from '../data/upgrades';
+import { REPEATABLE_BY_ID } from '../data/repeatables';
 import { BALANCE } from '../data/balance';
 import { nextMilestone } from '../data/milestones';
 import { unitCost, canAfford, maxAffordable } from './costs';
@@ -98,7 +99,14 @@ export function advise(s: GameState, report: TickReport | null, rates: Partial<R
   const caps = capsOf(s);
   const tooBig = BUILDINGS.find(b => isBuildingUnlocked(b, s) && Object.entries(unitCost(b, s.buildings[b.id], getModifiers(s).cost))
     .some(([r, v]) => RESOURCES[r as ResId].stored && (v ?? 0) > caps[r as ResId]));
-  if (tooBig) return warn(t('{nome} custa mais do que cabe no armazém', { nome: t(tooBig.name) }), t('Construir armazéns ({custo}) para aumentar a capacidade.', { custo: costText(s, 'storage') }), 'warn', { build: 'storage' });
+  if (tooBig) {
+    // Armazéns crescem devagar (cada um +12%); no fim do jogo quem acompanha os custos é a pesquisa contínua (+30% por nível).
+    const compress = REPEATABLE_BY_ID.rStorage;
+    const late = compress?.unlock(s) && s.buildings.storage >= 40;
+    return late
+      ? warn(t('{nome} custa mais do que cabe no armazém', { nome: t(tooBig.name) }), t('Pesquise “Compressão de carga” (Pesquisa contínua): +30% de capacidade por nível, sem limite.'), 'warn', { tab: 'research' })
+      : warn(t('{nome} custa mais do que cabe no armazém', { nome: t(tooBig.name) }), t('Construir armazéns ({custo}) para aumentar a capacidade.', { custo: costText(s, 'storage') }), 'warn', { build: 'storage' });
+  }
   if (s.buildings.miner === 0) {
     return warn(t('Produção apenas manual'), s.resources.credits >= 15 ? t('Comprar a primeira mineradora automática.') : t('Clique no asteroide e venda o minério até comprar uma mineradora.'), 'warn', { build: 'miner' });
   }

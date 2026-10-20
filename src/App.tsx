@@ -40,6 +40,8 @@ import { Tips } from './ui/Tips';
 import { FocusBoard } from './ui/FocusBoard';
 import { useFoldText } from './ui/useFoldText';
 import { Compass } from './ui/Compass';
+import { EventResult } from './ui/EventResult';
+import { Tutorial, tutorialEarly } from './ui/Tutorial';
 
 type Tab = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
   | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
@@ -109,6 +111,8 @@ export function App() {
   useEffect(() => startAudio(), []);
   useFoldText('painel');
   useFoldText('compass');
+  // Cada aba abre no topo; o holofote (botão Ir) rola até o card depois disso.
+  useEffect(() => { document.querySelectorAll<HTMLElement>('#painel, #painel .panel-body').forEach(e => { e.scrollTop = 0; }); }, [tab]);
   const focus = game.settings.focus;
   useEffect(() => { document.body.classList.toggle('reduce-motion', reduce); }, [reduce]);
   useEffect(() => { document.body.classList.toggle('focus-mode', focus); }, [focus]);
@@ -125,7 +129,7 @@ export function App() {
   useShortcuts(i => { if (tabs[i]) setTab(tabs[i].id); }, () => setHelp(h => !h));
 
   return (
-    <div className={`app ${focus ? 'focus' : ''}`}>
+    <div className={`app ${focus ? 'focus' : ''} ${tutorialEarly(game) ? 'tutorial-early' : ''}`}>
       <a className="skip-link" href="#painel" onClick={e => { e.preventDefault(); document.getElementById('painel')?.focus(); }}>{t('Pular para o conteúdo')}</a>
       <TopBar />
       <nav className="sidenav" aria-label={t('Seções')}>
@@ -145,6 +149,7 @@ export function App() {
       </nav>
       <main className="stage">
         <Compass goTo={setTab} available={tabs.map(x => x.id)} />
+        {focus && <Tips />}
         <div className="scene-wrap">
           {/* Modo foco: sem a cena Pixi (libera a GPU); o painel de alertas ocupa o lugar dela. */}
           {!focus && <SceneView onReady={() => setSceneReady(true)} />}
@@ -152,8 +157,9 @@ export function App() {
           {focus && current.id !== 'map' && <FocusBoard goTo={setTab} />}
           {!focus && <Buffs />}
           {!focus && <EventCard />}
+          {!focus && <Tips />}
+          <EventResult />
         </div>
-        <Tips />
         <ActionBar />
         <Advisor goTo={setTab} />
       </main>
@@ -161,6 +167,7 @@ export function App() {
         <h2 className="panel-title"><Icon name={current.icon} size={28} />{t(current.label)}</h2>
         <Panel tab={current.id} onHelp={() => setHelp(true)} />
       </section>
+      <Tutorial goTo={setTab} tab={current.id} />
       <Toasts />
       <Splash ready={sceneReady || focus} />
       <OfflineModal />

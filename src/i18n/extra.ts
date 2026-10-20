@@ -6,10 +6,21 @@ export const EXTRA_KEYS: string[] = [
   // Registro
   'Guia', 'Diário', 'Conquistas', 'Minerais', 'Estatísticas', 'Tempo nesta jornada', 'Estruturas construídas', 'Pesquisas concluídas',
   'Minério extraído', 'Créditos ganhos nesta jornada', 'Créditos ganhos em todas as jornadas', 'Colônias · locais descobertos',
-  'Contratos cumpridos', 'Eventos respondidos', 'Ascensões',
+  'Contratos cumpridos', 'Eventos respondidos', 'Ascensões', 'Integridade do save',
   // Pesquisa
   'Fase 1 · Sobrevivência industrial', 'Fase 2 · Autossuficiência energética', 'Fase 3 · Indústria avançada', 'Fase 4 · Civilização',
   'Fase 5 · Expansão interestelar', 'Fase 6 · Megaprojetos',
+  // Tutorial
+  'Clique em “Extrair minério” (ou no asteroide) para tirar ferro da rocha.', 'Venda o ferro: os créditos compram as máquinas.',
+  'Compre uma Mineradora: ela extrai sozinha, mesmo sem você clicar.', 'Máquinas gastam energia. Construa um Painel solar na aba Energia.',
+  'Pronto! A bússola no topo sempre mostra o próximo objetivo e para onde a jornada vai.',
+  // Civilização (medidas de bem-estar e suas dicas)
+  'Comida', 'Moradia', 'Trabalho', 'Saúde',
+  'Reserva de comida para 1 minuto de consumo. Estufas hidropônicas resolvem.',
+  'Moradia para todos. Habitats e torres residenciais abrigam mais gente.',
+  'Pessoas para ocupar as vagas das estruturas. Mais moradia e comida trazem mais colonos.',
+  'Um centro médico para cada 500 pessoas.',
+  'A energia da base precisa dar conta da demanda. Veja a aba Energia.',
   // Bússola da jornada (nomes e metas das fases)
   'Base', 'Sociedade', 'Império', 'Além',
   'Monte uma base que trabalha sozinha: mineradoras, energia e uma refinaria.',

@@ -120,8 +120,8 @@ export function LocationCard({ loc }: { loc: Location }) {
       {claim && !loc.outpost && (
         <p className={`status ${disputed ? 'sev-warn' : 'sev-ok'} claim`} style={{ borderColor: claim.color }}>
           {disputed
-            ? t('Reivindicado pela {faccao}. Sem tratado (relação {r}), fundar custa ×{m} e esfria a relação em {p}.', { faccao: t(claim.name), r: TREATY_AT, m: BALANCE.disputeMult, p: BALANCE.disputePenalty })
-            : t('Reivindicado pela {faccao} — o tratado libera a fundação sem taxa.', { faccao: t(claim.name) })}
+            ? t(claim.masc ? 'Reivindicado pelo {faccao}. Sem tratado (relação {r}), fundar custa ×{m} e esfria a relação em {p}.' : 'Reivindicado pela {faccao}. Sem tratado (relação {r}), fundar custa ×{m} e esfria a relação em {p}.', { faccao: t(claim.name), r: TREATY_AT, m: BALANCE.disputeMult, p: BALANCE.disputePenalty })
+            : t(claim.masc ? 'Reivindicado pelo {faccao} — o tratado libera a fundação sem taxa.' : 'Reivindicado pela {faccao} — o tratado libera a fundação sem taxa.', { faccao: t(claim.name) })}
         </p>
       )}
       {loc.outpost ? (

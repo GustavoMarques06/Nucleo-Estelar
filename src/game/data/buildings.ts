@@ -42,13 +42,13 @@ export const BUILDINGS: BuildingDef[] = [
     requires: 'energyStorage',
   },
   {
-    id: 'geothermal', name: 'Usina geotérmica', category: 'energy', sprite: 'building-power-grid',
+    id: 'geothermal', name: 'Usina geotérmica', category: 'energy', sprite: 'building-geothermal',
     desc: 'Perfura até o calor do núcleo do asteroide. Gera energia constante, de dia e de noite.',
     cost: { credits: 5000, alloys: 100 }, growth: 1.2, energyOut: 18, workers: 2,
     requires: 'geology',
   },
   {
-    id: 'flowBattery', name: 'Bateria de fluxo', category: 'energy', sprite: 'building-battery',
+    id: 'flowBattery', name: 'Bateria de fluxo', category: 'energy', sprite: 'building-flow-battery',
     desc: 'Tanques de eletrólito que guardam muito mais energia que o banco de baterias. Ideal para atravessar a noite.',
     cost: { credits: 90000, alloys: 800, components: 200 }, growth: 1.3, battery: 8000,
     requires: 'superconductors',
@@ -80,7 +80,7 @@ export const BUILDINGS: BuildingDef[] = [
     requires: 'fusion',
   },
   {
-    id: 'antimatter', name: 'Reator de antimatéria', category: 'energy', sprite: 'building-fusion-ring',
+    id: 'antimatter', name: 'Reator de antimatéria', category: 'energy', sprite: 'building-antimatter',
     desc: 'Aniquila matéria exótica em energia colossal. Sem matéria exótica, não gera. Aguenta sobrecarga.',
     cost: { credits: 5000000, alloys: 40000, components: 8000, exotic: 40 }, growth: 1.35,
     energyOut: 9000, inputs: { exotic: 0.005 }, workers: 15, overclock: true,

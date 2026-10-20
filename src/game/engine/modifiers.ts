@@ -15,6 +15,7 @@ import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneMult } from '..
 import { colonyCount } from '../selectors';
 import { dayFactor } from './daylight';
 import { linkDemand } from './grid';
+import { civBonus } from './civilization';
 
 export interface Modifiers {
   click: number;
@@ -130,6 +131,10 @@ export function getModifiers(s: GameState): Modifiers {
     if (b.extract || b.outputs) mul(m.output, b.id, k);
     if (b.energyOut) mul(m.energyOut, b.id, k);
   }
+  // Civilização: a era atual e o legado das jornadas anteriores
+  const civ = civBonus(s);
+  m.tax *= civ.tax;
+  m.popGrowth *= civ.growth;
   // Reatores em sobrecarga
   for (const [id, oc] of Object.entries(s.overclock)) {
     if (!oc) continue;

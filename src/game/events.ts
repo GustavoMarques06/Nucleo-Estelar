@@ -13,6 +13,8 @@ export type GameEvent =
   | { type: 'ascended' }
   | { type: 'spaceEvent'; id: string }
   | { type: 'eventChosen' }
+  | { type: 'eventScan' }                                     // começou a "investigar" o resultado de um evento
+  | { type: 'eventReveal'; good: boolean }                    // um item do resultado apareceu
   | { type: 'achievement'; id: string }
   | { type: 'contract' }
   | { type: 'goal' }

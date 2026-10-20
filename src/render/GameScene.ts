@@ -9,7 +9,7 @@ import { fmt } from '../game/engine/format';
 import { artUrl, spriteUrl } from '../assets';
 
 import {
-  BACKDROP, BUILDING_IDS_ART, BUILDING_SPRITE, BUILDING_TIERS, COLONIST_FRAMES, CONSTRUCT_FRAMES, FLASH_FRAMES, GOLDEN_SPRITE, LOADER_SPRITE, LOADER_STOPS,
+  BACKDROP, BUILDING_IDS_ART, BUILDING_SPRITE, BUILDING_TIERS, COLONIST_FRAMES, PEOPLE_SPRITES, CONSTRUCT_FRAMES, FLASH_FRAMES, GOLDEN_SPRITE, LOADER_SPRITE, LOADER_STOPS,
   OVERLAYS, ROCKCHIP_FRAMES, SLOTS, SMOKE_FRAMES, SPRITES, TEXT_STYLE, TRAFFIC_SHIPS, type Overlay,
 } from './sceneConfig';
 import { LAYERS } from '../game/data/layers';
@@ -161,8 +161,10 @@ export class GameScene {
     }
 
     // Colonos caminhando pela base quando há população.
-    for (let i = 0; i < 6; i++) {
-      const c = new AnimatedSprite(COLONIST_FRAMES.map(n => this.tex[n]));
+    for (let i = 0; i < 24; i++) {
+      // A cada três, um colono animado; os outros são a gente da base (minerador, médica, criança…).
+      const frames = i % 3 === 0 ? COLONIST_FRAMES : [PEOPLE_SPRITES[i % PEOPLE_SPRITES.length]];
+      const c = new AnimatedSprite(frames.map(n => this.tex[n]));
       c.anchor.set(0.5, 1);
       c.animationSpeed = 0.06;
       c.visible = false;
@@ -240,7 +242,7 @@ export class GameScene {
       o.sprite.scale.set((A * o.def.size) / o.sprite.texture.width);
     }
     for (const d of this.drones) d.scale.set((A * 0.12) / d.texture.width);
-    for (const c of this.colonists) c.scale.set((A * 0.045) / c.texture.width);
+    for (const c of this.colonists) c.scale.set((A * 0.062) / c.texture.height);     // todos da mesma altura
     this.dyson.position.set(W * 0.13, H * 0.66);
     this.dyson.scale.set((pSize * 0.42) / this.dyson.texture.width);
     for (const s of this.smokes) {
@@ -335,13 +337,15 @@ export class GameScene {
       if (!reduce) this.dyson.rotation = t * 0.02;
     }
 
-    const colonistCount = Math.min(this.colonists.length, Math.ceil(game.resources.population / 10));
+    // A multidão cresce com a população, em escala logarítmica: 10 pessoas = 2 colonos, 1 mil = 10, 1 milhão = 23.
+    const colonistCount = Math.min(this.colonists.length, Math.ceil(1.6 * Math.log(1 + game.resources.population / 4)));
     this.colonists.forEach((c, i) => {
       c.visible = i < colonistCount && !reduce;
       if (!c.visible) return;
       const phase = t * 0.12 + i * 1.9;
       const A = this.asteroidWidth;
-      c.position.set(this.asteroid.x + Math.sin(phase) * A * 0.22, this.asteroid.y + (-0.14 + (i % 3) * 0.045) * A);
+      const step = i % 3 === 0 ? 0 : Math.abs(Math.sin(t * 5 + i)) * A * 0.004;      // quem não tem quadros de caminhada balança a cada passo
+      c.position.set(this.asteroid.x + Math.sin(phase) * A * (0.12 + (i % 4) * 0.045), this.asteroid.y + (-0.16 + (i % 5) * 0.04) * A - step);
       c.scale.x = Math.abs(c.scale.x) * (Math.cos(phase) >= 0 ? 1 : -1);
       c.zIndex = c.y;
     });

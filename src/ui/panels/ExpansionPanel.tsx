@@ -1,7 +1,7 @@
 import type { Amounts, ResId } from '../../game/types';
 import { useGame } from '../../game/store';
 import { getModifiers } from '../../game/engine/modifiers';
-import { canLaunch, expeditionCost, expeditionDuration, expeditionsUnlocked, outpostYield, unsettled } from '../../game/engine/expansion';
+import { canLaunch, expeditionCost, expeditionTime, expeditionsUnlocked, outpostYield, unsettled } from '../../game/engine/expansion';
 import { fmtDuration } from '../../game/engine/format';
 import { Icon } from '../Icon';
 import { Tx } from '../../i18n/Tx';
@@ -37,7 +37,7 @@ export function ExpansionPanel() {
         <Icon name="ship-explorer" size={72} className="card-art" />
         <div className="card-main">
           <h3>{t('Expedição')}</h3>
-          <p className="desc">{t('Envia uma nave para descobrir um novo local. Duração: {tempo}.', { tempo: fmtDuration(expeditionDuration(game, m) / m.expeditionSpeed) })}</p>
+          <p className="desc">{t('Envia uma nave para descobrir um novo local. Duração: {tempo}.', { tempo: fmtDuration(expeditionTime(game, m)) })}</p>
           {!can.ok && can.reason && <p className="status sev-warn">{t(can.reason)}</p>}
           {(game.drones.scout ?? 0) > 0 && (
             <p className="hint">{t('Batedores ativos: exploram sozinhos enquanto houver menos de 3 locais sem colônia ({n} agora).', { n: unsettled(game) })}</p>

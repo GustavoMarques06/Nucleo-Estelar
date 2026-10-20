@@ -101,7 +101,7 @@ export function DiplomacyPanel() {
                   {tier >= 1 ? ' ' + t('(o tratado libera esses locais para colonizar)') : ''}
                 </p>
               )}
-              {rivalAllied && st.relation > 0 && <p className="status sev-warn">{t('Tensão: você é aliado da {nome}, rival desta facção. A relação esfria aos poucos.', { nome: t(FACTION_BY_ID[f.rival].name) })}</p>}
+              {rivalAllied && st.relation > 0 && <p className="status sev-warn">{t(FACTION_BY_ID[f.rival].masc ? 'Tensão: você é aliado do {nome}, rival desta facção. A relação esfria aos poucos.' : 'Tensão: você é aliado da {nome}, rival desta facção. A relação esfria aos poucos.', { nome: t(FACTION_BY_ID[f.rival].name) })}</p>}
               {quest && (
                 <div className="quest" style={{ borderColor: f.color }}>
                   <b>{quest.honor ? t('Missão de honra: {titulo}', { titulo: t(f.quest.title) }) : t('Pedido: {titulo}', { titulo: t(f.quest.title) })}</b>

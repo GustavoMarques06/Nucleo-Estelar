@@ -8,3 +8,6 @@ Thumbs.db
 .DS_Store
 .vscode/
 .idea/
+
+# saves gerados para teste local
+saves/

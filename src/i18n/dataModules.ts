@@ -21,6 +21,7 @@ export * from '../game/data/milestones';
 export * from '../game/data/minerals';
 export * from '../game/data/resources';
 export * from '../game/data/lore';
+export * from '../game/engine/civilization';
 export * from '../game/data/story';
 export * from '../game/data/tips';
 export * from '../game/data/upgrades';

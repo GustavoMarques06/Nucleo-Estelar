@@ -69,7 +69,7 @@ Guided goals, the in-game guide and the logbook accompany every stage. If you ju
 | Space events | 27, 13 of them in chained stories that remember your choices |
 | Achievements | 51 (+2% production each, permanent) |
 | Guided goals | 33 |
-| Logbook entries | 28 (16 from the journey, in five acts, + 12 from the factions), plus 18 in the Archive (10 fragments and 8 transmissions) |
+| Logbook entries | 28 (16 from the journey, in five acts, + 12 from the factions), plus 19 in the Archive (11 fragments and 8 transmissions) |
 | Ascension challenges | 8, each with a special rule and a permanent upgrade |
 | Languages | Portuguese and English (automatic from the browser, or pick in Options) |
 | Sprites | about 380, cropped from the original art sheets |

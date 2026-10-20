@@ -34,7 +34,21 @@
     "min-a1": "mineracao-a1.jpg",
     "min-a2": "mineracao-a2.jpg",
     "min-a3": "mineracao-a3.jpg",
-    "min-b": "mineracao-b.jpg"
+    "min-b": "mineracao-b.jpg",
+    "civ-eras": "civ-eras-a.jpg",
+    "civ-pessoas": "pessoas.jpg",
+    "energia-nova": "energia-nova.jpg",
+    "civ-cenas": "civ-colonos.jpg",
+    "diario-14": "diario-14.jpg",
+    "diario-15": "diario-15.jpg",
+    "diario-16": "diario-16.jpg",
+    "voz-mira": "voz-mira.jpg",
+    "voz-brokk": "voz-brokk.jpg",
+    "voz-sera": "voz-sera.jpg",
+    "planetas-a": "planetas-a.jpg",
+    "planetas-b": "planetas-b.jpg",
+    "planetas-c": "planetas-c.jpg",
+    "planetas-d": "planetas-d.jpg"
   },
   "items": [
     {
@@ -972,6 +986,458 @@
         220
       ],
       "maxSize": 128
+    },
+    {
+      "name": "era-camp",
+      "sheet": "civ-eras",
+      "at": [
+        187,
+        214
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "era-village",
+      "sheet": "civ-eras",
+      "at": [
+        529,
+        215
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "era-town",
+      "sheet": "civ-eras",
+      "at": [
+        877,
+        203
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "era-metropolis",
+      "sheet": "civ-eras",
+      "at": [
+        1221,
+        183
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "era-arcology",
+      "sheet": "civ-eras",
+      "at": [
+        189,
+        547
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "era-ecumene",
+      "sheet": "civ-eras",
+      "at": [
+        875,
+        550
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "era-stellar",
+      "sheet": "civ-eras",
+      "at": [
+        1220,
+        551
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "colonist-miner",
+      "sheet": "civ-pessoas",
+      "at": [
+        141,
+        378
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "colonist-doctor",
+      "sheet": "civ-pessoas",
+      "at": [
+        376,
+        384
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "colonist-kid",
+      "sheet": "civ-pessoas",
+      "at": [
+        586,
+        445
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "colonist-engineer",
+      "sheet": "civ-pessoas",
+      "at": [
+        815,
+        389
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "colonist-elder",
+      "sheet": "civ-pessoas",
+      "at": [
+        1068,
+        416
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "colonist-farmer",
+      "sheet": "civ-pessoas",
+      "at": [
+        1287,
+        392
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "building-geothermal",
+      "sheet": "energia-nova",
+      "at": [
+        263,
+        383
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-flow-battery",
+      "sheet": "energia-nova",
+      "at": [
+        711,
+        362
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "building-antimatter",
+      "sheet": "energia-nova",
+      "at": [
+        1156,
+        377
+      ],
+      "maxSize": 256
+    },
+    {
+      "name": "era-scene-camp",
+      "sheet": "civ-cenas",
+      "crop": [
+        36,
+        30,
+        430,
+        224
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "era-scene-village",
+      "sheet": "civ-cenas",
+      "crop": [
+        490,
+        30,
+        429,
+        224
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "era-scene-town",
+      "sheet": "civ-cenas",
+      "crop": [
+        943,
+        30,
+        429,
+        224
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "era-scene-metropolis",
+      "sheet": "civ-cenas",
+      "crop": [
+        490,
+        274,
+        429,
+        222
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "era-scene-arcology",
+      "sheet": "civ-cenas",
+      "crop": [
+        943,
+        274,
+        429,
+        222
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "era-scene-ecumene",
+      "sheet": "civ-cenas",
+      "crop": [
+        490,
+        515,
+        429,
+        222
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "era-scene-stellar",
+      "sheet": "civ-cenas",
+      "crop": [
+        943,
+        515,
+        429,
+        222
+      ],
+      "maxSize": 440
+    },
+    {
+      "name": "diario-14",
+      "sheet": "diario-14",
+      "crop": [
+        0,
+        0,
+        1376,
+        768
+      ],
+      "maxSize": 680
+    },
+    {
+      "name": "diario-15",
+      "sheet": "diario-15",
+      "crop": [
+        0,
+        0,
+        1376,
+        650
+      ],
+      "maxSize": 680
+    },
+    {
+      "name": "diario-16",
+      "sheet": "diario-16",
+      "crop": [
+        0,
+        0,
+        1376,
+        768
+      ],
+      "maxSize": 680
+    },
+    {
+      "name": "voz-mira",
+      "sheet": "voz-mira",
+      "crop": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "voz-brokk",
+      "sheet": "voz-brokk",
+      "crop": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "voz-sera",
+      "sheet": "voz-sera",
+      "crop": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "maxSize": 320
+    },
+    {
+      "name": "planet-desert-canyon",
+      "sheet": "planetas-a",
+      "at": [
+        185,
+        385
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-desert-dunes",
+      "sheet": "planetas-a",
+      "at": [
+        530,
+        385
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-alien-glow",
+      "sheet": "planetas-a",
+      "at": [
+        875,
+        385
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-alien-hex",
+      "sheet": "planetas-a",
+      "at": [
+        1225,
+        385
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.1,
+        "fringeFactor": 0.25,
+        "fringePasses": 1,
+        "minRB": 120
+      }
+    },
+    {
+      "name": "asteroid-metallic-dense",
+      "sheet": "planetas-b",
+      "at": [
+        185,
+        385
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "asteroid-metallic-split",
+      "sheet": "planetas-b",
+      "at": [
+        530,
+        385
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "asteroid-crystal-blue",
+      "sheet": "planetas-b",
+      "at": [
+        875,
+        385
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "asteroid-crystal-pink",
+      "sheet": "planetas-b",
+      "at": [
+        1225,
+        385
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.1,
+        "fringeFactor": 0.25,
+        "fringePasses": 1,
+        "minRB": 120
+      }
+    },
+    {
+      "name": "planet-terra-rocky",
+      "sheet": "planetas-c",
+      "at": [
+        190,
+        375
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-ice",
+      "sheet": "planetas-c",
+      "at": [
+        530,
+        375
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-desert",
+      "sheet": "planetas-c",
+      "at": [
+        875,
+        375
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-ocean",
+      "sheet": "planetas-c",
+      "at": [
+        1215,
+        375
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-jungle",
+      "sheet": "planetas-d",
+      "at": [
+        205,
+        195
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-volcanic",
+      "sheet": "planetas-d",
+      "at": [
+        690,
+        200
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-alien",
+      "sheet": "planetas-d",
+      "at": [
+        1185,
+        200
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-terra-garden",
+      "sheet": "planetas-d",
+      "at": [
+        700,
+        565
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "planet-capital",
+      "sheet": "planetas-d",
+      "at": [
+        1185,
+        565
+      ],
+      "maxSize": 192
     }
   ],
   "grids": [

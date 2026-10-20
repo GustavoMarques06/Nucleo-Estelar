@@ -4,7 +4,7 @@ export interface GuideEntry { id: string; title: string; icon: string; text: str
 export const GUIDE: GuideEntry[] = [
   { id: 'basics', title: 'Como o jogo funciona', icon: 'nav-mining', text: [
     'Você começa com uma broca num asteroide. Extraia minério, venda, compre máquinas e deixe-as trabalhar sozinhas.',
-    'O painel “Telemetria” sempre diz o que você produz, o que limita o crescimento e o próximo passo. O “Objetivo” abaixo dele guia as primeiras horas.',
+    'A bússola, no topo, mostra a fase da jornada, a meta dela e o próximo objetivo (o botão “Ir” leva até ele). A Telemetria, embaixo, diz o que limita o crescimento e oferece a correção.',
   ] },
   { id: 'milestones', title: 'Marcos de quantidade', icon: 'icon-trophy', text: [
     'Ao chegar a 10, 25, 50, 100, 150, 200… unidades de uma estrutura, a função principal dela fica ×1,5 (produção, extração, energia, moradia, carga de bateria ou bônus). Os marcos se acumulam. Armazéns não têm marcos: cada novo já guarda mais que o anterior.',

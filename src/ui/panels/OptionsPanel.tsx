@@ -41,8 +41,10 @@ export function OptionsPanel({ onShowShortcuts }: { onShowShortcuts?: () => void
     if (!file) return;
     const text = await file.text().catch(() => '');
     if (!confirm(t('Substituir o progresso atual pelo do arquivo? O progresso de agora será perdido.'))) return;
-    const ok = importSave(text);
-    toast(ok ? t('Save importado com sucesso.') : t('Arquivo inválido ou de uma versão mais nova do jogo.'), ok ? 'info' : 'warn');
+    const r = importSave(text);
+    toast(r === 'ok' ? t('Save importado com sucesso.')
+      : r === 'tampered' ? t('Este arquivo foi modificado fora do jogo e não pode ser importado.')
+      : t('Arquivo inválido ou de uma versão mais nova do jogo.'), r === 'ok' ? 'info' : 'warn');
   };
   const hhmm = (ms: number) => new Date(ms).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 

@@ -53,5 +53,7 @@ export const SFX: { [K in GameEvent['type']]?: Handler<K> } = {
   challenge: e => { if (e.done) [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, { type: 'triangle', delay: i * 0.08, vol: 0.045 })); else { tone(147, 0.3, { type: 'sawtooth', vol: 0.045 }); tone(220, 0.4, { type: 'sawtooth', delay: 0.22, vol: 0.04 }); } },
   territory: () => { tone(185, 0.25, { type: 'sawtooth', vol: 0.035 }); tone(139, 0.35, { type: 'sawtooth', delay: 0.18, vol: 0.035 }); },
   nav: () => tone(520, 0.03, { type: 'sine', vol: 0.012 }),
+  eventScan: () => { for (let i = 0; i < 4; i++) tone(1200 + i * 180, 0.05, { type: 'sine', delay: i * 0.28, vol: 0.02 }); noise(0.4, 0.015); },
+  eventReveal: e => (e.good ? tone(1047, 0.1, { type: 'triangle', vol: 0.035 }) : tone(330, 0.12, { type: 'triangle', vol: 0.03 })),
   overclock: () => { tone(110, 0.5, { type: 'sawtooth', slide: 440, vol: 0.04 }); tone(880, 0.2, { type: 'square', delay: 0.4, vol: 0.025 }); },
 };

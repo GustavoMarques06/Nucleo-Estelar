@@ -206,7 +206,7 @@ describe('megaprojetos, eventos e Ascensão', () => {
 
   it('salvamento preserva os sistemas novos', () => {
     let s = research(newGame(0), 'exploration');
-    s.locations.push(generateLocation(3));
+    s.locations.push({ ...generateLocation(3), type: 'ocean', sprite: 'planet-ocean' });          // terraformável (gás e asteroides não são)
     s.locations[0].outpost = { level: 2, spec: 'science', terra: 2, terraRemaining: 100, terraTotal: 400 };
     s.megaprojects.dyson = 2;
     s.ascension = { points: 3, total: 9, count: 2, perks: { production: 2 } };

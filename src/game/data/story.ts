@@ -26,7 +26,7 @@ export const STORY: StoryDef[] = [
     'Os sensores confirmam o que o ouvido já suspeitava. O chiado do rádio não é ruído: é um sinal, e vem sempre do mesmo ponto do céu.',
     'Ciência é a moeda do que ainda não se sabe fazer. E há muito que você não sabe.',
   ] },
-  { id: 'veins', act: 'Ato I · Silêncio', title: 'Diário 003: geometria sob a crosta', art: 'diario-02', when: s => s.deposit.found >= 1, text: [
+  { id: 'veins', act: 'Ato I · Silêncio', title: 'Diário 003: geometria sob a crosta', art: 'diario-14', when: s => s.deposit.found >= 1, text: [
     'A primeira sonda desce e encontra um veio de minério. Mas o veio é reto demais. Reto como uma galeria, com paredes lisas e uma abóbada que nenhuma erosão faria.',
     'Alguém escavou este asteroide muito antes de você. O K-17 não é uma rocha à deriva: é uma mina abandonada, ou um pedaço de algo muito maior.',
     'Você registra as coordenadas das galerias. Todas apontam para o mesmo lugar do céu que o rádio.',
@@ -42,7 +42,7 @@ export const STORY: StoryDef[] = [
     'Os mapas estelares mostram o que o sinal já sugeria: há mundos além do cinturão, e eles formam um arco, como contas de um colar que alguém espalhou.',
     'Alguns estão vazios. Outros nem sempre estão desocupados. O Chamado aponta para o centro do arco.',
   ] },
-  { id: 'signal', act: 'Ato II · O Chamado', title: 'Diário 006: o eco', art: 'diario-04', when: s => s.locations.length >= 1, text: [
+  { id: 'signal', act: 'Ato II · O Chamado', title: 'Diário 006: o eco', art: 'diario-15', when: s => s.locations.length >= 1, text: [
     'A primeira expedição volta com um local novo no mapa e um dado impossível: o mundo também emite o Chamado. Dezessete pulsos, uma pausa, dezessete.',
     'Não é coincidência. Cada ponto do arco repete o sinal, um passando ao outro, como faróis numa costa muito longa.',
     'Alguém montou uma rede de faróis para guiar quem estivesse perdido. Resta saber guiar até onde.',
@@ -90,7 +90,7 @@ export const STORY: StoryDef[] = [
     'Quem a mantém crescendo descobre que o fim do jogo não é um lugar, é uma escolha.',
   ] },
   // ---------- Ato V · O Núcleo ----------
-  { id: 'truth', act: 'Ato V · O Núcleo', title: 'Diário 015: os Acendedores', art: 'diario-12', when: s => (s.megaprojects.core ?? 0) >= 3, text: [
+  { id: 'truth', act: 'Ato V · O Núcleo', title: 'Diário 015: os Acendedores', art: 'diario-16', when: s => (s.megaprojects.core ?? 0) >= 3, text: [
     'O Núcleo finalmente conta a história. Há muito tempo, as estrelas da galáxia começaram a morrer, uma a uma. Os Acendedores construíram o Núcleo para mantê-la acesa.',
     'Mas uma estrela não se cuida sozinha. Eles se derramaram dentro dele, até o último, para que a luz nunca falhasse. Não sumiram: viraram a chama.',
     'A chama, porém, só queima: não escolhe nem constrói. Por isso espalhou o Chamado, para despertar quem tivesse mãos. A nave em pedaços ao redor do K-17 foi de um Guardião antes de você. E de outro antes dele.',

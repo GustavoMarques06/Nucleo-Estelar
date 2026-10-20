@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { BuildingId, Category, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
+import type { Amounts, BuildingId, Category, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
 import { RES_IDS } from './data/resources';
 import { BALANCE } from './data/balance';
 import { BUILDING_BY_ID } from './data/buildings';
@@ -10,7 +10,7 @@ import { layerIndex } from './engine/deposit';
 import { LAYERS } from './data/layers';
 import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneLevel } from './data/milestones';
 import { fmt, fmtNum } from './engine/format';
-import { clearSave, loadBackup, loadGame, parseSave, saveGame, serialize } from './engine/save';
+import { clearSave, loadBackup, loadGame, parseSave, saveGame, saveSignature, serialize } from './engine/save';
 import { applyOffline, type OfflineSummary } from './engine/offline';
 import { energyBalance, getModifiers } from './engine/modifiers';
 import { maxAffordable } from './engine/costs';
@@ -26,7 +26,9 @@ import { CRISIS_BY_KIND } from './data/crises';
 import { assignDrones } from './engine/drones';
 import { GOAL_BY_ID } from './data/goals';
 import { LORE_BY_ID } from './data/lore';
-import { surfaceChain, checkGoals, checkStory, ascend, buildMegaStage, buyPerk, buyStarPerk, transcend, buyRepeatable, checkAchievements, chooseEvent, dismissEvent, spawnEvent } from './engine/progression';
+import { ERAS, eraIndex } from './engine/civilization';
+import { surfaceChain, checkGoals, checkStory, ascend, buildMegaStage, buyPerk, buyStarPerk, transcend, buyRepeatable, checkAchievements, chooseEvent, dismissEvent, eventChoiceCost, spawnEvent } from './engine/progression';
+import { EVENT_BY_ID } from './data/events';
 import { fulfillContract } from './engine/contracts';
 import { ACHIEVEMENT_BY_ID } from './data/achievements';
 import { events } from './events';
@@ -39,6 +41,19 @@ export type History = Partial<Record<ResId, number[]>>;
 export const HISTORY_STEP = 10;         // segundos de jogo entre amostras
 export const HISTORY_MAX = 180;         // 30 min de histórico
 export interface Toast { id: number; text: string; kind: 'info' | 'warn' | 'bad'; count: number }
+/** O que uma escolha de evento rendeu: a interface mostra com uma animação de "investigando…" e depois revela item a item. */
+export interface EventResult {
+  key: number;
+  event: string;              // nome do evento (texto-fonte)
+  sprite: string;
+  choice: string;             // texto da escolha
+  reward: Amounts;
+  paid: Amounts;
+  buff?: { name: string; duration: number };
+  relation?: Record<string, number>;
+  reputation?: number;
+  continues: boolean;         // a escolha agendou a continuação da história
+}
 
 interface Store {
   game: GameState;
@@ -66,6 +81,8 @@ interface Store {
   sell(res: ResId): void;
   buy(id: BuildingId): void;
   buyAmountOf(id: BuildingId, amount: number): void;
+  onlyAffordable: boolean;
+  setOnlyAffordable(v: boolean): void;
   upgrade(id: string): void;
   launchExpedition(): void;
   establishOutpost(locId: string, spec: Specialization, byInfluence?: boolean): void;
@@ -101,6 +118,8 @@ interface Store {
   dismissTip(id: string): void;
   chooseEvent(choice: number): void;
   dismissEvent(): void;
+  eventResult: EventResult | null;
+  dismissEventResult(): void;
   setAutosell(res: ResId, on: boolean): void;
   setSetting<K extends keyof Settings>(k: K, v: Settings[K]): void;
   setBuyAmount(a: BuyAmount): void;
@@ -110,7 +129,7 @@ interface Store {
   dismissToast(id: number): void;
   save(): boolean;
   exportSave(): string;
-  importSave(text: string): boolean;
+  importSave(text: string): 'ok' | 'invalid' | 'tampered';
   restoreBackup(): boolean;
   reset(): void;
 }
@@ -143,6 +162,9 @@ export const useGame = create<Store>()((set, get) => {
     selectedLoc: null,
     saveError: false,
     storyQueue: [],
+    eventResult: null,
+    onlyAffordable: false,
+    setOnlyAffordable(v) { set({ onlyAffordable: v }); },
 
     boot() {
       // Pede ao navegador para não apagar o save quando faltar espaço.
@@ -157,6 +179,7 @@ export const useGame = create<Store>()((set, get) => {
       const { state, summary } = applyOffline(loaded.state);
       set({ game: state, offline: summary });
       if (loaded.recovered) get().toast('O save principal estava ilegível: restauramos o backup mais recente.', 'warn');
+      if (state.integrity.tampered && Date.now() - state.integrity.since < 60_000) get().toast(t('Este save foi modificado fora do jogo. O progresso continua, mas fica marcado como modificado.'), 'warn');
     },
 
     advance(dt) {
@@ -172,6 +195,7 @@ export const useGame = create<Store>()((set, get) => {
       const layerBefore = layerIndex(game);
       const before = { ...game.resources };
       const veinsBefore = game.deposit.veins.filter(v => v.reserve > 0).length;
+      const eraBefore = eraIndex(game);
       // Passos de 1 s; um intervalo enorme (computador suspenso) usa no máximo ~400 passos, como o cálculo offline.
       const stepSize = Math.max(1, remaining / 400);
       while (remaining > 0) {
@@ -243,7 +267,13 @@ export const useGame = create<Store>()((set, get) => {
         for (const r of RES_IDS) history[r] = [...(history[r] ?? []), rates[r]].slice(-HISTORY_MAX);
       }
       if (game.deposit.veins.filter(v => v.reserve > 0).length < veinsBefore) { events.emit({ type: 'veinDepleted' }); get().toast(t('Um veio se esgotou: a extração voltou para a crosta.')); }
-      set({ game, report, rates, flows, history, ...(story.fresh.length ? { storyQueue: [...get().storyQueue, ...story.fresh] } : {}) });
+      set({ game, report, rates, flows, history, ...(story.fresh.length ? { storyQueue: [...get().storyQueue, ...(story.fresh.length > 2 ? story.fresh.slice(-1) : story.fresh)] } : {}) });
+      if (story.fresh.length > 2) get().toast(t('{n} capítulos novos no Diário (aba Registro).', { n: story.fresh.length }));
+      const eraNow = eraIndex(game);
+      if (eraNow > eraBefore && !longGap) {
+        events.emit({ type: 'goal' });
+        get().toast(t('Sua civilização entrou na era {nome}!', { nome: t(ERAS[eraNow - 1].name) }));
+      }
       if (story.lore.length) {
         const first = LORE_BY_ID[story.lore[0]];
         get().toast(story.lore.length === 1 ? t('Novo no Arquivo: {titulo}', { titulo: t(first.title) }) : t('{n} novos registros no Arquivo (aba Registro).', { n: story.lore.length }));
@@ -429,11 +459,24 @@ export const useGame = create<Store>()((set, get) => {
     },
 
     chooseEvent(choice) {
-      const r = chooseEvent(get().game, choice);
-      if (!r) { events.emit({ type: 'denied' }); get().toast('Recursos insuficientes para essa escolha.', 'warn'); return; }
-      set({ game: r.state });
+      const before = get().game;
+      const def = before.event ? EVENT_BY_ID[before.event.id] : null;
+      const c = def?.choices[choice];
+      const paid = eventChoiceCost(before, choice);
+      const r = chooseEvent(before, choice);
+      if (!r || !def || !c) { events.emit({ type: 'denied' }); get().toast('Recursos insuficientes para essa escolha.', 'warn'); return; }
+      const reward = Object.fromEntries(Object.entries(r.reward).filter(([, v]) => (v ?? 0) > 0)) as Amounts;
+      set({
+        game: r.state,
+        eventResult: {
+          key: Date.now(), event: def.name, sprite: def.sprite, choice: c.label, reward, paid,
+          buff: c.buff && { name: c.buff.name, duration: c.buff.duration }, relation: c.relation, reputation: c.reputation,
+          continues: r.state.chain.length > before.chain.length,
+        },
+      });
       events.emit({ type: 'eventChosen' });
     },
+    dismissEventResult() { set({ eventResult: null }); },
     dismissEvent() { set({ game: dismissEvent(get().game) }); },
 
     dismissTip(id) {
@@ -483,12 +526,14 @@ export const useGame = create<Store>()((set, get) => {
     exportSave() { return serialize(get().game); },
 
     importSave(text) {
+      // Arquivo editado fora do jogo não entra: a assinatura não confere.
+      if (saveSignature(text.trim()) === 'bad') return 'tampered';
       const parsed = parseSave(text.trim());
-      if (!parsed) return false;
+      if (!parsed) return 'invalid';
       const { state, summary } = applyOffline(parsed);
       set({ game: state, offline: summary, report: null, rates: zeroRates(), flows: null, history: {}, ending: false });
       get().save();
-      return true;
+      return 'ok';
     },
 
     restoreBackup() {

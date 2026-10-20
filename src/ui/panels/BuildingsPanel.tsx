@@ -153,6 +153,8 @@ function Controls({ b }: { b: BuildingDef }) {
 export function BuyAmountPicker() {
   const buyAmount = useGame(s => s.buyAmount);
   const setBuyAmount = useGame(s => s.setBuyAmount);
+  const only = useGame(s => s.onlyAffordable);
+  const setOnly = useGame(s => s.setOnlyAffordable);
   return (
     <div className="amounts" role="group" aria-label={t('Quantidade de compra')}>
       {t('Comprar')}
@@ -161,6 +163,9 @@ export function BuyAmountPicker() {
           {a === 'max' ? t('Máx') : `×${a}`}
         </button>
       ))}
+      <label className="toggle only-affordable" title={t('Esconde as estruturas que você ainda não consegue pagar')}>
+        <input type="checkbox" checked={only} onChange={e => setOnly(e.target.checked)} /> {t('Só o que posso comprar')}
+      </label>
     </div>
   );
 }
@@ -174,16 +179,21 @@ export function BuildingList({ category, title }: { category: Category; title?: 
   const setRecipe = useGame(s => s.setRecipe);
   const m = getModifiers(game);
   const inCat = BUILDINGS.filter(b => b.category === category);
-  const list = inCat.filter(b => isBuildingUnlocked(b, game));
+  const only = useGame(s => s.onlyAffordable);
+  const unlocked = inCat.filter(b => isBuildingUnlocked(b, game));
+  // Filtro: esconde o que não dá para pagar agora (as novas, ainda sem nenhuma unidade, continuam à vista).
+  const list = only ? unlocked.filter(b => game.buildings[b.id] === 0 || canAfford(game, bulkCost(b, game.buildings[b.id], 1, m.cost))) : unlocked;
+  const hidden = unlocked.length - list.length;
   const spotId = useSpotTarget('building', list.length);
   // Só as próximas: estruturas cuja pesquisa já pode ser feita (evita uma lista enorme no começo).
   const waiting = inCat.filter(b => b.requires && !isBuildingUnlocked(b, game) && UPGRADE_BY_ID[b.requires] && isUpgradeVisible(UPGRADE_BY_ID[b.requires], game));
-  if (!list.length && !waiting.length && title) return null;
+  if (!unlocked.length && !waiting.length && title) return null;
 
   return (
     <>
       {title && <h4 className="section">{title}</h4>}
-      {list.length === 0 && <p className="hint">{t('Continue progredindo para desbloquear estruturas desta categoria.')}</p>}
+      {unlocked.length === 0 && <p className="hint">{t('Continue progredindo para desbloquear estruturas desta categoria.')}</p>}
+      {hidden > 0 && <p className="hint filtered">{t('{n} estruturas escondidas pelo filtro “Só o que posso comprar”.', { n: hidden })}</p>}
       {list.map(b => {
         const owned = game.buildings[b.id];
         const amount = buyAmount === 'max' ? Math.max(1, maxAffordable(game, b, m.cost)) : buyAmount;

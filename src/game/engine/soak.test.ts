@@ -51,6 +51,7 @@ const finite = (x: unknown) => typeof x === 'number' && Number.isFinite(x);
 function normalize(save: Record<string, any>): Record<string, any> {
   const out = { ...save };
   delete out.savedAt;
+  delete out.sig;                 // a assinatura muda junto com savedAt
   out.autosell = Object.fromEntries(Object.entries(save.autosell ?? {}).filter(([, x]) => x));
   out.keep = Object.fromEntries(Object.entries(save.keep ?? {}).filter(([, x]) => x));
   out.recipes = Object.fromEntries(Object.entries(save.recipes ?? {}).filter(([, x]) => x));  out.market = { clock: Math.round((save.market?.clock ?? 0) * 1e6) / 1e6, sat: Object.fromEntries(Object.entries(save.market?.sat ?? {}).filter(([, x]) => (x as number) > 0.002)) };

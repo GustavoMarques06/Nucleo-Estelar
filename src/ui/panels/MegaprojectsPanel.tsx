@@ -20,7 +20,7 @@ function MegaCard({ mp }: { mp: MegaprojectDef }) {
   const sprite = next?.sprite ?? mp.stages[mp.stages.length - 1]?.sprite ?? 'star-yellow';
 
   return (
-    <article className={`card mega ${done === 0 ? 'not-built' : ''} ${mp.endless ? 'endless' : ''}`}>
+    <article className={`card mega ${done === 0 ? 'not-built' : ''} ${mp.endless ? 'endless' : ''} ${!next && !mp.endless ? 'complete' : ''}`}>
       <Icon name={sprite} size={96} className="card-art" />
       <div className="card-main">
         <h3>{t(mp.name)} <span className="count">{done}/{total}</span></h3>

@@ -125,7 +125,7 @@ Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da hist
 | Eventos espaciais | 27, 13 deles em histórias encadeadas que lembram suas escolhas |
 | Conquistas | 51 (+2% de produção cada, permanentes) |
 | Objetivos guiados | 33 |
-| Registros do diário | 28 (16 da jornada, em cinco atos, + 12 das facções), mais 18 do Arquivo (10 fragmentos e 8 transmissões) |
+| Registros do diário | 28 (16 da jornada, em cinco atos, + 12 das facções), mais 19 do Arquivo (11 fragmentos e 8 transmissões) |
 | Desafios de Ascensão | 8, cada um com uma regra especial e uma melhoria permanente |
 | Idiomas | Português e inglês (automático pelo navegador, ou escolha nas Opções) |
 | Sprites | cerca de 380, recortados das pranchas de arte originais |

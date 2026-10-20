@@ -1,7 +1,7 @@
 import type { Amounts, BuildingDef, GameState, ResId } from '../types';
 
 export function unitCost(def: BuildingDef, owned: number, costMult = 1): Amounts {
-  const f = Math.pow(def.growth, owned) * costMult;
+  const f = Math.min(1e280, Math.pow(def.growth, owned)) * costMult;      // milhares de unidades não viram Infinity
   const out: Amounts = {};
   for (const [r, v] of Object.entries(def.cost)) out[r as ResId] = Math.max(1, Math.floor((v ?? 0) * f));
   return out;

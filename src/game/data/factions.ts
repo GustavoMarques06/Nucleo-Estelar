@@ -8,6 +8,7 @@ export interface FactionDef {
   color: string;             // cor no mapa e na interface
   sprite: string;
   rival: string;             // presentear esta facção esfria a relação com a rival
+  masc?: boolean;            // nome masculino (“do Conclave”, “pelo Conclave”); o padrão é feminino
   gift: ResId;               // o que ela aprecia
   giftBase: number;          // quantidade base do presente (escala com a economia)
   treaty: Effect[];          // relação ≥ 25
@@ -40,7 +41,7 @@ export const FACTIONS: FactionDef[] = [
   {
     id: 'helix', name: 'Conclave Helix', tagline: 'Cientistas e arquivistas',
     desc: 'Uma rede de estações de pesquisa que troca conhecimento por materiais avançados.',
-    color: '#b68cff', sprite: 'planet-alien', rival: 'vesper', gift: 'components', giftBase: 30,
+    color: '#b68cff', sprite: 'planet-alien', rival: 'vesper', masc: true, gift: 'components', giftBase: 30,
     treaty: [{ kind: 'resource', res: 'science', mult: 1.15 }],
     alliance: [{ kind: 'resource', res: 'science', mult: 1.15 }, { kind: 'outputAll', mult: 1.05 }],
     treatyText: 'Ciência +15%', allianceText: 'Ciência +15% extra e toda a produção +5%',
@@ -71,6 +72,9 @@ export const FACTIONS: FactionDef[] = [
     quest: { res: 'fuel', base: 60, title: 'Frota sem combustível', reward: (_, k) => ({ ships: 2, exotic: Math.max(1, Math.ceil(k / 5)), influence: 10 }), rewardText: 'naves, materiais exóticos e influência' },
   },
 ];
+
+/** “do”/“da” conforme o gênero do nome da facção. */
+export const deFaction = (f: FactionDef) => (f.masc ? 'do' : 'da');
 
 export const FACTION_BY_ID = Object.fromEntries(FACTIONS.map(f => [f.id, f]));
 

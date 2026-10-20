@@ -1,5 +1,5 @@
 import type { Amounts, Effect, GameState } from '../types';
-import { FACTIONS, FACTION_BY_ID } from './factions';
+import { FACTIONS, FACTION_BY_ID, deFaction } from './factions';
 import { CHAIN_EVENTS } from './chains';
 
 export interface ChainStep { event: string; delay: number; p?: number }
@@ -93,8 +93,8 @@ export const EVENTS: EventDef[] = [
     minPhase: s => s.buildings.refinery >= 1,
     choices: [
       { label: 'Desmontar', reward: (_, k) => ({ alloys: 15 * k, components: 2 * k }) },
-      { label: 'Investigar o computador de bordo',
-        reward: (s, k) => (s.upgrades.lab ? { science: 6 * k, exotic: s.upgrades.exploration ? 2 : 0 } : { credits: 120 * k }) },
+      { label: 'Investigar o computador de bordo', flag: 'derelict-log',
+        reward: (s, k) => (s.upgrades.lab ? { science: 6 * k, exotic: s.upgrades.exploration ? Math.max(2, Math.round(Math.sqrt(k))) : 0 } : { credits: 120 * k }) },
     ],
   },
   {
@@ -155,7 +155,7 @@ for (const f of FACTIONS) {
   const rival = FACTION_BY_ID[f.rival];
   EVENTS.push({
     id: `tribute-${f.id}`, name: `${f.name} desconfia`, sprite: 'event-trader',
-    text: `Você é aliado da ${rival.name}, rival da ${f.name}. Os enviados pedem uma prova de boa-fé antes de continuar as conversas.`,
+    text: `Você é aliado ${deFaction(rival)} ${rival.name}, rival ${deFaction(f)} ${f.name}. Os enviados pedem uma prova de boa-fé antes de continuar as conversas.`,
     minPhase: s => (s.factions[f.id]?.relation ?? 0) >= 25 && (s.factions[rival.id]?.relation ?? 0) >= 60,
     choices: [
       { label: 'Pagar o tributo (relação +8)', relation: { [f.id]: 8 }, pay: (_, k) => ({ [f.gift]: Math.ceil(f.giftBase * k * 2) }) },

@@ -16,6 +16,7 @@ import { ACHIEVEMENTS } from '../data/achievements';
 import { GOALS } from '../data/goals';
 import { STORY } from '../data/story';
 import { LORE } from '../data/lore';
+import { eraIndex } from './civilization';
 import { challengeBlocks, challengeMet } from './challenges';
 import { CHALLENGE_BY_ID } from '../data/challenges';
 
@@ -114,6 +115,8 @@ export function ascend(prev: GameState, now = Date.now(), next: string | null = 
   s.tips = [...prev.tips];
   s.goals = [...prev.goals];
   s.story = [...prev.story];
+  s.civ = { best: Math.max(prev.civ.best, eraIndex(prev)) };      // a civilização lembra: o legado vale para sempre
+  s.integrity = { ...prev.integrity };                             // a marca de save modificado também
   s.flags = prev.flags.filter(f => f.startsWith('ending-'));      // a escolha final vale para sempre
   s.transcendence = { ...prev.transcendence, perks: { ...prev.transcendence.perks } };
   const done = [...prev.challenges.done];
@@ -266,6 +269,8 @@ export function transcend(prev: GameState, now = Date.now()): GameState | null {
   s.tips = [...prev.tips];
   s.goals = [...prev.goals];
   s.story = [...prev.story];
+  s.civ = { best: Math.max(prev.civ.best, eraIndex(prev)) };      // a civilização lembra: o legado vale para sempre
+  s.integrity = { ...prev.integrity };                             // a marca de save modificado também
   s.flags = prev.flags.filter(f => f.startsWith('ending-'));      // a escolha final vale para sempre
   s.challenges = { active: null, done: [...prev.challenges.done] };
   s.stats.lifetimeEarned = prev.stats.lifetimeEarned + prev.stats.earned;

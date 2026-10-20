@@ -85,10 +85,12 @@ describe('exportar e importar', () => {
     const text = g.exportSave();
     expect(parseSave(text)!.resources.credits).toBe(4242);
     useGame.setState({ game: newGame(0) });
-    expect(useGame.getState().importSave('isso não é um save')).toBe(false);
-    expect(useGame.getState().importSave(JSON.stringify({ ...JSON.parse(text), version: 999 }))).toBe(false);
+    expect(useGame.getState().importSave('isso não é um save')).toBe('invalid');
+    expect(useGame.getState().importSave(JSON.stringify({ ...JSON.parse(text), version: 999 }))).toBe('invalid');
     expect(useGame.getState().game.resources.credits).toBe(0);
-    expect(useGame.getState().importSave(text)).toBe(true);
+    expect(useGame.getState().importSave(text.replace('4242', '9999'))).toBe('tampered');   // editado fora do jogo: recusado
+    expect(useGame.getState().game.resources.credits).toBe(0);
+    expect(useGame.getState().importSave(text)).toBe('ok');
     expect(useGame.getState().game.resources.credits).toBeGreaterThanOrEqual(4242);
   });
 

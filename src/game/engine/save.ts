@@ -13,6 +13,7 @@ import { TIPS } from '../data/tips';
 import { GOALS } from '../data/goals';
 import { STORY } from '../data/story';
 import { LORE } from '../data/lore';
+import { ERAS } from './civilization';
 import { CHALLENGE_BY_ID } from '../data/challenges';
 import { VEIN_KIND_BY_ID } from '../data/deposit';
 import { FACTIONS, FACTION_BY_ID } from '../data/factions';
@@ -21,7 +22,9 @@ import { STAR_PERK_BY_ID } from '../data/transcendence';
 import { CRISIS_BY_KIND } from '../data/crises';
 import { KEEP_STEPS, SELL_FLOORS } from '../data/market';
 import { BALANCE } from '../data/balance';
-import { newGame, SAVE_VERSION } from './state';
+import { newGame, SAVE_VERSION, SIGNED_SINCE } from './state';
+import { checkSignature, withSignature } from './integrity';
+import { terraformable, uniqueName } from './expansion';
 import { PROTECTABLE, THROTTLE_STEPS, prioritizable, throttleable } from './energy';
 
 const KEY = 'nucleo-estelar/save';
@@ -79,6 +82,7 @@ export function parseSave(raw: string): GameState | null {
   let d: Record<string, unknown>;
   try { d = obj(JSON.parse(raw)); } catch { return null; }
   if (typeof d.version !== 'number' || d.version > SAVE_VERSION) return null;
+  const signature = checkSignature(d, SIGNED_SINCE);
   // Versão 1 → 2: os campos novos simplesmente começam com os valores padrão.
 
   const s = newGame();
@@ -91,6 +95,11 @@ export function parseSave(raw: string): GameState | null {
   s.discovered = [...new Set([...s.discovered, ...arr(d.discovered).filter((x): x is string => typeof x === 'string' && x in MINERAL_BY_ID)])];
 
   s.locations = arr(d.locations).slice(0, 5000).map(parseLocation).filter((l): l is Location => !!l);
+  // Saves antigos podiam ter dois locais com o mesmo nome (o gerador repetia): o segundo ganha um numeral.
+  const names: string[] = [];
+  for (const l of s.locations) { l.name = uniqueName(names, l.name); names.push(l.name); }
+  // Gigantes gasosos e asteroides não são terraformáveis: um save editado não consegue mudar isso.
+  for (const l of s.locations) if (l.outpost && !terraformable(l)) { l.outpost.terra = 0; l.outpost.terraRemaining = 0; l.outpost.terraTotal = 0; }
   const dep = obj(d.deposit);
   s.deposit.veins = arr(dep.veins).slice(0, 20).flatMap(x => {
     const v = obj(x), mix = obj(v.mix);
@@ -170,6 +179,7 @@ export function parseSave(raw: string): GameState | null {
       if (left > 0 || cool > 0) s.overclock[b.id] = fault ? { left, cool, fault } : { left, cool };
     }
   }
+  s.civ = { best: Math.floor(num(obj(d.civ).best, 0, ERAS.length)) };
   s.protect = [...new Set(arr(d.protect).map(c => str(c) as Category))].filter(c => PROTECTABLE.includes(c));
   s.energyCharge = num(d.energyCharge, 0, 1e15);
   s.debt = num(d.debt, 0, 1e15);
@@ -206,7 +216,7 @@ export function parseSave(raw: string): GameState | null {
   s.goals = [...new Set(arr(d.goals).filter((x): x is string => typeof x === 'string' && goalIds.has(x)))];
   const storyIds = new Set([...STORY, ...LORE].map(e => e.id));
   s.story = [...new Set(arr(d.story).filter((x): x is string => typeof x === 'string' && storyIds.has(x)))];
-  const tipIds = new Set(TIPS.map(t => t.id));
+  const tipIds = new Set([...TIPS.map(t => t.id), 'tutorial-done', 'tutorial-skip']);
   s.tips = [...new Set(arr(d.tips).filter((x): x is string => typeof x === 'string' && tipIds.has(x)))];
   // Jogadores de versões anteriores já conhecem o começo: não mostra a dica inicial de novo.
   if (typeof d.version === 'number' && d.version < 3 && !s.tips.includes('start')) s.tips.push('start');
@@ -251,11 +261,24 @@ export function parseSave(raw: string): GameState | null {
   // Quem já jogava antes do diário não recebe a história inteira de uma vez: o que a partida já cumpre vira "lido".
   if (d.version < 14) s.story = [...new Set([...s.story, ...STORY.filter(e => e.when(s)).map(e => e.id)])];
   s.savedAt = num(d.savedAt, 0, 8.64e15) || Date.now();
+  // Integridade: a marca é permanente; uma assinatura que não confere marca agora.
+  const prevMark = obj(d.integrity);
+  const was = prevMark.tampered === true;
+  s.integrity = was ? { tampered: true, since: num(prevMark.since, 0, 8.64e15) } : signature === 'bad' ? { tampered: true, since: Date.now() } : { tampered: false, since: 0 };
   return s;
 }
 
+/** Diz se o texto de um save foi editado fora do jogo (sem ler o resto): usado para recusar arquivos importados. */
+export function saveSignature(raw: string): 'ok' | 'legacy' | 'bad' | 'invalid' {
+  try {
+    const d = obj(JSON.parse(raw));
+    if (typeof d.version !== 'number' || d.version > SAVE_VERSION) return 'invalid';
+    return checkSignature(d, SIGNED_SINCE);
+  } catch { return 'invalid'; }
+}
+
 export function serialize(s: GameState, now = Date.now()): string {
-  return JSON.stringify({ ...s, version: SAVE_VERSION, savedAt: now });
+  return withSignature(JSON.stringify({ ...s, version: SAVE_VERSION, savedAt: now }));
 }
 
 export interface Loaded { state: GameState; recovered: boolean }

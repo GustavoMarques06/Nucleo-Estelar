@@ -97,10 +97,12 @@ export const SMOKE_FRAMES = frames('anim-smoke', 6);
 export const FLASH_FRAMES = frames('anim-flash', 6);
 
 export const COLONIST_FRAMES = ['char-colonist-walk-1', 'char-colonist-walk-2'];
+/** Gente da base (sprites parados que "caminham" balançando): misturados ao colono animado. */
+export const PEOPLE_SPRITES = ['colonist-miner', 'colonist-doctor', 'colonist-kid', 'colonist-engineer', 'colonist-elder', 'colonist-farmer'];
 const overlayFrames = OVERLAYS.flatMap(o => Array.from({ length: o.frames }, (_, i) => `${o.prefix}-${i + 1}`));
 export const SPRITES = [
   ...new Set([...overlayFrames, ...ROCKCHIP_FRAMES, ...CONSTRUCT_FRAMES, ...TRAFFIC_SHIPS, 'ship-colony']),
-  ...BUILDINGS.map(b => b.sprite), ...COLONIST_FRAMES, 'ship-explorer', 'mega-dyson-1', 'mega-dyson-2', 'mega-dyson-3', 'mega-dyson-4',
+  ...BUILDINGS.map(b => b.sprite), ...COLONIST_FRAMES, ...PEOPLE_SPRITES, 'ship-explorer', 'mega-dyson-1', 'mega-dyson-2', 'mega-dyson-3', 'mega-dyson-4',
   ...ASTEROID_SPRITES, ...SMOKE_FRAMES, ...FLASH_FRAMES, ...TIER_SPRITES, 'planet-habitable', 'planet-ringed', 'moon-grey', 'drone-mining', 'ship-cargo',
   'ore-iron', 'ore-copper', 'ore-gold', 'icon-credits', 'item-alloy', 'item-advanced-component', GOLDEN_SPRITE, LOADER_SPRITE,
   'ingot-titanium', 'crystal-cyan', 'raw-brown-chunk',

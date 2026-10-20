@@ -4,7 +4,9 @@ import { BALANCE } from '../data/balance';
 import { BUILDING_IDS } from '../data/buildings';
 import { FACTIONS } from '../data/factions';
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
+/** Primeira versão com save assinado: saves mais antigos sem assinatura são aceitos sem marca. */
+export const SIGNED_SINCE = 15;
 
 export function newGame(now = Date.now()): GameState {
   return {
@@ -27,6 +29,8 @@ export function newGame(now = Date.now()): GameState {
     tips: [],
     goals: [],
     story: [],
+    civ: { best: 0 },
+    integrity: { tampered: false, since: 0 },
     factions: Object.fromEntries(FACTIONS.map(f => [f.id, { relation: 0, cooldown: 0, questTimer: 240 }])),
     quests: [],
     claimTimer: 600,
@@ -78,6 +82,8 @@ export function cloneState(s: GameState): GameState {
     tips: [...s.tips],
     goals: [...s.goals],
     story: [...s.story],
+    civ: { ...s.civ },
+    integrity: { ...s.integrity },
     factions: Object.fromEntries(Object.entries(s.factions).map(([k, v]) => [k, { ...v }])),
     drones: { ...s.drones },
     quests: s.quests.map(q => ({ ...q, reward: { ...q.reward } })),

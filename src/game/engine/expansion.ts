@@ -41,6 +41,11 @@ export function expeditionCost(s: GameState, m: Modifiers = getModifiers(s)): Am
   return { fuel: Math.ceil(BALANCE.expeditionFuel * (1 + 0.3 * n) * m.expedition), ships: 1 };
 }
 
+/** Tempo mínimo de viagem: os bônus de velocidade se acumulam, mas uma expedição nunca é instantânea. */
+export const MIN_EXPEDITION_SECONDS = 10;
+/** Quanto a expedição leva de fato, já com a velocidade (e o mínimo). */
+export const expeditionTime = (s: GameState, m: Modifiers = getModifiers(s)) => Math.max(MIN_EXPEDITION_SECONDS, expeditionDuration(s, m) / m.expeditionSpeed);
+
 export function expeditionDuration(s: GameState, m: Modifiers = getModifiers(s)) {
   const n = s.locations.length + s.expeditions.length;
   return BALANCE.expeditionTime * (1 + 0.15 * n) * m.expedition;
@@ -64,12 +69,25 @@ export function launchExpedition(prev: GameState): GameState | null {
   return s;
 }
 
+const ROMAN = ['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+/** Nome sem repetir os locais já conhecidos: "Kepler Menor" vira "Kepler Menor II", "III"… */
+export function uniqueName(taken: string[], name: string): string {
+  const used = new Set(taken);
+  if (!used.has(name)) return name;
+  for (const r of ROMAN) if (!used.has(`${name} ${r}`)) return `${name} ${r}`;
+  let n = 11;
+  while (used.has(`${name} ${n}`)) n++;
+  return `${name} ${n}`;
+}
+
 /** Avança expedições; devolve os locais descobertos. Usada dentro da simulação (funciona offline). */
 export function advanceExpeditions(s: GameState, m: Modifiers, dt: number): string[] {
   const found: string[] = [];
-  for (const e of s.expeditions) e.remaining -= dt * m.expeditionSpeed;
+  // A velocidade nunca deixa a viagem durar menos que o mínimo (o total já é medido sem a velocidade).
+  for (const e of s.expeditions) e.remaining -= dt * Math.min(m.expeditionSpeed, e.total / MIN_EXPEDITION_SECONDS);
   for (const e of s.expeditions.filter(e => e.remaining <= 0)) {
     const loc = generateLocation(e.seed, m.richness, s.locations.length);
+    loc.name = uniqueName(s.locations.map(l => l.name), loc.name);
     s.locations.push(loc);
     if (!s.discovered.includes(loc.mineral)) s.discovered.push(loc.mineral);
     found.push(loc.id);
@@ -183,7 +201,19 @@ export function outpostYield(loc: Location, m: Modifiers, s?: GameState, power =
 export const MAX_TERRA = 5;
 const NON_TERRAFORMABLE: LocationType[] = ['gas', 'metallic', 'crystal'];
 export const terraformable = (loc: Location) => !NON_TERRAFORMABLE.includes(loc.type);
-export const locationSprite = (loc: Location) => ((loc.outpost?.terra ?? 0) >= MAX_TERRA ? 'planet-habitable' : loc.sprite);
+/** Mundo-jardim de cada tipo: a terraformação completa mantém a cara do mundo de origem. */
+const TERRA_SPRITE: Partial<Record<LocationType, string>> = {
+  rocky: 'planet-terra-rocky', ice: 'planet-terra-ice', desert: 'planet-terra-desert', ocean: 'planet-terra-ocean',
+  jungle: 'planet-terra-jungle', volcanic: 'planet-terra-volcanic', alien: 'planet-terra-alien',
+};
+/** Colônia terraformada a partir deste nível vira um mundo-capital (luzes de cidade e anel de estações). */
+export const CAPITAL_LEVEL = 15;
+export function locationSprite(loc: Location): string {
+  const o = loc.outpost;
+  if (!o || o.terra < MAX_TERRA) return loc.sprite;
+  if (o.level >= CAPITAL_LEVEL) return 'planet-capital';
+  return TERRA_SPRITE[loc.type] ?? 'planet-terra-garden';
+}
 
 /** Custo do PRÓXIMO nível. Cresce 1,9× por nível e fica dentro da capacidade típica do armazém. */
 export function terraformCost(loc: Location): Amounts {

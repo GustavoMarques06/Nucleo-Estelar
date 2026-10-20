@@ -235,6 +235,8 @@ export interface GameState {
   tips: string[];                          // dicas já vistas (permanentes)
   goals: string[];                         // objetivos guiados concluídos (permanentes)
   story: string[];                         // registros do diário de bordo já lidos (permanentes)
+  civ: { best: number };
+  integrity: { tampered: boolean; since: number };   // save já foi modificado fora do jogo (marca permanente; since = quando foi detectado)                   // melhor era de civilização já alcançada em qualquer jornada (legado permanente)
   factions: Record<string, FactionState>;
   claimTimer: number;                      // segundos até a próxima movimentação de território das facções
   quests: FactionQuest[];                  // pedidos abertos das facções (no máximo um por facção)

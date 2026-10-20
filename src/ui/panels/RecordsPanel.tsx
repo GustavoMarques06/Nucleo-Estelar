@@ -6,6 +6,8 @@ import { fmt, fmtDuration } from '../../game/engine/format';
 import { GUIDE } from '../../game/data/guide';
 import { STORY, STORY_BY_ID } from '../../game/data/story';
 import { LORE } from '../../game/data/lore';
+import { SPEAKER_ART, SPEAKER_ICON } from '../portraits';
+import { EcoPortrait } from '../EcoPortrait';
 import { artUrl } from '../../assets';
 import { buildingCount, colonyCount } from '../../game/selectors';
 import { Icon } from '../Icon';
@@ -36,6 +38,14 @@ function Guide() {
   );
 }
 
+function Portrait({ speaker }: { speaker: string }) {
+  const art = SPEAKER_ART[speaker], icon = SPEAKER_ICON[speaker];
+  if (art) return <div className="portrait" role="img" aria-label={t(speaker)} style={{ backgroundImage: `url(${artUrl(art)})` }} />;
+  if (speaker === 'ECO') return <div className="portrait icon"><EcoPortrait size={96} /></div>;
+  if (icon) return <div className="portrait icon"><Icon name={icon} size={56} /></div>;
+  return null;
+}
+
 /** Arquivo: fragmentos dos Acendedores e transmissões das vozes recorrentes. */
 function Archive() {
   const read = useGame(s => s.game.story);
@@ -46,7 +56,10 @@ function Archive() {
       {LORE.map(e => read.includes(e.id) ? (
         <details key={e.id} className={e.kind}>
           <summary>{e.speaker && <small className="story-act">{t(e.speaker)} · </small>}{t(e.title)}</summary>
-          <div className="guide-text">{e.text.map((x, k) => <p key={k}>{t(x)}</p>)}</div>
+          <div className="guide-text">
+            {e.speaker && <Portrait speaker={e.speaker} />}
+            {e.text.map((x, k) => <p key={k}>{t(x)}</p>)}
+          </div>
         </details>
       ) : (
         <div key={e.id} className="diary-locked">??? <small>{e.kind === 'fragment' ? t('fragmento ainda não encontrado') : t('transmissão ainda não recebida')}</small></div>
@@ -131,6 +144,7 @@ function Stats() {
     ['Contratos cumpridos', fmt(g.stats.contractsDone)],
     ['Eventos respondidos', fmt(g.stats.eventsSeen)],
     ['Ascensões', fmt(g.ascension.count)],
+    ['Integridade do save', g.integrity.tampered ? t('Modificado fora do jogo') : t('Original')],
   ];
   return (
     <table className="stats-table">

@@ -32,6 +32,10 @@ export const LORE: LoreDef[] = [
     'Os mundos que você já encontrou coincidem com um mapa gravado numa lâmina de vidro: um arco de faróis e, no centro, uma marca grande onde o desenho se apaga.',
     'Quem o fez deixou uma nota: “Daqui em diante, o caminho é de quem acender.”',
   ] },
+  { id: 'frag-derelict', kind: 'fragment', title: 'Fragmento: o diário de bordo da nave', when: s => s.flags.includes('derelict-log'), text: [
+    'O computador da nave abandonada ainda guarda uma última entrada: “Guardião 16. Perdi o sinal perto do K-17. Se outro ouvir os dezessete pulsos, siga-os. Eu não consegui.”',
+    'A data do registro é anterior à fundação de qualquer facção conhecida.',
+  ] },
   { id: 'frag-garden', kind: 'fragment', title: 'Fragmento: o jardineiro', when: terra(2), text: [
     'Sob os canais de irrigação, o solo guarda sementes preservadas por milênios. Uma etiqueta ainda legível: “Para quando o céu voltar a ter cor.”',
     'Elas brotam. Algumas plantas nunca foram catalogadas por nenhum dos Conclaves.',
