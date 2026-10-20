@@ -66,7 +66,7 @@ export function RoutesBox({ loc }: { loc: Location }) {
   const partners = game.locations
     .filter(l => l.outpost && l.id !== loc.id && !mine.some(r => r.a === l.id || r.b === l.id))
     .sort((a, b) => routeScore(loc, b) - routeScore(loc, a));
-  const chosen = game.locations.find(l => l.id === target) ?? partners[0] ?? null;
+  const chosen = partners.find(l => l.id === target) ?? partners[0] ?? null;
   const check = chosen ? canOpenRoute(game, loc.id, chosen.id) : { ok: false, reason: 'Sem outras colônias para ligar.' };
   const cost = chosen ? routeCost(game, loc, chosen) : {};
 

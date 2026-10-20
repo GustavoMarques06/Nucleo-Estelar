@@ -2,7 +2,7 @@ import type { Amounts, Contract, GameState, ResId } from '../types';
 import { RESOURCES } from '../data/resources';
 import { BALANCE } from '../data/balance';
 import { cloneState, rng } from './state';
-import { getModifiers, sellPrice, storageCap } from './modifiers';
+import { capFor, getModifiers, sellPrice } from './modifiers';
 import { grant } from './stock';
 import { payCost } from './costs';
 
@@ -16,7 +16,7 @@ export const contractsUnlocked = (s: GameState) => s.stats.earned >= 300 && s.bu
 /** Recursos que já fazem parte da economia do jogador (e cabem no armazém). */
 function candidates(s: GameState): ResId[] {
   return (Object.keys(RESOURCES) as ResId[]).filter(r =>
-    RESOURCES[r].sellPrice && RESOURCES[r].stored && r !== 'exotic' && (s.stats.produced[r] ?? 0) > 50);
+    RESOURCES[r].sellPrice && RESOURCES[r].stored && r !== 'exotic' && r !== 'slag' && (s.stats.produced[r] ?? 0) > 50);
 }
 
 function makeContract(s: GameState, seed: number): Contract | null {
@@ -25,7 +25,7 @@ function makeContract(s: GameState, seed: number): Contract | null {
   const r = rng(seed * 31 + 7);
   const res = list[Math.floor(r() * list.length)];
   const m = getModifiers(s);
-  const cap = storageCap(s, m);
+  const cap = capFor(s, res, m);
   // Pede algo entre 25% e 70% da capacidade: exige planejar, mas sempre cabe no armazém.
   const amount = Math.max(10, Math.floor(cap * (0.25 + r() * 0.45)));
   // Contratos urgentes (depois de alguns cumpridos): pagam bem mais, mas falhar custa reputação.
@@ -58,9 +58,9 @@ export function advanceContracts(s: GameState, dt: number) {
 /** Entregadores (drones) cumprem contratos sozinhos, mas deixam 30% do armazém para as indústrias. */
 export function autoFulfill(s: GameState) {
   if ((s.drones.courier ?? 0) < 1) return;
-  const cap = storageCap(s);
+  const m = getModifiers(s);
   for (const c of [...s.contracts]) {
-    if (s.resources[c.res] - c.amount < cap * 0.3) continue;
+    if (s.resources[c.res] - c.amount < capFor(s, c.res, m) * 0.3) continue;
     payCost(s, { [c.res]: c.amount });
     grant(s, c.reward);
     s.contracts = s.contracts.filter(x => x.id !== c.id);

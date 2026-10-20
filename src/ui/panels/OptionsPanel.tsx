@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useGame } from '../../game/store';
 import { backupInfo } from '../../game/engine/save';
 import { fmtDuration } from '../../game/engine/format';
@@ -15,7 +15,9 @@ export function OptionsPanel() {
   const importSave = useGame(s => s.importSave);
   const restoreBackup = useGame(s => s.restoreBackup);
   const fileRef = useRef<HTMLInputElement>(null);
-  const backupAt = backupInfo();
+  // Ler e validar o backup é caro: refaz só a cada 10 s de jogo (o ritmo do salvamento automático).
+  const saveTick = Math.floor(game.stats.playTime / 10);
+  const backupAt = useMemo(() => backupInfo(), [saveTick]);
 
   const download = () => {
     const blob = new Blob([exportSave()], { type: 'application/json' });

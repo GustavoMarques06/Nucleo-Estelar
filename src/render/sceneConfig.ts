@@ -1,5 +1,6 @@
 import type { BuildingId } from '../game/types';
 import { BUILDINGS } from '../game/data/buildings';
+import { LAYERS } from '../game/data/layers';
 
 // Configuração da cena do asteroide (posições, aparências por progresso e lista de imagens a carregar).
 // Fica separada de GameScene para que ajustar a arte não exija mexer na lógica de desenho.
@@ -44,7 +45,18 @@ export const SLOTS: Partial<Record<BuildingId, { at: [number, number][]; thresho
   deepDrill: { at: [[-0.38, -0.22]], thresholds: [1], size: 0.13 },
   titaniumForge: { at: [[0.38, -0.34]], thresholds: [1], size: 0.14 },
   crystalArray: { at: [[0.64, -0.04]], thresholds: [1], size: 0.13 },
+  // Energia excedente, reciclagem e armazéns especializados
+  converter: { at: [[-0.3, -0.5]], thresholds: [1], size: 0.1 },
+  recycler: { at: [[-0.4, 0.38]], thresholds: [1], size: 0.1 },
+  silo: { at: [[0.18, 0.36]], thresholds: [1], size: 0.12 },
+  tank: { at: [[-0.68, -0.1]], thresholds: [1], size: 0.11 },
+  depot: { at: [[0.68, 0.22]], thresholds: [1], size: 0.12 },
 };
+
+/** Indústrias entre as quais os drones Carregadores voam (as que estiverem construídas). */
+export const LOADER_STOPS: BuildingId[] = ['refinery', 'foundry', 'factory', 'industrialComplex', 'refineryComplex', 'titaniumForge', 'recycler', 'chemicalPlant', 'moduleLine', 'storage', 'silo', 'depot'];
+export const GOLDEN_SPRITE = 'raw-gold-pile';
+export const LOADER_SPRITE = 'drone-transport';
 
 /**
  * Animações em cima das estruturas em operação. `size` e `dx/dy` são frações da largura do asteroide, a partir do
@@ -67,13 +79,8 @@ export const ROCKCHIP_FRAMES = Array.from({ length: 6 }, (_, i) => `anim-rockchi
 export const CONSTRUCT_FRAMES = Array.from({ length: 6 }, (_, i) => `anim-construct-${i + 1}`);
 export const TRAFFIC_SHIPS = ['ship-freighter', 'ship-mining', 'ship-industrial'];
 
-// O asteroide muda de aparência conforme o minério extraído (princípio 5 do GDD: a progressão é visual).
-export const ASTEROID_TIERS: { minMined: number; sprite: string }[] = [
-  { minMined: 0, sprite: 'asteroid-main-big' },
-  { minMined: 1500, sprite: 'asteroid-main-damaged-1' },
-  { minMined: 12000, sprite: 'asteroid-main-damaged-2' },
-  { minMined: 60000, sprite: 'asteroid-main-damaged-3' },
-];
+// O asteroide muda de aparência conforme a camada alcançada (princípio 5 do GDD: a progressão é visual).
+export const ASTEROID_SPRITES = [...new Set(LAYERS.map(l => l.sprite))];
 
 const frames = (prefix: string, n: number) => Array.from({ length: n }, (_, i) => `${prefix}-${i + 1}`);
 // Estruturas ganham versões maiores conforme a quantidade construída.
@@ -91,8 +98,9 @@ const overlayFrames = OVERLAYS.flatMap(o => Array.from({ length: o.frames }, (_,
 export const SPRITES = [
   ...new Set([...overlayFrames, ...ROCKCHIP_FRAMES, ...CONSTRUCT_FRAMES, ...TRAFFIC_SHIPS, 'ship-colony']),
   ...BUILDINGS.map(b => b.sprite), ...COLONIST_FRAMES, 'ship-explorer', 'mega-dyson-1', 'mega-dyson-2', 'mega-dyson-3', 'mega-dyson-4',
-  ...ASTEROID_TIERS.map(t => t.sprite), ...SMOKE_FRAMES, ...FLASH_FRAMES, ...TIER_SPRITES, 'planet-habitable', 'planet-ringed', 'moon-grey', 'drone-mining', 'ship-cargo',
-  'ore-iron', 'ore-copper', 'ore-gold', 'icon-credits', 'item-alloy', 'item-advanced-component',
+  ...ASTEROID_SPRITES, ...SMOKE_FRAMES, ...FLASH_FRAMES, ...TIER_SPRITES, 'planet-habitable', 'planet-ringed', 'moon-grey', 'drone-mining', 'ship-cargo',
+  'ore-iron', 'ore-copper', 'ore-gold', 'icon-credits', 'item-alloy', 'item-advanced-component', GOLDEN_SPRITE, LOADER_SPRITE,
+  'ingot-titanium', 'crystal-cyan', 'raw-brown-chunk',
 ];
 export const BUILDING_SPRITE = Object.fromEntries(BUILDINGS.map(b => [b.id, b.sprite])) as Record<BuildingId, string>;
 

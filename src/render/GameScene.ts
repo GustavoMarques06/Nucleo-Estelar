@@ -8,12 +8,19 @@ import { fmt } from '../game/engine/format';
 import { artUrl, spriteUrl } from '../assets';
 
 import {
-  ASTEROID_TIERS, BACKDROP, BUILDING_IDS_ART, BUILDING_SPRITE, BUILDING_TIERS, COLONIST_FRAMES, CONSTRUCT_FRAMES, FLASH_FRAMES, OVERLAYS, ROCKCHIP_FRAMES, SLOTS,
-  SMOKE_FRAMES, SPRITES, TEXT_STYLE, TRAFFIC_SHIPS, type Overlay,
+  BACKDROP, BUILDING_IDS_ART, BUILDING_SPRITE, BUILDING_TIERS, COLONIST_FRAMES, CONSTRUCT_FRAMES, FLASH_FRAMES, GOLDEN_SPRITE, LOADER_SPRITE, LOADER_STOPS,
+  OVERLAYS, ROCKCHIP_FRAMES, SLOTS, SMOKE_FRAMES, SPRITES, TEXT_STYLE, TRAFFIC_SHIPS, type Overlay,
 } from './sceneConfig';
+import { LAYERS } from '../game/data/layers';
+import { BALANCE } from '../game/data/balance';
+import { layerIndex } from '../game/engine/deposit';
 
 interface Floater { node: Container; vy: number; life: number }
 interface Ship { node: Sprite; vx: number; vy?: number }
+/** Ponto brilhante no asteroide: posição em frações da largura do asteroide, a partir do centro. */
+interface Golden { node: Sprite; u: number; v: number; life: number }
+/** Drone carregador voando entre duas indústrias (`t` de 0 a 1 no trecho atual). */
+interface Loader { node: Sprite; from: BuildingId; to: BuildingId; t: number; speed: number }
 
 export class GameScene {
   private app = new Application();
@@ -49,6 +56,9 @@ export class GameScene {
   private squish = 0;
   private unsub?: () => void;
   private asteroidWidth = 300;
+  private golden: Golden | null = null;
+  private goldenTimer = 25;               // o primeiro aparece logo, para o jogador descobrir a mecânica
+  private loaders: Loader[] = [];
 
   async init(host: HTMLElement) {
     await this.app.init({
@@ -76,6 +86,7 @@ export class GameScene {
     }
     this.tex[BACKDROP] = loaded[artUrl(BACKDROP)] as Texture;
     await Promise.all([document.fonts?.load('22px "VT323"'), document.fonts?.load('22px "Mul"', '×')]).catch(() => undefined);
+    if (this.disposed) { this.app.destroy(true); return; }
 
     this.build();
     this.layout();
@@ -113,7 +124,7 @@ export class GameScene {
     this.dyson.visible = false;
     stage.addChild(this.dyson, this.planet2, this.planet, this.moon, this.world);
 
-    this.asteroid = new Sprite(this.tex[ASTEROID_TIERS[0].sprite]);
+    this.asteroid = new Sprite(this.tex[LAYERS[0].sprite]);
     this.asteroid.anchor.set(0.5);
     this.asteroid.eventMode = 'static';
     this.asteroid.cursor = 'pointer';
@@ -269,10 +280,8 @@ export class GameScene {
     // Asteroide: flutuação leve e “amassado” ao clicar
     const bob = reduce ? 0 : Math.sin(t * 0.8) * this.asteroidWidth * 0.008;
     this.world.y = bob;
-    // Aparência do asteroide conforme o minério extraído
-    let tier = ASTEROID_TIERS[0];
-    for (const x of ASTEROID_TIERS) if (game.stats.totalMined >= x.minMined) tier = x;
-    const tierTex = this.tex[tier.sprite];
+    // Aparência do asteroide conforme a camada alcançada
+    const tierTex = this.tex[LAYERS[layerIndex(game)].sprite];
     if (this.asteroid.texture !== tierTex) this.asteroid.texture = tierTex;
     const baseScale0 = this.asteroidWidth / this.asteroid.texture.width;
     if (this.squish > 0) {
@@ -378,6 +387,9 @@ export class GameScene {
       }
     });
 
+    this.updateGolden(dt, game.stats.totalMined, reduce);
+    this.updateLoaders(dt, reduce);
+
     // Textos flutuantes
     for (let i = this.floaters.length - 1; i >= 0; i--) {
       const f = this.floaters[i];
@@ -393,6 +405,77 @@ export class GameScene {
       s.node.x += s.vx * dt;
       s.node.y += (s.vy ?? 0) * dt;
       if (s.node.x > W + 200 || s.node.y < -200) { s.node.destroy(); this.ships.splice(i, 1); }
+    }
+  }
+
+  // ---------- Pontos brilhantes ----------
+  /** Aparece de tempos em tempos num ponto da superfície; clicar coleta, ignorar deixa sumir. */
+  private updateGolden(dt: number, mined: number, reduce: boolean) {
+    const A = this.asteroidWidth;
+    if (!this.golden) {
+      if (mined < 30) return;                               // só depois que o jogador já sabe clicar
+      this.goldenTimer -= dt;
+      if (this.goldenTimer > 0) return;
+      this.goldenTimer = BALANCE.strikeMinGap + Math.random() * (BALANCE.strikeMaxGap - BALANCE.strikeMinGap);
+      const node = new Sprite(this.tex[GOLDEN_SPRITE]);
+      node.anchor.set(0.5);
+      node.eventMode = 'static';
+      node.cursor = 'pointer';
+      // Ângulo e raio aleatórios dentro da parte de cima do asteroide (onde fica a base).
+      const ang = Math.random() * Math.PI * 2, r = 0.12 + Math.random() * 0.18;
+      const g: Golden = { node, u: Math.cos(ang) * r * 1.1, v: Math.sin(ang) * r * 0.6 - 0.08, life: BALANCE.strikeLife };
+      node.on('pointertap', e => {
+        e.stopPropagation();
+        useGame.getState().strike(e.global.x, e.global.y);
+        this.oneShot(FLASH_FRAMES, node.x, node.y + this.world.y, A * 0.3, 0.3, 0.4);
+        this.removeGolden();
+      });
+      this.world.addChild(node);
+      this.golden = g;
+    }
+    const g = this.golden;
+    g.life -= dt;
+    if (g.life <= 0) { this.removeGolden(); return; }
+    const pulse = reduce ? 1 : 1 + Math.sin(this.time * 6) * 0.12;
+    g.node.position.set(this.asteroid.x + g.u * A, this.asteroid.y + g.v * A);
+    g.node.scale.set(((A * 0.075) / g.node.texture.width) * pulse);
+    g.node.alpha = Math.min(1, g.life / 1.5);                // some aos poucos no último segundo e meio
+    g.node.tint = reduce || Math.sin(this.time * 9) > 0 ? 0xffffff : 0xfff1a8;
+  }
+
+  private removeGolden() {
+    if (!this.golden) return;
+    this.golden.node.destroy();
+    this.golden = null;
+  }
+
+  // ---------- Drones carregadores ----------
+  /** Com Carregadores designados, até 4 drones voam entre as indústrias construídas. */
+  private updateLoaders(dt: number, reduce: boolean) {
+    const { game } = useGame.getState();
+    const stops = LOADER_STOPS.filter(id => game.buildings[id] > 0 && SLOTS[id]);
+    const want = reduce || stops.length < 2 ? 0 : Math.min(4, Math.ceil((game.drones.loader ?? 0) / 10));
+    while (this.loaders.length > want) this.loaders.pop()!.node.destroy();
+    const pick = (not?: BuildingId) => { const opts = stops.filter(x => x !== not); return opts[Math.floor(Math.random() * opts.length)]; };
+    while (this.loaders.length < want) {
+      const node = new Sprite(this.tex[LOADER_SPRITE]);
+      node.anchor.set(0.5);
+      node.eventMode = 'none';
+      this.world.addChild(node);
+      const from = pick();
+      this.loaders.push({ node, from, to: pick(from), t: Math.random(), speed: 0.35 + Math.random() * 0.2 });
+    }
+    const A = this.asteroidWidth;
+    const at = (id: BuildingId) => { const [u, v] = SLOTS[id]!.at[0]; return { x: this.asteroid.x + u * A, y: this.asteroid.y + (v - SLOTS[id]!.size * 0.5) * A }; };
+    for (const l of this.loaders) {
+      if (!stops.includes(l.from) || !stops.includes(l.to)) { l.from = pick(); l.to = pick(l.from); l.t = 0; }
+      l.t += dt * l.speed;
+      if (l.t >= 1) { l.from = l.to; l.to = pick(l.from); l.t = 0; }
+      const a = at(l.from), b = at(l.to);
+      // Arco: sobe no meio do trecho, como quem passa por cima das estruturas.
+      const lift = Math.sin(l.t * Math.PI) * A * 0.12;
+      l.node.position.set(a.x + (b.x - a.x) * l.t, a.y + (b.y - a.y) * l.t - lift);
+      l.node.scale.set(((A * 0.07) / l.node.texture.width) * (b.x >= a.x ? 1 : -1), (A * 0.07) / l.node.texture.width);
     }
   }
 

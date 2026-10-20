@@ -13,8 +13,9 @@ export const BALANCE = {
 
   // ----- Ritmo (o que torna o jogo mais lento ou mais rápido) -----
   buildingGrowthAdd: 0.05,    // somado ao crescimento de custo de toda estrutura (1,15 → 1,20)
-  scienceScale: { 3: 14, 4: 30, 5: 260, 6: 1700 } as Record<number, number>,   // custo em ciência por fase
-  megaCostScale: 20,
+  // Recalibrados com os marcos de quantidade (que multiplicam a produção): ritmo-alvo igual ao de antes.
+  scienceScale: { 3: 21, 4: 66, 5: 1040, 6: 20000 } as Record<number, number>,   // custo em ciência por fase
+  megaCostScale: 100,
   repeatableCostScale: 4,
 
   // ----- População -----
@@ -83,4 +84,22 @@ export const BALANCE = {
   eventMinGap: 150,
   eventMaxGap: 300,
   eventDuration: 60,
+
+  // ----- Marcos de quantidade: cada marco atingido multiplica a função principal da estrutura -----
+  milestoneMult: 1.5,
+
+  // ----- Mineração ativa -----
+  strikeMinGap: 50,           // segundos entre pontos brilhantes no asteroide (com o jogo aberto)
+  strikeMaxGap: 120,
+  strikeLife: 12,             // segundos que o ponto fica disponível
+  strikeClicks: 20,           // um ponto brilhante vale pelo menos este número de cliques...
+  strikeSeconds: 15,          // ...ou este tempo de extração automática, o que for maior
+
+  // ----- Energia: dia e noite do asteroide, baterias, sobrecarga -----
+  dayPeriod: 360,             // segundos de uma volta completa do asteroide (dia + noite)
+  dayAmplitude: 0.3,          // painéis solares rendem de 70% (meia-noite) a 130% (meio-dia); média 100%
+  batteryEfficiency: 0.9,     // fração da sobra que chega a ser guardada
+  overclockMult: 2,
+  overclockTime: 60,
+  overclockCooldown: 240,
 };

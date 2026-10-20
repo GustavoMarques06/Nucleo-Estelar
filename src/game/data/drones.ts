@@ -29,6 +29,9 @@ export const DRONE_ROLES: DroneRoleDef[] = [
   { id: 'terraformer', name: 'Terraformadores', icon: 'drone-drill',
     desc: 'Aceleram a terraformação das colônias.',
     auto: '—', bonus: 'Velocidade da terraformação', max: 0.8, half: 30 },
+  { id: 'loader', name: 'Carregadores', icon: 'drone-transport-b',
+    desc: 'Levam insumos de uma indústria a outra na base: as linhas trabalham mais rápido (mais insumo, mais produto, mesma energia).',
+    auto: '—', bonus: 'Ritmo das indústrias', max: 0.4, half: 50 },
 ];
 
 export const DRONE_BY_ID = Object.fromEntries(DRONE_ROLES.map(r => [r.id, r]));

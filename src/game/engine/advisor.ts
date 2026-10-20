@@ -2,8 +2,10 @@ import type { BuildingId, GameState, ResId, TickReport } from '../types';
 import { BUILDINGS, BUILDING_BY_ID } from '../data/buildings';
 import { RESOURCES } from '../data/resources';
 import { UPGRADES } from '../data/upgrades';
-import { unitCost, canAfford } from './costs';
-import { getModifiers, isBuildingUnlocked, isUpgradeVisible, storageCap } from './modifiers';
+import { BALANCE } from '../data/balance';
+import { nextMilestone } from '../data/milestones';
+import { unitCost, canAfford, maxAffordable } from './costs';
+import { capsOf, getModifiers, isBuildingUnlocked, isUpgradeVisible } from './modifiers';
 import { fmt, fmtRate } from './format';
 import { CRISIS_BY_KIND } from '../data/crises';
 
@@ -39,7 +41,12 @@ export function advise(s: GameState, report: TickReport | null, rates: Partial<R
 
   if (e && e.ratio < 0.999) {
     const best = (['fusion', 'orbitalCollector', 'fission', 'solar'] as const).find(id => has(s, id))!;
-    return warn(`Energia insuficiente — máquinas a ${Math.round(e.ratio * 100)}%`, `Construir ${BUILDING_BY_ID[best].name.toLowerCase()} (${costText(s, best)}).`, 'bad');
+    // À noite, se de dia sobra energia, o remédio é guardar a sobra (baterias), não só construir geradores.
+    const night = e.day < 0.95 && s.buildings.solar > 0;
+    const fix = night && has(s, 'battery')
+      ? `Baterias (${costText(s, 'battery')}) guardam a sobra do dia para a noite${s.buildings.fission > 0 || s.buildings.fusion > 0 ? '; a sobrecarga dos reatores também ajuda' : ''}.`
+      : `Construir ${BUILDING_BY_ID[best].name.toLowerCase()} (${costText(s, best)}).`;
+    return warn(`Energia insuficiente${night ? ' (noite)' : ''} — máquinas a ${Math.round(e.ratio * 100)}%`, fix, 'bad');
   }
   if (report && report.upkeep.ratio < 0.999) {
     return warn(`Manutenção em atraso — estruturas caras a ${Math.round(report.upkeep.ratio * 100)}%`,
@@ -77,9 +84,9 @@ export function advise(s: GameState, report: TickReport | null, rates: Partial<R
   if (pop?.status === 'housing' && pop.cap > 0 && s.resources.population >= pop.cap - 0.5) {
     return warn('Moradia lotada', `Mais ${has(s, 'residential') ? 'torres residenciais' : 'habitats'} deixam a população (e os impostos) crescer.`);
   }
-  const capNow = storageCap(s);
+  const caps = capsOf(s);
   const tooBig = BUILDINGS.find(b => isBuildingUnlocked(b, s) && Object.entries(unitCost(b, s.buildings[b.id], getModifiers(s).cost))
-    .some(([r, v]) => RESOURCES[r as ResId].stored && (v ?? 0) > capNow));
+    .some(([r, v]) => RESOURCES[r as ResId].stored && (v ?? 0) > caps[r as ResId]));
   if (tooBig) return warn(`${tooBig.name} custa mais do que cabe no armazém`, `Construir armazéns (${costText(s, 'storage')}) para aumentar a capacidade.`);
   if (s.buildings.miner === 0) {
     return warn('Produção apenas manual', s.resources.credits >= 15 ? 'Comprar a primeira mineradora automática.' : 'Clique no asteroide e venda o minério até comprar uma mineradora.');
@@ -91,6 +98,12 @@ export function advise(s: GameState, report: TickReport | null, rates: Partial<R
   if (research) return ok(`Pesquisa disponível: ${research.name}.`);
   const fresh = BUILDINGS.find(b => s.buildings[b.id] === 0 && isBuildingUnlocked(b, s));
   if (fresh) return ok(`Nova estrutura liberada: ${fresh.name} (${costText(s, fresh.id)}).`);
+  // Marco ao alcance: a estrutura que chega ao próximo marco com menos compras (até 3), se couber no bolso agora.
+  const near = BUILDINGS.filter(b => s.buildings[b.id] > 0 && isBuildingUnlocked(b, s))
+    .map(b => ({ b, missing: nextMilestone(s.buildings[b.id]) - s.buildings[b.id] }))
+    .filter(x => x.missing <= 3 && maxAffordable(s, x.b, getModifiers(s).cost) >= x.missing)
+    .sort((a, b) => a.missing - b.missing)[0];
+  if (near) return ok(`Marco ao alcance: ${near.missing === 1 ? 'mais 1' : `mais ${near.missing}`} ${near.b.name} e ela rende ×${BALANCE.milestoneMult.toLocaleString('pt-BR')}.`);
   if ((s.megaprojects.dyson ?? 0) >= 4) return ok('Contribua para o Núcleo Estelar (Megaprojetos): cada estágio multiplica toda a produção.');
   if (s.upgrades.lab && s.buildings.observatory === 0) return ok(`Observatório (${costText(s, 'observatory')}) gera ciência para as pesquisas.`);
   return ok(`Mais mineradoras (${costText(s, 'miner')}) ou pesquisas na aba Pesquisa.`);

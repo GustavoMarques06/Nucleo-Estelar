@@ -7,7 +7,7 @@ import { canGift, giveGift } from './factions';
 import { assignDrones, droneFree } from './drones';
 import {
   canTerraform, establishOutpost, generateLocation, isDisputed, outpostCost, outpostYield, startTerraform,
-  terraformCost, unsettled,
+  terraformCost, terraformDuration, unsettled,
 } from './expansion';
 import { parseSave, serialize } from './save';
 import { BALANCE } from '../data/balance';
@@ -137,6 +137,19 @@ describe('terraformação', () => {
     s.resources.drones = 60; s.drones.terraformer = 60;
     expect(getModifiers(s).terraSpeed).toBeGreaterThan(slow * 1.4);
   });
+
+  it('a velocidade dos drones conta uma vez só: a obra dura o que a interface mostra', () => {
+    let s = withColony();
+    s.resources.drones = 60; s.drones.terraformer = 60;
+    const m = getModifiers(s);
+    const shown = terraformDuration(s.locations[0], m);
+    s = startTerraform(s, s.locations[0].id)!;
+    const steps = Math.ceil(shown);
+    for (let i = 0; i < steps - 5; i++) s = simulate(s, 1).state;
+    expect(s.locations[0].outpost!.terra).toBe(0);                     // ainda não acabou pouco antes do prazo
+    for (let i = 0; i < 10; i++) s = simulate(s, 1).state;
+    expect(s.locations[0].outpost!.terra).toBe(1);                     // e acaba no prazo mostrado
+  });
 });
 
 describe('drones de logística', () => {
@@ -193,7 +206,7 @@ describe('drones de logística', () => {
     s.buildings.maintenance = 10; s.buildings.solar = 10;
     s.resources.alloys = 1000; s.resources.components = 1000; s.resources.population = 50;
     const r = simulate(s, 10);
-    expect(r.state.resources.drones).toBeCloseTo(0.4, 2);        // 10 hangares × 0,004/s × 10 s
+    expect(r.state.resources.drones).toBeCloseTo(0.6, 2);        // 10 hangares × 0,004/s × 10 s × 1,5 (marco de 10 unidades)
     expect(r.state.resources.alloys).toBeLessThan(1000);
   });
 });

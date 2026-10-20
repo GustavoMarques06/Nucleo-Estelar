@@ -27,4 +27,8 @@ export const SFX: Partial<Record<GameEvent['type'], () => void>> = {
   transcended: () => { [131, 196, 262, 392, 523, 784, 1047, 1568].forEach((f, i) => tone(f, 0.6, { type: 'triangle', delay: i * 0.12, vol: 0.045 })); },
   achievement: () => { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, { delay: i * 0.08, vol: 0.035 })); },
   contract: () => { tone(523, 0.08, { type: 'triangle' }); tone(784, 0.08, { type: 'triangle', delay: 0.07 }); tone(1047, 0.15, { type: 'triangle', delay: 0.14 }); },
+  milestone: () => { [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.16, { type: 'square', delay: i * 0.06, vol: 0.03 })); },
+  layer: () => { tone(98, 0.6, { type: 'sawtooth', vol: 0.05, slide: -30 }); [392, 523, 659].forEach((f, i) => tone(f, 0.25, { type: 'sine', delay: 0.25 + i * 0.1, vol: 0.04 })); },
+  golden: () => { [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.12, { type: 'triangle', delay: i * 0.04, vol: 0.035 })); },
+  overclock: () => { tone(110, 0.5, { type: 'sawtooth', slide: 440, vol: 0.04 }); tone(880, 0.2, { type: 'square', delay: 0.4, vol: 0.025 }); },
 };

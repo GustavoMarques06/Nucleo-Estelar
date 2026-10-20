@@ -1,14 +1,15 @@
-import type { Amounts, GameState, ResId, Vein } from '../types';
+import type { Amounts, BuildingId, GameState, ResId, Vein } from '../types';
 import { BUILDINGS } from '../data/buildings';
 import { BALANCE } from '../data/balance';
-import { CRUST_ID, VEIN_KINDS, type VeinKind } from '../data/deposit';
-import { RESOURCES, STARTER_DEPOSIT } from '../data/resources';
+import { CRUST_ID, VEIN_KINDS, VEIN_KIND_BY_ID, type VeinKind } from '../data/deposit';
+import { LAYERS, LAYER_GATES, type LayerDef } from '../data/layers';
+import { RESOURCES } from '../data/resources';
 import { cloneState, rng } from './state';
 import { depositShares, getModifiers, type Modifiers } from './modifiers';
 import { canAfford, payCost } from './costs';
 
-// Jazida: a crosta do asteroide é infinita; os veios são reservas finitas que rendem mais e trazem minérios novos.
-// Enquanto houver um veio em foco, toda a extração (máquinas e cliques) sai dele; esgotado, volta para a crosta.
+// Jazida: a crosta do asteroide é infinita (e fica mais rica nas camadas profundas); os veios são reservas finitas
+// que rendem mais e trazem minérios novos. Enquanto houver um veio em foco, a extração sai dele; esgotado, volta para a crosta.
 
 export const prospectingUnlocked = (s: GameState) => !!s.upgrades.geology;
 export const autoDepositUnlocked = (s: GameState) => !!s.upgrades.autoProspect;
@@ -16,18 +17,53 @@ export const autoDepositUnlocked = (s: GameState) => !!s.upgrades.autoProspect;
 export const veinsLeft = (s: GameState) => s.deposit.veins.filter(v => v.reserve > 0);
 const veinById = (s: GameState, id: string): Vein | undefined => s.deposit.veins.find(v => v.id === id);
 
+// ---------- Camadas ----------
+/** Camada atual: avança com o minério extraído, desde que exista a broca que ela exige. */
+export function layerIndex(s: GameState): number {
+  let i = 0;
+  for (let k = 1; k < LAYERS.length; k++) {
+    const L = LAYERS[k];
+    if (s.stats.totalMined < L.minMined || (L.needs && s.buildings[L.needs] <= 0)) break;
+    i = k;
+  }
+  return i;
+}
+export const currentLayer = (s: GameState): LayerDef => LAYERS[layerIndex(s)];
+export const nextLayer = (s: GameState): LayerDef | null => LAYERS[layerIndex(s) + 1] ?? null;
+
+/** Composição da crosta na camada atual (sem os minérios cuja pesquisa ainda não foi feita). */
+export function crustMix(s: GameState): Amounts {
+  const out: Amounts = {};
+  for (const [r, w] of Object.entries(currentLayer(s).mix)) {
+    const gate = LAYER_GATES[r];
+    if (!gate || s.upgrades[gate]) out[r as ResId] = w;
+  }
+  return out;
+}
+
+// ---------- Veios ----------
 /** O veio em foco, se ainda tiver reserva (senão a extração sai da crosta). */
 export function activeVein(s: GameState): Vein | null {
   const v = veinById(s, s.deposit.focus);
   return v && v.reserve > 0 ? v : null;
 }
 
+/** Estruturas que conseguem extrair do veio (undefined = todas, inclusive os cliques). */
+export const veinOnly = (v: Vein): BuildingId[] | undefined => VEIN_KIND_BY_ID[v.kind]?.only;
+/** Alguma estrutura construída consegue extrair deste veio? */
+export const veinUsable = (s: GameState, v: Vein) => { const only = veinOnly(v); return !only || only.some(b => s.buildings[b] > 0); };
+
 export interface ActiveMix { veinId: string | null; shares: Amounts; yield: number }
 
-/** De onde sai o minério agora: composição (com os bônus de prospecção) e multiplicador de extração. */
-export function activeMix(s: GameState, m: Modifiers): ActiveMix {
+/**
+ * De onde sai o minério agora para `building` (ou para os cliques, sem `building`): composição (com os bônus de
+ * prospecção) e multiplicador de extração. Um veio restrito (profundo) só serve às estruturas que o alcançam.
+ */
+export function activeMix(s: GameState, m: Modifiers, building?: BuildingId): ActiveMix {
   const v = activeVein(s);
-  return v ? { veinId: v.id, shares: depositShares(m, v.mix), yield: v.yield } : { veinId: null, shares: depositShares(m, STARTER_DEPOSIT), yield: 1 };
+  const only = v && veinOnly(v);
+  if (v && (!only || (building && only.includes(building)))) return { veinId: v.id, shares: depositShares(m, v.mix), yield: v.yield };
+  return { veinId: null, shares: depositShares(m, crustMix(s)), yield: currentLayer(s).yield };
 }
 
 /** Extração nominal (unidades/s) de todas as máquinas, sem contar energia e mão de obra: base do tamanho das reservas. */
@@ -100,8 +136,9 @@ export function setAutoDeposit(prev: GameState, on: boolean): GameState | null {
   return s;
 }
 
-/** Quanto vale um veio para quem o escolhe sozinho: rendimento × valor de mercado da mistura (minérios raros pesam mais). */
-export function veinScore(v: Vein): number {
+/** Quanto vale um veio para quem o escolhe sozinho: rendimento × valor de mercado da mistura (minérios raros pesam mais). Zero se nada o alcança. */
+export function veinScore(v: Vein, s?: GameState): number {
+  if (s && !veinUsable(s, v)) return 0;
   let value = 0;
   for (const [res, share] of Object.entries(v.mix)) value += (share ?? 0) * (RESOURCES[res as ResId].sellPrice ?? 1);
   return v.yield * value;
@@ -121,10 +158,11 @@ export function drain(s: GameState, veinId: string, amount: number) {
 /** Automação (pesquisa "Sondas autônomas"): foca o melhor veio e prospecta de novo quando não sobra nenhum. Dentro da simulação. */
 export function autoDeposit(s: GameState) {
   if (!s.deposit.auto || !autoDepositUnlocked(s)) return;
-  if (!activeVein(s)) {
-    const best = veinsLeft(s).sort((a, b) => veinScore(b) - veinScore(a))[0];
-    if (best) s.deposit.focus = best.id;
-    else if (canProspect(s).ok && s.resources.credits >= (prospectCost(s).credits ?? 0) * 3) prospectInto(s);
-  }
+  const cur = activeVein(s);
+  if (cur && veinUsable(s, cur)) return;
+  // Só veios que alguma estrutura alcança (um Veio profundo sem Perfuratriz não serve).
+  const best = veinsLeft(s).filter(v => veinUsable(s, v)).sort((a, b) => veinScore(b, s) - veinScore(a, s))[0];
+  if (best) s.deposit.focus = best.id;
+  else if (canProspect(s).ok && s.resources.credits >= (prospectCost(s).credits ?? 0) * 3) prospectInto(s);
 }
 

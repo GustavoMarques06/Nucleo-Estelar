@@ -33,7 +33,7 @@ function MegaCard({ mp }: { mp: MegaprojectDef }) {
             {mp.stages.map((st, i) => <li key={i} className={i < done ? 'sev-ok' : i === done ? '' : 'dim'}>{i < done ? '✓ ' : ''}{st.desc}</li>)}
           </ul>
         )}
-        {!available && <p className="status sev-warn">Requer o Enxame de Dyson completo.</p>}
+        {!available && mp.requiresText && <p className="status sev-warn">{mp.requiresText}</p>}
         {next && available && (
           <div className="mega-progress">
             {(Object.entries(next.cost) as [ResId, number][]).map(([r, tot]) => {

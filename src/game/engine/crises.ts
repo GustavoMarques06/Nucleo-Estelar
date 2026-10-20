@@ -4,7 +4,7 @@ import { CRISES, CRISIS_BY_KIND } from '../data/crises';
 import { TREATY_AT } from '../data/factions';
 import { cloneState } from './state';
 import { canAfford, payCost } from './costs';
-import { storageCap } from './modifiers';
+import { capsOf } from './modifiers';
 import { routesOf } from './routes';
 
 /** Quanto da produção a colônia mantém neste recurso (1 = sem crise). */
@@ -19,16 +19,17 @@ export const crisisOf = (s: GameState, locId: string): Crisis | null => s.crises
 export function crisisCost(s: GameState, c: Crisis): Amounts {
   const loc = s.locations.find(l => l.id === c.locId);
   const level = loc?.outpost?.level ?? 1;
-  const cap = storageCap(s);
+  const cap = capsOf(s);
   const k = Math.min(0.45, 0.08 + 0.035 * Math.min(level, 10));
   const discount = (loc?.outpost?.terra ?? 0) >= 3 ? 0.6 : 1;               // mundos terraformados são mais resilientes
   const amt = (v: number) => Math.max(1, Math.ceil(v * discount));
+  const lv = Math.min(level, 60);                                            // custos em créditos sem estourar com níveis absurdos
   switch (c.kind) {
-    case 'drought': return { water: amt(cap * k) };
-    case 'unrest': return { credits: amt(15000 * Math.pow(1.6, level)) };
-    case 'raid': return { fuel: amt(cap * k * 0.6), components: amt(cap * k * 0.6) };
-    case 'plague': return { food: amt(cap * k) };
-    case 'blockade': return { fuel: amt(cap * k * 0.5), credits: amt(8000 * Math.pow(1.5, level)) };
+    case 'drought': return { water: amt(cap.water * k) };
+    case 'unrest': return { credits: amt(15000 * Math.pow(1.6, lv)) };
+    case 'raid': return { fuel: amt(cap.fuel * k * 0.6), components: amt(cap.components * k * 0.6) };
+    case 'plague': return { food: amt(cap.food * k) };
+    case 'blockade': return { fuel: amt(cap.fuel * k * 0.5), credits: amt(8000 * Math.pow(1.5, lv)) };
   }
 }
 

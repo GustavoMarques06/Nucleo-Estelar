@@ -2,7 +2,7 @@ import type { GameState, ResId } from '../types';
 import { RES_IDS } from '../data/resources';
 import { BALANCE } from '../data/balance';
 import { simulate } from './economy';
-import { getModifiers, storageCap } from './modifiers';
+import { capsOf, getModifiers } from './modifiers';
 import { RESOURCES } from '../data/resources';
 
 export interface OfflineSummary {
@@ -44,8 +44,8 @@ export function applyOffline(s: GameState, now = Date.now(), steps = 400): { sta
     if (d > 0.5) gained[r] = d;
   }
   state = { ...state, savedAt: now };
-  const cap2 = storageCap(state);
-  const fullStorage = (Object.keys(gained) as ResId[]).filter(r => RESOURCES[r].stored && state.resources[r] >= cap2 - 0.01);
+  const caps = capsOf(state);
+  const fullStorage = (Object.keys(gained) as ResId[]).filter(r => RESOURCES[r].stored && state.resources[r] >= caps[r] - 0.01);
   const hasNews = Object.keys(gained).length > 0 || discoveries > 0;
   return { state, summary: hasNews ? { seconds, capped: raw > cap, gained, discoveries, terraforms, crisesCleared, fullStorage } : null };
 }

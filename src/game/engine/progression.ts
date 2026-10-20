@@ -102,6 +102,8 @@ export function ascend(prev: GameState, now = Date.now()): GameState | null {
   s.stats.questsDone = prev.stats.questsDone;
   s.autosellFloor = prev.autosellFloor;
   s.keep = { ...prev.keep };
+  s.throttle = { ...prev.throttle };
+  s.priority = { ...prev.priority };
   s.achievements = [...prev.achievements];
   s.tips = [...prev.tips];
   s.goals = [...prev.goals];
@@ -242,6 +244,8 @@ export function transcend(prev: GameState, now = Date.now()): GameState | null {
   s.stats.questsDone = prev.stats.questsDone;
   s.autosellFloor = prev.autosellFloor;
   s.keep = { ...prev.keep };
+  s.throttle = { ...prev.throttle };
+  s.priority = { ...prev.priority };
   applyStartBonuses(s);
   return s;
 }

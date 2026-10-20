@@ -2,8 +2,11 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { BuildingId, DroneRole, GameState, ResId, Specialization, TickReport } from '../types';
 import { playCampaign, type CampaignEvent } from './bot';
 import { cloneState, rng } from './state';
-import { buyBuilding, buyUpgrade, mineClick, sell, simulate } from './economy';
-import { energyBalance, getModifiers, storageCap } from './modifiers';
+import { buyBuilding, buyUpgrade, goldenStrike, mineClick, sell, simulate } from './economy';
+import { batteryCap, capsOf, energyBalance, getModifiers } from './modifiers';
+import { THROTTLE_STEPS, overclockReactor, setPriority, setThrottle } from './energy';
+import { prospect, setFocus } from './deposit';
+import { DRONE_ROLES } from '../data/drones';
 import { RES_IDS, RESOURCES } from '../data/resources';
 import { BUILDINGS, BUILDING_IDS } from '../data/buildings';
 import { UPGRADES, UPGRADE_BY_ID } from '../data/upgrades';
@@ -50,8 +53,7 @@ function normalize(save: Record<string, any>): Record<string, any> {
   delete out.savedAt;
   out.autosell = Object.fromEntries(Object.entries(save.autosell ?? {}).filter(([, x]) => x));
   out.keep = Object.fromEntries(Object.entries(save.keep ?? {}).filter(([, x]) => x));
-  out.recipes = Object.fromEntries(Object.entries(save.recipes ?? {}).filter(([, x]) => x));
-  out.market = { clock: Math.round((save.market?.clock ?? 0) * 1e6) / 1e6, sat: Object.fromEntries(Object.entries(save.market?.sat ?? {}).filter(([, x]) => (x as number) > 0.002)) };
+  out.recipes = Object.fromEntries(Object.entries(save.recipes ?? {}).filter(([, x]) => x));  out.market = { clock: Math.round((save.market?.clock ?? 0) * 1e6) / 1e6, sat: Object.fromEntries(Object.entries(save.market?.sat ?? {}).filter(([, x]) => (x as number) > 0.002)) };
   return out;
 }
 
@@ -118,9 +120,13 @@ function violations(s: GameState, deep = false): string[] {
   for (const f of FACTIONS) { const x = s.factions[f.id]?.relation; if (!finite(x) || x < 0 || x > 100) v.push(`relação ${f.id} fora de 0–100 (${x})`); }
   for (const g of s.goals) if (!GOALS.some(x => x.id === g)) v.push(`objetivo desconhecido ${g}`);
 
+  if (!finite(s.energyCharge) || s.energyCharge < 0) v.push(`carga das baterias inválida (${s.energyCharge})`);
+  for (const [id, oc] of Object.entries(s.overclock)) if (!oc || !finite(oc.left) || !finite(oc.cool) || (oc.left <= 0 && oc.cool <= 0)) v.push(`sobrecarga inválida em ${id}`);
+  for (const [id, x] of Object.entries(s.throttle)) if (!finite(x) || x! < 0 || x! >= 1) v.push(`ritmo inválido em ${id} (${x})`);
   if (deep) {
-    const cap = storageCap(s);
-    for (const r of RES_IDS) if (RESOURCES[r].stored && s.resources[r] > cap * (1 + 1e-9) + 1e-6) v.push(`${r} acima da capacidade do armazém (${s.resources[r]} > ${cap})`);
+    const caps = capsOf(s);
+    for (const r of RES_IDS) if (RESOURCES[r].stored && s.resources[r] > caps[r] * (1 + 1e-9) + 1e-6) v.push(`${r} acima da capacidade do armazém (${s.resources[r]} > ${caps[r]})`);
+    if (s.energyCharge > batteryCap(s) * (1 + 1e-9) + 1e-6) v.push(`baterias acima da carga máxima (${s.energyCharge} > ${batteryCap(s)})`);
     const e = energyBalance(s);
     if (!(e.ratio >= 0 && e.ratio <= 1)) v.push(`razão de energia fora de 0–1 (${e.ratio})`);
     // Salvar e abrir de novo deve devolver exatamente o mesmo estado.
@@ -192,8 +198,8 @@ function monkey(start: GameState, seed: number, actions: number) {
   let s = cloneState(start);
   // Bastante material para que muitas ações deem certo.
   const rich = (x: GameState) => {
-    const cap = storageCap(x);
-    for (const id of RES_IDS) if (RESOURCES[id].stored) x.resources[id] = Math.max(x.resources[id], cap * 0.8);
+    const caps = capsOf(x);
+    for (const id of RES_IDS) if (RESOURCES[id].stored) x.resources[id] = Math.max(x.resources[id], caps[id] * 0.8);
     x.resources.credits = Math.max(x.resources.credits, 1e14);
     x.resources.science = Math.max(x.resources.science, 1e11);
     x.resources.influence = Math.max(x.resources.influence, 1e4);
@@ -204,7 +210,7 @@ function monkey(start: GameState, seed: number, actions: number) {
   s = rich(s);
   const colonies = () => s.locations.filter(l => l.outpost);
   const types = SPECIALIZATIONS.map(x => x.id) as Specialization[];
-  const roles = ['courier', 'scout', 'hauler', 'mechanic', 'terraformer'] as DroneRole[];
+  const roles = DRONE_ROLES.map(x => x.id) as DroneRole[];
   type Action = [string, () => GameState | null];
   const table = (): Action[] => [
     ['vender', () => sell(s, pick(tradedResources())).state],
@@ -230,6 +236,11 @@ function monkey(start: GameState, seed: number, actions: number) {
     ['evento', () => { if (!s.event) return spawnEvent(s, r); return r() < 0.7 ? chooseEvent(s, Math.floor(r() * 3))?.state ?? null : dismissEvent(s); }],
     ['spawn de crise', () => spawnCrisis(s, r)],
     ['clique', () => mineClick(s, 1).state],
+    ['ponto brilhante', () => goldenStrike(s).state],
+    ['sobrecarga', () => overclockReactor(s, pick(['fission', 'fusion', 'solar', 'miner'] as BuildingId[]))],
+    ['ritmo', () => setThrottle(s, pick(BUILDING_IDS) as BuildingId, pick(THROTTLE_STEPS))],
+    ['prioridade', () => setPriority(s, pick(BUILDING_IDS) as BuildingId, pick([1, -1, 0] as const))],
+    ['veio', () => { const v = s.deposit.veins.length ? pick(s.deposit.veins) : null; return v ? setFocus(s, v.id) : prospect(s); }],
     ['venda automática', () => ({ ...s, autosell: { ...s.autosell, [pick(tradedResources())]: r() < 0.7 }, keep: { ...s.keep, [pick(tradedResources())]: pick([0, 0.1, 0.25, 0.5, 0.75]) }, autosellFloor: pick([0, 0.5, 1, 1.3]) })],
     ['receita', () => { const b = pick(BUILDINGS.filter(x => x.alt)); const recipes = { ...s.recipes }; if (r() < 0.5) recipes[b.id] = true; else delete recipes[b.id]; return { ...s, recipes }; }],
     ['simular', () => simulate(s, pick([1, 5, 30, 120, 600])).state],

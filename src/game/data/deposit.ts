@@ -1,4 +1,4 @@
-import type { Amounts } from '../types';
+import type { Amounts, BuildingId } from '../types';
 
 /** Um tipo de veio que a prospecção pode encontrar. */
 export interface VeinKind {
@@ -12,6 +12,7 @@ export interface VeinKind {
   weight: number;            // frequência relativa no sorteio
   minFound?: number;         // só aparece depois de tantos veios já encontrados
   requires?: string;         // pesquisa que libera este tipo
+  only?: BuildingId[];       // só estas estruturas conseguem extrair dele (as demais e os cliques usam a crosta)
 }
 
 /** A crosta do asteroide: infinita, sempre disponível, com a composição de sempre. */
@@ -32,6 +33,11 @@ export const VEIN_KINDS: VeinKind[] = [
     mix: { crystals: 0.3, copper: 0.5, gold: 0.1, iron: 0.1 }, yield: 1.2, reserve: 0.7, weight: 2, requires: 'crystallography' },
   { id: 'motherlode', name: 'Veio mestre', icon: 'vein-motherlode', desc: 'Raro e enorme: de tudo um pouco, com titânio e cristais.',
     mix: { iron: 0.4, copper: 0.2, gold: 0.1, titanium: 0.15, crystals: 0.15 }, yield: 2, reserve: 2, weight: 0.7, minFound: 5, requires: 'crystallography' },
+  // Personalidades: o instável rende muito e acaba rápido (vale ficar de olho); o profundo só a Perfuratriz alcança.
+  { id: 'unstable', name: 'Veio instável', icon: 'vein-orange-big', desc: 'Rende ×3, mas desmorona em cerca de 3 minutos: aproveite enquanto dura.',
+    mix: { iron: 0.55, copper: 0.35, gold: 0.1 }, yield: 3, reserve: 0.6, weight: 2, minFound: 3 },
+  { id: 'deep', name: 'Veio profundo', icon: 'vein-violet-big', desc: 'Enorme e rico em titânio e ouro, mas só a Perfuratriz profunda o alcança.',
+    mix: { titanium: 0.3, gold: 0.15, iron: 0.4, copper: 0.15 }, yield: 2.5, reserve: 1.6, weight: 2, requires: 'deepDrilling', only: ['deepDrill'] },
 ];
 
 export const VEIN_KIND_BY_ID = Object.fromEntries(VEIN_KINDS.map(k => [k.id, k]));

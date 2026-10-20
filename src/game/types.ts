@@ -3,7 +3,8 @@
 
 export type ResId =
   | 'credits' | 'iron' | 'copper' | 'gold' | 'alloys' | 'components'
-  | 'water' | 'food' | 'fuel' | 'science' | 'exotic' | 'ships' | 'population' | 'drones' | 'influence' | 'modules' | 'titanium' | 'crystals';
+  | 'water' | 'food' | 'fuel' | 'science' | 'exotic' | 'ships' | 'population' | 'drones' | 'influence' | 'modules' | 'titanium' | 'crystals'
+  | 'slag';
 export type Amounts = Partial<Record<ResId, number>>;
 
 export type BuildingId =
@@ -11,7 +12,12 @@ export type BuildingId =
   | 'observatory' | 'iceExtractor' | 'foundry' | 'crusher' | 'battery' | 'industrialComplex' | 'maintenance'
   | 'habitat' | 'hydroponics' | 'hospital' | 'university' | 'residential' | 'market'
   | 'orbitalCollector' | 'fusion' | 'chemicalPlant' | 'shipyard' | 'comms' | 'harbor'
-  | 'cleanroom' | 'refineryComplex' | 'spaceport' | 'embassy' | 'moduleLine' | 'quantumLab' | 'arcology' | 'deepDrill' | 'titaniumForge' | 'crystalArray';
+  | 'cleanroom' | 'refineryComplex' | 'spaceport' | 'embassy' | 'moduleLine' | 'quantumLab' | 'arcology' | 'deepDrill' | 'titaniumForge' | 'crystalArray'
+  | 'converter' | 'recycler' | 'silo' | 'tank' | 'depot';
+/** Grupos de armazenamento: armazéns especializados aumentam só a capacidade do seu grupo. */
+export type StorageGroup = 'ore' | 'fluid' | 'goods';
+/** Prioridade de uma indústria na disputa por insumos (1 = alta, −1 = baixa; ausente = normal). */
+export type Priority = 1 | -1;
 export type UpgradeId = string;
 /** Cada estrutura pertence a exatamente uma categoria; cada categoria aparece numa única aba. */
 export type Category = 'mining' | 'industry' | 'energy' | 'logistics' | 'science' | 'civilization' | 'commerce' | 'expansion' | 'diplomacy';
@@ -24,6 +30,7 @@ export interface ResourceDef {
   stored: boolean;       // limitado pela capacidade do armazém
   mineral?: string;      // id no catálogo de minerais
   hidden?: boolean;      // não aparece como fichinha comum na barra (população tem a sua)
+  group?: StorageGroup;  // grupo de armazenamento (só para os guardados no armazém)
 }
 
 /** Efeito que soma +`per` (fração) por unidade construída. Ex.: per 0.05 com 4 unidades = ×1,2. */
@@ -56,6 +63,12 @@ export interface BuildingDef {
   outputs?: Amounts;         // produção por segundo por unidade
   storage?: number;          // capacidade da primeira unidade
   storageGrowth?: number;    // cada unidade seguinte guarda este múltiplo da anterior
+  storageGroup?: StorageGroup; // armazém especializado: a capacidade vale só para este grupo
+  byproducts?: Amounts;      // subprodutos por segundo por unidade (saem junto, sem travar a produção)
+  battery?: number;          // carga de energia que cada unidade guarda (energia·segundo)
+  surplus?: number;          // energia excedente que cada unidade consegue absorver por segundo (conversor)
+  daylight?: boolean;        // geração varia com o dia e a noite do asteroide
+  overclock?: boolean;       // pode entrar em sobrecarga (energia ×2 por um tempo, depois esfria)
   boost?: Boost;
   upkeep?: number;            // créditos/s de manutenção por unidade (calculado a partir do custo)
   alt?: Recipe;              // receita alternativa, escolhida pelo jogador
@@ -178,7 +191,10 @@ export interface MarketState {
 export interface FactionState { relation: number; cooldown: number; questTimer: number }   // relação 0–100; cooldown do próximo presente; segundos até o próximo pedido
 /** Pedido de uma facção: entregar material em troca de relação e recompensas. */
 export interface FactionQuest { id: string; faction: string; res: ResId; amount: number; reward: Amounts; remaining: number; total: number }
-export type DroneRole = 'courier' | 'scout' | 'hauler' | 'mechanic' | 'terraformer';
+export type DroneRole = 'courier' | 'scout' | 'hauler' | 'mechanic' | 'terraformer' | 'loader';
+
+/** Sobrecarga de um reator: `left` segundos a mais de energia; depois `cool` segundos esfriando. */
+export interface Overclock { left: number; cool: number }
 
 // ---------- Fim de jogo ----------
 export interface TranscendenceState {
@@ -226,6 +242,10 @@ export interface GameState {
   autosellFloor: number;                   // venda automática só acima deste múltiplo do preço base (0 = sempre)
   keep: Partial<Record<ResId, number>>;    // reserva (fração do armazém) que a venda automática não toca
   recipes: Partial<Record<BuildingId, true>>;   // estruturas usando a receita alternativa
+  throttle: Partial<Record<BuildingId, number>>; // ritmo escolhido (0–1; ausente = 100%)
+  priority: Partial<Record<BuildingId, Priority>>; // prioridade na disputa por insumos (ausente = normal)
+  overclock: Partial<Record<BuildingId, Overclock>>; // reatores em sobrecarga ou esfriando
+  energyCharge: number;                    // energia guardada nas baterias (energia·segundo)
   debt: number;                            // manutenção em atraso (créditos)
   drones: Record<DroneRole, number>;       // drones designados a cada função
   transcendence: TranscendenceState;
@@ -256,7 +276,9 @@ export type BuildingStatus =
   | { kind: 'power'; ratio: number }
   | { kind: 'workers'; ratio: number }
   | { kind: 'input'; res: ResId }
-  | { kind: 'full'; res: ResId };
+  | { kind: 'full'; res: ResId }
+  | { kind: 'paused' }                      // ritmo em 0%
+  | { kind: 'surplus'; ratio: number };     // conversor: pouca energia sobrando para absorver
 
 export type PopStatus = 'none' | 'growing' | 'stable' | 'housing' | 'starving';
 
@@ -271,7 +293,11 @@ export interface TickReport {
   flows?: Flows;
   upkeep: { rate: number; debt: number; ratio: number };   // manutenção por segundo, dívida e fração que as estruturas conseguem manter
   status: Partial<Record<BuildingId, BuildingStatus>>;
-  energy: { supply: number; demand: number; ratio: number };
+  /**
+   * `supply` já inclui `fromBattery` (o que as baterias devolveram por segundo); `charge`/`chargeCap` = carga das baterias;
+   * `day` = fator solar agora; `converted` = energia por segundo absorvida pelos conversores.
+   */
+  energy: { supply: number; demand: number; ratio: number; charge: number; chargeCap: number; fromBattery: number; day: number; converted: number };
   workforce: { supply: number; demand: number; ratio: number };
   population: { cap: number; status: PopStatus; foodNeed: number };
   finishedExpeditions: string[];   // ids de locais descobertos neste passo

@@ -55,9 +55,13 @@ describe('prospecção', () => {
     s.deposit.found = 2;
     expect(ids()).toContain('auriferous');
     expect(ids()).not.toContain('titanic');
+    expect(ids()).not.toContain('unstable');                       // o instável só depois de 3 veios
+    s.deposit.found = 3;
+    expect(ids()).toContain('unstable');
     s.upgrades.deepProspecting = true;
     expect(ids()).toContain('titanic');
-    s.upgrades.crystallography = true; s.deposit.found = 6;
+    expect(ids()).not.toContain('deep');                           // o profundo exige Perfuração profunda
+    s.upgrades.crystallography = true; s.upgrades.deepDrilling = true; s.deposit.found = 6;
     expect(ids()).toEqual(VEIN_KINDS.map(k => k.id));
   });
 

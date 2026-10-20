@@ -1,7 +1,8 @@
 import { useGame } from '../game/store';
 import { RESOURCES, RES_IDS } from '../game/data/resources';
-import { energyBalance, housingCap, storageCap } from '../game/engine/modifiers';
-import { fmt, fmtRate } from '../game/engine/format';
+import { batteryCap, capsOf, energyBalance, housingCap } from '../game/engine/modifiers';
+import { isDay, nextTurn } from '../game/engine/daylight';
+import { fmt, fmtDuration, fmtRate } from '../game/engine/format';
 import { Icon } from './Icon';
 
 const HELP: Partial<Record<string, string>> = {
@@ -13,12 +14,21 @@ const HELP: Partial<Record<string, string>> = {
 export function TopBar() {
   const game = useGame(s => s.game);
   const rates = useGame(s => s.rates);
+  const report = useGame(s => s.report);
   const setSetting = useGame(s => s.setSetting);
-  const cap = storageCap(game);
+  const caps = capsOf(game);
   const e = energyBalance(game);
   const popCap = housingCap(game);
   const focus = game.settings.focus;
   const saveError = useGame(s => s.saveError);
+  // Baterias: o que elas devolvem agora entra na geração; a barra mostra a carga.
+  const chargeCap = batteryCap(game);
+  const charge = Math.min(game.energyCharge, chargeCap);
+  const fromBattery = report?.energy.fromBattery ?? 0;
+  const supply = e.supply + fromBattery;
+  const discharging = fromBattery > 0.01;
+  const day = isDay(game.stats.playTime);
+  const hasSolar = game.buildings.solar > 0;
   // Complexidade gradual: só aparecem recursos que o jogador já produziu.
   const visible = RES_IDS.filter(r => !RESOURCES[r].hidden && (r === 'credits' || (game.stats.produced[r] ?? 0) > 0 || game.resources[r] > 0));
 
@@ -29,6 +39,7 @@ export function TopBar() {
         {visible.map(r => {
           const def = RESOURCES[r];
           const have = game.resources[r];
+          const cap = caps[r];
           const full = def.stored && have >= cap - 0.01;
           const rate = rates[r];
           const pct = def.stored ? Math.min(100, (have / cap) * 100) : 0;
@@ -55,13 +66,15 @@ export function TopBar() {
             </div>
           </div>
         )}
-        <div className={`chip energy ${e.demand > e.supply ? 'deficit' : ''}`}
-          title="Energia: em uso / gerada. Se o uso passar do que é gerado, todas as máquinas ficam mais lentas. “Sobra” é a folga para ligar mais máquinas.">
+        <div className={`chip energy ${e.demand > supply + 0.01 ? 'deficit' : ''}`}
+          title={`Energia: em uso / gerada. Se o uso passar do que é gerado, todas as máquinas ficam mais lentas. “Sobra” é a folga para ligar mais máquinas.${hasSolar ? ` ${day ? 'Dia' : 'Noite'} no asteroide: ${day ? 'o pôr do sol' : 'o nascer do sol'} em ${fmtDuration(nextTurn(game.stats.playTime))} (painéis solares rendem mais de dia).` : ''}${chargeCap > 0 ? ` Baterias: ${fmt(charge)} de ${fmt(chargeCap)} de carga${discharging ? ', descarregando agora' : ''}.` : ''}`}>
           <Icon name="icon-energy" size={28} />
           <div className="chip-body">
-            <b>{fmt(Math.min(e.demand, e.supply))}<small className="cap">/{fmt(e.supply)}</small></b>
-            <small>{e.demand > e.supply ? `déficit ${fmt(e.demand - e.supply)}` : `sobra ${fmt(e.supply - e.demand)}`}</small>
+            <b>{fmt(Math.min(e.demand, supply))}<small className="cap">/{fmt(supply)}</small></b>
+            <small>{e.demand > supply + 0.01 ? `déficit ${fmt(e.demand - supply)}` : discharging ? 'baterias' : `sobra ${fmt(supply - e.demand)}`}</small>
           </div>
+          {hasSolar && <span className={`daynight ${day ? 'day' : 'night'}`} aria-label={day ? 'dia' : 'noite'}>{day ? '☀' : '☾'}</span>}
+          {chargeCap > 0 && <i className="fillbar battery" style={{ width: `${Math.min(100, (charge / chargeCap) * 100)}%` }} />}
         </div>
         {saveError && <span className="save-warn" role="alert" title="O navegador não está salvando. Abra Opções e exporte o save.">⚠ Sem salvar</span>}
         <button className={`focus-toggle ${focus ? 'on' : ''}`} onClick={() => setSetting('focus', !focus)} aria-pressed={focus}

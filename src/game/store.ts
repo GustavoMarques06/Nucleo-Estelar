@@ -1,10 +1,15 @@
 import { create } from 'zustand';
-import type { BuildingId, DroneRole, Flows, FlowSource, GameState, ResId, Settings, Specialization, TickReport } from './types';
+import type { BuildingId, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
 import { RES_IDS } from './data/resources';
 import { BALANCE } from './data/balance';
 import { BUILDING_BY_ID } from './data/buildings';
 import { newGame } from './engine/state';
-import { buyBuilding, buyUpgrade, mineClick, sell, simulate } from './engine/economy';
+import { buyBuilding, buyUpgrade, goldenStrike, mineClick, sell, simulate } from './engine/economy';
+import { overclockReactor, setPriority, setThrottle } from './engine/energy';
+import { layerIndex } from './engine/deposit';
+import { LAYERS } from './data/layers';
+import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneLevel } from './data/milestones';
+import { fmt } from './engine/format';
 import { clearSave, loadBackup, loadGame, parseSave, saveGame, serialize } from './engine/save';
 import { applyOffline, type OfflineSummary } from './engine/offline';
 import { energyBalance, getModifiers } from './engine/modifiers';
@@ -48,6 +53,10 @@ interface Store {
   boot(): void;
   advance(dt: number): void;
   mine(x?: number, y?: number): void;
+  strike(x?: number, y?: number): void;
+  overclock(id: BuildingId): void;
+  setThrottle(id: BuildingId, value: number): void;
+  setPriority(id: BuildingId, p: Priority | 0): void;
   sell(res: ResId): void;
   buy(id: BuildingId): void;
   upgrade(id: string): void;
@@ -151,11 +160,16 @@ export const useGame = create<Store>()((set, get) => {
       if (longGap && (game.crises.length || game.contracts.some(c => c.risk))) game = { ...game, crises: [], contracts: game.contracts.filter(c => !c.risk) };
       let report: TickReport | null = null;
       let found = 0;
+      const terraformed: string[] = [];
+      const layerBefore = layerIndex(game);
       const before = { ...game.resources };
+      // Passos de 1 s; um intervalo enorme (computador suspenso) usa no máximo ~400 passos, como o cálculo offline.
+      const stepSize = Math.max(1, remaining / 400);
       while (remaining > 0) {
-        const step = Math.min(1, remaining);
+        const step = Math.min(stepSize, remaining);
         ({ state: game, report } = simulate(game, step, { flows: step >= remaining - 1e-9 }));
         found += report.finishedExpeditions.length;
+        terraformed.push(...report.finishedTerraforms);
         remaining -= step;
       }
       if (longGap) game = { ...game, crisisTimer: Math.max(game.crisisTimer, 240) };
@@ -215,13 +229,19 @@ export const useGame = create<Store>()((set, get) => {
         events.emit({ type: 'achievement', id });
         get().toast(`Conquista: ${ACHIEVEMENT_BY_ID[id].name} (+2% de produção)`);
       }
-      for (const id of report?.finishedTerraforms ?? []) {
+      for (const id of terraformed) {
         events.emit({ type: 'terraformed' });
         get().toast(`Terraformação concluída em ${game.locations.find(l => l.id === id)?.name ?? 'uma colônia'}!`);
       }
       if (found > 0) {
         events.emit({ type: 'discovered', count: found });
         get().toast(found === 1 ? 'Expedição concluída: novo local descoberto!' : `${found} novos locais descobertos!`);
+      }
+      const layerNow = layerIndex(game);
+      if (layerNow > layerBefore) {
+        const L = LAYERS[layerNow];
+        events.emit({ type: 'layer', index: layerNow });
+        get().toast(`Nova camada do asteroide: ${L.name}. A crosta agora rende ×${L.yield.toLocaleString('pt-BR')}.`);
       }
     },
 
@@ -231,6 +251,25 @@ export const useGame = create<Store>()((set, get) => {
       set({ game: state });
       events.emit({ type: 'mined', gained, x, y });
     },
+
+    strike(x, y) {
+      const { state, gained } = goldenStrike(get().game);
+      if (Object.keys(gained).length === 0) { get().toast('Armazém cheio — o ponto brilhante se perdeu.', 'warn'); return; }
+      set({ game: state });
+      events.emit({ type: 'golden', x, y });
+      events.emit({ type: 'mined', gained, x, y });
+      const total = Object.values(gained).reduce((a, b) => a + (b ?? 0), 0);
+      get().toast(`Ponto brilhante: +${fmt(total)} de minério!`);
+    },
+
+    overclock(id) {
+      commit(overclockReactor(get().game, id), () => {
+        events.emit({ type: 'overclock', id });
+        get().toast(`Sobrecarga: ${BUILDING_BY_ID[id].name} gera ×${BALANCE.overclockMult} por ${BALANCE.overclockTime} s.`);
+      });
+    },
+    setThrottle(id, value) { commit(setThrottle(get().game, id, value)); },
+    setPriority(id, p) { commit(setPriority(get().game, id, p)); },
 
     sell(res) {
       const { state, earned } = sell(get().game, res);
@@ -243,7 +282,15 @@ export const useGame = create<Store>()((set, get) => {
       const next = buyBuilding(game, id, amount);
       commit(next, () => {
         events.emit({ type: 'built', id, amount });
-        if (BUILDING_BY_ID[id].energyUse) {
+        const def = BUILDING_BY_ID[id];
+        const was = game.buildings[id], now = next!.buildings[id];
+        // Marcos de quantidade: comemora cada um (e o bônus especial do marco de 100).
+        if (hasMilestones(def) && milestoneLevel(now) > milestoneLevel(was)) {
+          const special = was < SPECIAL_AT && now >= SPECIAL_AT ? MILESTONE_SPECIALS[id] : undefined;
+          events.emit({ type: 'milestone', id, special: !!special });
+          get().toast(`Marco: ${now} × ${def.name} — rende ×${BALANCE.milestoneMult.toLocaleString('pt-BR')}!${special ? ` Bônus especial: ${special.text}.` : ''}`);
+        }
+        if (def.energyUse) {
           const e = energyBalance(next!);
           if (e.demand > e.supply) get().toast('Energia insuficiente: construa geradores para manter as máquinas a 100%.', 'bad');
         }

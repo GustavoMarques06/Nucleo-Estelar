@@ -1,6 +1,6 @@
-import type { Amounts, BuildingDef, BuildingId, Effect, GameState, ResId, UpgradeDef } from '../types';
+import type { Amounts, BuildingDef, BuildingId, Effect, GameState, ResId, StorageGroup, UpgradeDef } from '../types';
 import { UPGRADES } from '../data/upgrades';
-import { RESOURCES, STARTER_DEPOSIT } from '../data/resources';
+import { RESOURCES, RES_IDS, STARTER_DEPOSIT } from '../data/resources';
 import { BALANCE } from '../data/balance';
 import { BUILDINGS } from '../data/buildings';
 import { PERKS } from '../data/ascension';
@@ -10,7 +10,9 @@ import { ACHIEVEMENT_BONUS } from '../data/achievements';
 import { FACTIONS, tierOf } from '../data/factions';
 import { STAR_PERKS } from '../data/transcendence';
 import { DRONE_ROLES, droneBonus } from '../data/drones';
+import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneMult } from '../data/milestones';
 import { colonyCount } from '../selectors';
+import { dayFactor } from './daylight';
 
 export interface Modifiers {
   click: number;
@@ -40,6 +42,9 @@ export interface Modifiers {
   terraSpeed: number;
   offline: number;
   autosell: boolean;
+  industrySpeed: number;      // ritmo das indústrias da base (drones carregadores)
+  /** Multiplicador dos marcos de quantidade de cada estrutura (já aplicado em `output` e `energyOut`). */
+  milestone: Partial<Record<BuildingId, number>>;
 }
 
 function base(): Modifiers {
@@ -47,8 +52,14 @@ function base(): Modifiers {
     click: 1, output: {}, outputAll: 1, resource: {}, energyOut: {}, energyAll: 1, energyUse: 1, storage: 1,
     price: {}, priceAll: 1, deposit: {}, popGrowth: 1, popCap: 1, tax: 1, outpost: 1, expedition: 1,
     expeditionSpeed: 1, richness: 1, cost: 1, contract: 1, megaCost: 1, droneBoost: 1, depth: 1, upkeep: 1, terraSpeed: 1, offline: 0, autosell: false,
+    industrySpeed: 1, milestone: {},
   };
 }
+
+/** Ritmo escolhido para uma estrutura (1 = 100%). */
+export const throttleOf = (s: Pick<GameState, 'throttle'>, id: BuildingId) => s.throttle[id] ?? 1;
+/** Multiplicador de marcos de uma estrutura (1 sem marcos). */
+export const milestoneOf = (m: Modifiers, id: BuildingId) => m.milestone[id] ?? 1;
 
 const mul = <K extends string>(map: Partial<Record<K, number>>, k: K, v: number) => { map[k] = (map[k] ?? 1) * v; };
 
@@ -104,10 +115,22 @@ export function getModifiers(s: GameState): Modifiers {
   for (const r of REPEATABLES) { const l = s.repeatables[r.id] ?? 0; if (l > 0) r.effects(l).forEach(e => applyEffect(m, e)); }
   if (s.achievements.length) m.outputAll *= 1 + ACHIEVEMENT_BONUS * s.achievements.length;
   for (const b of s.buffs) b.effects.forEach(e => applyEffect(m, e));
+  // Marcos de quantidade: multiplicam a função principal; com 100 unidades, algumas liberam um bônus especial.
+  for (const b of BUILDINGS) {
+    const n = s.buildings[b.id];
+    if (n >= SPECIAL_AT) MILESTONE_SPECIALS[b.id]?.effects.forEach(e => applyEffect(m, e));
+    const k = hasMilestones(b) ? milestoneMult(n) : 1;
+    if (k === 1) continue;
+    m.milestone[b.id] = k;
+    if (b.extract || b.outputs) mul(m.output, b.id, k);
+    if (b.energyOut) mul(m.energyOut, b.id, k);
+  }
+  // Reatores em sobrecarga
+  for (const [id, oc] of Object.entries(s.overclock)) if (oc && oc.left > 0) mul(m.energyOut, id as BuildingId, BALANCE.overclockMult);
   for (const b of BUILDINGS) {
     const n = s.buildings[b.id];
     if (!b.boost || n <= 0) continue;
-    const f = 1 + b.boost.per * n;
+    const f = 1 + b.boost.per * n * milestoneOf(m, b.id);
     switch (b.boost.kind) {
       case 'energyAll': m.energyAll *= f; break;
       case 'priceAll': m.priceAll *= f; break;
@@ -133,6 +156,7 @@ export function getModifiers(s: GameState): Modifiers {
     else if (role.id === 'hauler') m.outpost *= 1 + b;
     else if (role.id === 'mechanic') m.outputAll *= 1 + b;
     else if (role.id === 'terraformer') m.terraSpeed *= 1 + b;
+    else if (role.id === 'loader') m.industrySpeed *= 1 + b;
   }
   return m;
 }
@@ -158,15 +182,41 @@ export function buildingStorage(b: BuildingDef, n: number): number {
   return g === 1 ? b.storage! * n : b.storage! * (Math.pow(g, n) - 1) / (g - 1);
 }
 
+/** Capacidade geral (o que vale para todos os materiais): base + Armazéns. */
 export function storageCap(s: GameState, m = getModifiers(s)): number {
   let cap = BALANCE.baseStorage;
-  for (const b of BUILDINGS) if (b.storage) cap += buildingStorage(b, s.buildings[b.id]);
-  return Math.floor(cap * m.storage);
+  for (const b of BUILDINGS) if (b.storage && !b.storageGroup) cap += buildingStorage(b, s.buildings[b.id]) * milestoneOf(m, b.id);
+  return Math.floor(cap * m.storage + 1e-6);              // a série geométrica dá 299,999…: não perde a unidade no arredondamento
+}
+
+/** Capacidade extra de um grupo (Silos, Tanques, Galpões), já com os multiplicadores. */
+export function groupCap(s: GameState, group: StorageGroup, m = getModifiers(s)): number {
+  let cap = 0;
+  for (const b of BUILDINGS) if (b.storage && b.storageGroup === group) cap += buildingStorage(b, s.buildings[b.id]) * milestoneOf(m, b.id);
+  return Math.floor(cap * m.storage + 1e-6);
+}
+
+/** Capacidade de cada recurso: geral + a do grupo dele; Infinity para o que não vai para o armazém. */
+export type Caps = Record<ResId, number>;
+export function capsOf(s: GameState, m = getModifiers(s)): Caps {
+  const general = storageCap(s, m);
+  const groups = { ore: groupCap(s, 'ore', m), fluid: groupCap(s, 'fluid', m), goods: groupCap(s, 'goods', m) };
+  return Object.fromEntries(RES_IDS.map(r => {
+    const def = RESOURCES[r];
+    return [r, def.stored ? general + (def.group ? groups[def.group] : 0) : Infinity];
+  })) as Caps;
+}
+
+/** Capacidade de um recurso só (atalho de `capsOf`). */
+export function capFor(s: GameState, res: ResId, m = getModifiers(s)): number {
+  const def = RESOURCES[res];
+  if (!def.stored) return Infinity;
+  return storageCap(s, m) + (def.group ? groupCap(s, def.group, m) : 0);
 }
 
 export function housingCap(s: GameState, m = getModifiers(s)): number {
   let cap = 0;
-  for (const b of BUILDINGS) if (b.housing) cap += b.housing * s.buildings[b.id];
+  for (const b of BUILDINGS) if (b.housing) cap += b.housing * s.buildings[b.id] * milestoneOf(m, b.id);
   // Colônias terraformadas também recebem moradores.
   for (const l of s.locations) if (l.outpost?.terra) cap += 30 * l.outpost.terra * l.richness;
   return cap * m.popCap;
@@ -184,10 +234,10 @@ export function depositShares(m: Modifiers, base: Amounts = STARTER_DEPOSIT): Am
   return Object.fromEntries(raw.map(([r, w]) => [r, w / total]));
 }
 
-/** Fração (0–1) em que uma estrutura geradora consegue funcionar com os insumos em estoque. */
+/** Fração (0–1) em que uma estrutura geradora consegue funcionar com os insumos em estoque (já no ritmo escolhido). */
 export function inputAvailability(s: GameState, b: BuildingDef, dt: number): number {
   if (!b.inputs) return 1;
-  const n = s.buildings[b.id];
+  const n = s.buildings[b.id] * throttleOf(s, b.id);
   let f = 1;
   for (const [r, per] of Object.entries(b.inputs)) {
     const need = (per ?? 0) * n * dt;
@@ -196,21 +246,41 @@ export function inputAvailability(s: GameState, b: BuildingDef, dt: number): num
   return Math.max(0, Math.min(1, f));
 }
 
-export function energyBalance(s: GameState, m = getModifiers(s), dt = 1) {
+/** Energia gerada por uma estrutura agora (com dia/noite, sobrecarga, ritmo e insumos). */
+export function energyOutOf(s: GameState, b: BuildingDef, m: Modifiers, dt = 0): number {
+  const n = s.buildings[b.id];
+  if (!b.energyOut || n <= 0) return 0;
+  const sun = b.daylight ? dayFactor(s.stats.playTime, dt) : 1;
+  // Insumos: a interface (dt = 0) olha se há o bastante para o próximo segundo.
+  return n * throttleOf(s, b.id) * b.energyOut * (m.energyOut[b.id] ?? 1) * m.energyAll * sun * inputAvailability(s, b, dt || 1);
+}
+
+/**
+ * Geração e consumo de energia sem contar as baterias (a simulação as usa por cima disto).
+ * `dt` = duração do passo: o fator solar é a média do intervalo; dt = 0 dá o valor de agora (interface).
+ */
+export function energyBalance(s: GameState, m = getModifiers(s), dt = 0) {
   let supply = BALANCE.baseEnergy, demand = 0;
   for (const b of BUILDINGS) {
     const n = s.buildings[b.id];
     if (n <= 0) continue;
-    if (b.energyOut) supply += n * b.energyOut * (m.energyOut[b.id] ?? 1) * m.energyAll * inputAvailability(s, b, dt);
-    if (b.energyUse) demand += n * b.energyUse * m.energyUse * recipeOf(s, b).energy;
+    if (b.energyOut) supply += energyOutOf(s, b, m, dt);
+    if (b.energyUse) demand += n * throttleOf(s, b.id) * b.energyUse * m.energyUse * recipeOf(s, b).energy;
   }
   const ratio = demand > 0 ? Math.min(1, supply / demand) : 1;
   return { supply, demand, ratio };
 }
 
+/** Carga máxima das baterias (energia·segundo). */
+export function batteryCap(s: GameState, m = getModifiers(s)): number {
+  let cap = 0;
+  for (const b of BUILDINGS) if (b.battery) cap += b.battery * s.buildings[b.id] * milestoneOf(m, b.id);
+  return cap;
+}
+
 export function workforce(s: GameState) {
   let demand = 0;
-  for (const b of BUILDINGS) if (b.workers) demand += b.workers * s.buildings[b.id];
+  for (const b of BUILDINGS) if (b.workers) demand += b.workers * s.buildings[b.id] * throttleOf(s, b.id);
   const supply = s.resources.population;
   return { supply, demand, ratio: demand > 0 ? Math.min(1, supply / demand) : 1 };
 }

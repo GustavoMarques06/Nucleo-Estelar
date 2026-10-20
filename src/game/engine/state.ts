@@ -4,7 +4,7 @@ import { BALANCE } from '../data/balance';
 import { BUILDING_IDS } from '../data/buildings';
 import { FACTIONS } from '../data/factions';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export function newGame(now = Date.now()): GameState {
   return {
@@ -36,8 +36,12 @@ export function newGame(now = Date.now()): GameState {
     autosellFloor: 0,
     keep: {},
     recipes: {},
+    throttle: {},
+    priority: {},
+    overclock: {},
+    energyCharge: 0,
     debt: 0,
-    drones: { courier: 0, scout: 0, hauler: 0, mechanic: 0, terraformer: 0 },
+    drones: { courier: 0, scout: 0, hauler: 0, mechanic: 0, terraformer: 0, loader: 0 },
     transcendence: { seeds: 0, total: 0, count: 0, perks: {}, unlocked: false },
     buffs: [],
     event: null,
@@ -77,6 +81,9 @@ export function cloneState(s: GameState): GameState {
     market: { ...s.market, sat: { ...s.market.sat } },
     keep: { ...s.keep },
     recipes: { ...s.recipes },
+    throttle: { ...s.throttle },
+    priority: { ...s.priority },
+    overclock: Object.fromEntries(Object.entries(s.overclock).map(([k, v]) => [k, { ...v! }])),
     transcendence: { ...s.transcendence, perks: { ...s.transcendence.perks } },
     buffs: s.buffs.map(b => ({ ...b })),
     event: s.event && { ...s.event },

@@ -590,3 +590,27 @@ label.recipe { display: flex; gap: 6px; align-items: center; font-size: 16px; co
 .mix span { display: inline-flex; align-items: center; gap: 2px; }
 .panel-body .panel-body { overflow: visible; flex: none; padding: 0; }
 .deposit { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- Marcos de quantidade, controles das estruturas e energia ---------- */
+.milestone { margin-top: 6px; display: grid; gap: 2px; }
+.milestone-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 15px; color: #8fb4cc; }
+.milestone-head b { color: var(--c-gold); font-weight: 400; text-shadow: 0 0 8px rgba(255, 212, 71, .5); }
+.milestone small { font-size: 15px; }
+.milestone small.dim { color: #8fb4cc; opacity: .85; }
+.bar.milestone-bar { height: 6px; }
+.bar.milestone-bar > div { background: linear-gradient(#ffe27a, #ffb347); box-shadow: 0 0 8px rgba(255, 212, 71, .6); }
+.controls-row { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; margin-top: 4px; }
+.controls { display: contents; }
+.btn.overclock { font-size: 15px; }
+.btn.overclock.ready:not(:disabled) { color: var(--c-warm); }
+.btn.overclock.active { color: var(--c-accent); opacity: 1; text-shadow: 0 0 8px rgba(0, 229, 255, .7); }
+.btn.overclock.cooling { color: #8fb4cc; }
+.card .buy.milestone-buy:not(:disabled) { filter: drop-shadow(0 0 6px rgba(255, 212, 71, .75)); }
+.milestone-tag { color: var(--c-gold); font-size: 14px; line-height: 1; }
+.daynight.day { color: var(--c-gold); }
+.daynight.night { color: #b9c7ff; }
+.fillbar.battery { background: var(--c-accent); box-shadow: 0 0 6px rgba(0, 229, 255, .7); }
+.card.vein.layer { background: linear-gradient(var(--hud-bg), var(--hud-bg)) padding-box, linear-gradient(135deg, rgba(255, 179, 71, .55), rgba(0, 229, 255, .25)) border-box; }
+.card.vein.layer small { display: block; }
+.chip.energy { position: relative; }
+.chip.energy .daynight { position: absolute; top: 1px; right: 4px; font-size: 13px; line-height: 1; }

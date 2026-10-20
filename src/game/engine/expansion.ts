@@ -164,9 +164,13 @@ export function terraformCost(loc: Location): Amounts {
   return { credits: Math.ceil(2e6 * Math.pow(2.2, l)), water: Math.ceil(15000 * k), fuel: Math.ceil(4000 * k), components: Math.ceil(8000 * k) };
 }
 
+/** Trabalho do PRÓXIMO nível (segundos na velocidade 1). O andamento desconta `dt × terraSpeed` dele. */
+export function terraformWork(loc: Location): number {
+  return 600 * Math.pow(1.5, loc.outpost?.terra ?? 0);
+}
+
 export function terraformDuration(loc: Location, m: Modifiers): number {
-  const l = loc.outpost?.terra ?? 0;
-  return (600 * Math.pow(1.5, l)) / m.terraSpeed;
+  return terraformWork(loc) / m.terraSpeed;
 }
 
 export function canTerraform(s: GameState, loc: Location): { ok: boolean; reason?: string } {
@@ -183,10 +187,10 @@ export function startTerraform(prev: GameState, locId: string): GameState | null
   const loc = prev.locations.find(l => l.id === locId);
   if (!loc || !canTerraform(prev, loc).ok) return null;
   const s = cloneState(prev);
-  const m = getModifiers(s);
   payCost(s, terraformCost(loc));
   const target = s.locations.find(l => l.id === locId)!.outpost!;
-  target.terraTotal = terraformDuration(loc, m);
+  // Guarda o trabalho, não o tempo: a velocidade (drones) entra só no andamento, uma vez.
+  target.terraTotal = terraformWork(loc);
   target.terraRemaining = target.terraTotal;
   return s;
 }

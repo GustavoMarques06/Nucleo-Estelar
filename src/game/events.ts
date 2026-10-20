@@ -23,6 +23,10 @@ export type GameEvent =
   | { type: 'gift' }
   | { type: 'ending' }
   | { type: 'transcended' }
+  | { type: 'milestone'; id: BuildingId; special: boolean }   // estrutura atingiu um marco de quantidade
+  | { type: 'layer'; index: number }                          // a extração chegou a uma camada mais funda
+  | { type: 'golden'; x?: number; y?: number }                // ponto brilhante coletado
+  | { type: 'overclock'; id: BuildingId }
   | { type: 'denied' };
 
 type Listener = (e: GameEvent) => void;

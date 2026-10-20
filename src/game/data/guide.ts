@@ -6,23 +6,33 @@ export const GUIDE: GuideEntry[] = [
     'Você começa com uma broca num asteroide. Extraia minério, venda, compre máquinas e deixe-as trabalhar sozinhas.',
     'O painel “Telemetria” sempre diz o que você produz, o que limita o crescimento e o próximo passo. O “Objetivo” abaixo dele guia as primeiras horas.',
   ] },
-  { id: 'energy', title: 'Energia', icon: 'nav-energy', text: [
-    'Quase toda máquina consome energia. “Em uso / gerada” aparece no topo; “sobra” é a folga para ligar mais máquinas.',
-    'Se o uso passar do que é gerado, todas as máquinas ficam mais lentas na mesma proporção. Construa geradores antes de novas fábricas.',
+  { id: 'milestones', title: 'Marcos de quantidade', icon: 'icon-trophy', text: [
+    'Ao chegar a 10, 25, 50, 100, 150, 200… unidades de uma estrutura, a função principal dela fica ×1,5 (produção, extração, energia, moradia, carga de bateria ou bônus). Os marcos se acumulam. Armazéns não têm marcos: cada novo já guarda mais que o anterior.',
+    'Cada cartão mostra a barra até o próximo marco, e o botão de compra brilha quando a compra atinge um. Com 100 unidades, várias estruturas também liberam um bônus especial (100 Mineradoras: extração manual ×5; 100 Painéis solares: toda a energia +10%…).',
+  ] },
+  { id: 'energy', title: 'Energia, dia e noite', icon: 'nav-energy', text: [
+    'Quase toda máquina consome energia. “Em uso / gerada” aparece no topo; “sobra” é a folga para ligar mais máquinas. Se o uso passar do que é gerado, todas as máquinas ficam mais lentas na mesma proporção.',
+    'O asteroide gira: uma volta leva 6 minutos. Painéis solares rendem 130% ao meio-dia e 70% à meia-noite (na média, 100%). O Coletor orbital e os reatores não sentem a noite.',
+    'Baterias guardam a sobra e a devolvem quando falta: a barra de carga fica no topo. O Conversor de excedente transforma a sobra que nem as baterias aguentam em créditos (ou ciência).',
+    'Reatores de fissão e fusão aguentam sobrecarga: energia ×2 por 60 s, depois 4 minutos esfriando. Ótimo para atravessar a noite ou um pico de consumo.',
   ] },
   { id: 'storage', title: 'Armazém e capacidade', icon: 'icon-crate', text: [
     'Cada material tem um limite de estoque. A barrinha na base de cada cartão do topo mostra o quanto está cheio; vermelha = cheio.',
-    'Com o estoque cheio, quem produz aquele material para. Venda, gaste ou construa Armazéns (cada novo guarda mais que o anterior).',
+    'Com o estoque cheio, quem produz aquele material para. Venda, gaste ou construa armazéns (cada novo guarda mais que o anterior).',
+    'O Armazém aumenta tudo. Silos (minérios), Tanques (água e combustível) e Galpões (produtos) guardam o dobro, mas só do seu grupo: expanda onde o gargalo está.',
     'As indústrias nunca consomem os últimos 10% do armazém: sobra sempre material para construir.',
   ] },
-  { id: 'deposit', title: 'Jazida: crosta e veios', icon: 'ore-gold', text: [
-    'A crosta do asteroide é infinita, mas rende pouco. Depois de pesquisar Geologia você pode prospectar veios: reservas finitas que rendem de 20% a 100% mais e trazem minérios novos (titânio, cristais).',
-    'Escolha de qual veio perfurar na aba Mineração. Um veio dura cerca de 15 minutos de extração; esgotado, a extração volta sozinha para a crosta. Quanto mais máquinas, mais rápido ele acaba, e mais caro fica prospectar um novo.',
-    'As Sondas autônomas (pesquisa) escolhem o melhor veio e prospectam sozinhas. Titânio e cristais abrem estruturas novas: Perfuratriz profunda, Forja de titânio e Matriz de cristais.',
+  { id: 'deposit', title: 'Jazida: camadas e veios', icon: 'ore-gold', text: [
+    'Quanto mais você extrai, mais fundo chega: cada camada do asteroide tem uma crosta mais rica e rende mais. As camadas profundas exigem o Britador e depois a Perfuratriz profunda.',
+    'Depois de pesquisar Geologia você pode prospectar veios: reservas finitas que rendem mais e trazem minérios novos. Um veio dura cerca de 15 minutos de extração; esgotado, a extração volta sozinha para a crosta.',
+    'O Veio instável rende ×3 mas desmorona em ~3 minutos. O Veio profundo é enorme, mas só a Perfuratriz profunda o alcança (as outras máquinas e os cliques continuam na crosta).',
+    'De vez em quando um ponto brilhante aparece no asteroide: clique antes que suma para ganhar uma boa quantidade de minério de uma vez.',
   ] },
   { id: 'chain', title: 'Cadeias de produção', icon: 'building-refinery', text: [
     'Minério vira liga (refinaria/fundição), liga + cobre vira componente (fábrica). Quanto mais processado, mais vale.',
     'Cada estrutura mostra o motivo quando para: “Sem ferro”, “Energia insuficiente”, “Armazém cheio” ou “Falta mão de obra”.',
+    'Ritmo e prioridade: em cada indústria dá para escolher o ritmo (0–100%, libera energia e insumos) e a prioridade na disputa por insumos (as de prioridade alta pegam o material primeiro). A manutenção continua sendo cobrada.',
+    'Fundições geram escória. Ela nunca trava a produção, mas ocupa espaço: venda ou leve à Recicladora, que a separa de volta em ferro, cobre e ouro (ou titânio, na receita alternativa).',
   ] },
   { id: 'research', title: 'Pesquisa e ciência', icon: 'nav-research', text: [
     'As primeiras pesquisas custam créditos. Depois entra a ciência, produzida por Observatórios, Universidades e colônias.',
@@ -62,6 +72,7 @@ export const GUIDE: GuideEntry[] = [
   ] },
   { id: 'drones', title: 'Drones', icon: 'drone-transport', text: [
     'O Hangar monta drones. Na aba Logística você designa cada um a uma função. O primeiro drone de uma função liga a automação dela; os demais dão bônus com retornos decrescentes.',
+    'Carregadores aceleram as indústrias da base (mais insumo e mais produto pela mesma energia) e aparecem voando entre as estruturas.',
   ] },
   { id: 'legacy', title: 'Ascensão e Transcendência', icon: 'icon-star', text: [
     'A Ascensão recomeça a jornada em troca de Dados de Ascensão, que compram melhorias permanentes. Cada jornada fica mais rápida.',

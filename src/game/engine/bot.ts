@@ -8,14 +8,14 @@ import { MEGAPROJECTS } from '../data/megaprojects';
 import { RESOURCES, RES_IDS } from '../data/resources';
 import { buyBuilding, buyUpgrade, mineClick, sell, simulate } from './economy';
 import { canAfford, unitCost } from './costs';
-import { energyBalance, getModifiers, isBuildingUnlocked, isUpgradeVisible, storageCap, upgradeRequirementsMet, workforce } from './modifiers';
+import { capsOf, energyBalance, getModifiers, isBuildingUnlocked, isUpgradeVisible, upgradeRequirementsMet, workforce } from './modifiers';
 import { canLaunch, canTerraform, establishOutpost, launchExpedition, outpostUpgradeCost, startTerraform, upgradeOutpost } from './expansion';
 import { canFulfillQuest, canGift, canLobby, fulfillQuest, giveGift, lobbyFaction } from './factions';
 import { activeDecree, canEnact, enactDecree } from './decrees';
 import { canAskHelp, crisisCost, resolveCrisis, spawnCrisis } from './crises';
 import { canOpenRoute, openRoute, routeScore } from './routes';
 import { assignDrones, droneFree } from './drones';
-import { canProspect, prospect, prospectCost, prospectingUnlocked, setAutoDeposit, setFocus, veinScore, veinsLeft } from './deposit';
+import { canProspect, prospect, prospectCost, prospectingUnlocked, setAutoDeposit, setFocus, veinScore, veinsLeft, veinUsable } from './deposit';
 import { FACTIONS, ALLIANCE_AT } from '../data/factions';
 import { ascend, buildMegaStage, buyPerk, buyRepeatable, buyStarPerk, canAscend, canTranscend, checkAchievements, transcend } from './progression';
 import { PERKS, perkCost } from '../data/ascension';
@@ -53,14 +53,10 @@ type Waiting = Map<string, number>;
 
 /** Uma rodada de decisões do jogador. */
 function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prospecting: boolean): GameState {
-  const cap = storageCap(s);
+  const caps = capsOf(s);
 
-  // Vendas: excedentes perto do limite do armazém; no começo vende todo o ferro.
-  for (const r of RES_IDS) {
-    if (!RESOURCES[r].sellPrice || r === 'exotic') continue;
-    const early = r === 'iron' && s.buildings.refinery === 0;
-    if (early || s.resources[r] > cap * 0.85) s = sell(s, r).state;
-  }
+  // No começo vende todo o ferro: é de onde vêm os primeiros créditos. (Os excedentes são vendidos no fim da rodada.)
+  if (s.buildings.refinery === 0) s = sell(s, 'iron').state;
 
   // Pesquisas: qualquer uma ao alcance.
   for (const u of UPGRADES) {
@@ -74,8 +70,8 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
     if (!veinsLeft(s).length && canProspect(s).ok && s.resources.credits >= (prospectCost(s).credits ?? 0) * 3) s = prospect(s) ?? s;
     const wantTi = ((s.upgrades.deepDrilling && s.buildings.deepDrill === 0) || (s.upgrades.lightAlloys && s.buildings.titaniumForge === 0)) && s.resources.titanium < 300;
     const wantCr = !!s.upgrades.crystallography && s.buildings.crystalArray === 0 && s.resources.crystals < 100;
-    const best = veinsLeft(s).sort((a, b) => (veinScore(b) + (wantTi ? (b.mix.titanium ?? 0) * 1e4 : 0) + (wantCr ? (b.mix.crystals ?? 0) * 1e4 : 0))
-      - (veinScore(a) + (wantTi ? (a.mix.titanium ?? 0) * 1e4 : 0) + (wantCr ? (a.mix.crystals ?? 0) * 1e4 : 0)))[0];
+    const best = veinsLeft(s).filter(v => veinUsable(s, v)).sort((a, b) => (veinScore(b, s) + (wantTi ? (b.mix.titanium ?? 0) * 1e4 : 0) + (wantCr ? (b.mix.crystals ?? 0) * 1e4 : 0))
+      - (veinScore(a, s) + (wantTi ? (a.mix.titanium ?? 0) * 1e4 : 0) + (wantCr ? (a.mix.crystals ?? 0) * 1e4 : 0)))[0];
     if (best && best.id !== s.deposit.focus) s = setFocus(s, best.id) ?? s;
   }
   // Expansão
@@ -90,7 +86,7 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
   // Crises: paga se sobra folga no armazém; senão pede ajuda a uma facção com tratado.
   for (const c of s.crises) {
     const cost = crisisCost(s, c);
-    const buffer = Object.entries(cost).every(([r, v]) => r === 'credits' || !RESOURCES[r as ResId].stored || s.resources[r as ResId] - (v ?? 0) >= cap * 0.3);
+    const buffer = Object.entries(cost).every(([r, v]) => r === 'credits' || !RESOURCES[r as ResId].stored || s.resources[r as ResId] - (v ?? 0) >= caps[r as ResId] * 0.3);
     const next = (buffer && resolveCrisis(s, c.id, 'pay')) || (canAskHelp(s, c) ? resolveCrisis(s, c.id, 'help') : null);
     if (next) s = next;
   }
@@ -102,7 +98,7 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
     for (const p of pairs) {
       if (!canOpenRoute(s, p.a.id, p.b.id).ok) continue;
       const next = openRoute(s, p.a.id, p.b.id);
-      if (next && next.resources.credits >= 5000 && next.resources.fuel >= cap * 0.3) { s = next; break; }
+      if (next && next.resources.credits >= 5000 && next.resources.fuel >= caps.fuel * 0.3) { s = next; break; }
     }
   }
 
@@ -111,12 +107,12 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
     for (const fac of FACTIONS) {
       if (s.factions[fac.id].relation >= ALLIANCE_AT || !canGift(s, fac.id).ok) continue;
       const next = giveGift(s, fac.id);
-      if (next && next.resources[fac.gift] >= cap * 0.3) s = next;
+      if (next && next.resources[fac.gift] >= caps[fac.gift] * 0.3) s = next;
     }
   }
   // Pedidos das facções: cumpre quando sobra material (mantém 30% do armazém), como faria um jogador atento.
   for (const q of s.quests) {
-    if (!canFulfillQuest(s, q.id) || (RESOURCES[q.res].stored && s.resources[q.res] - q.amount < cap * 0.3)) continue;
+    if (!canFulfillQuest(s, q.id) || (RESOURCES[q.res].stored && s.resources[q.res] - q.amount < caps[q.res] * 0.3)) continue;
     s = fulfillQuest(s, q.id)?.state ?? s;
   }
   // Influência: decretos de produção e preço sempre que possível; o que sobra vira relação com as facções.
@@ -133,7 +129,7 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
     for (const loc of s.locations) {
       if (!canTerraform(s, loc).ok) continue;
       const next = startTerraform(s, loc.id);
-      if (next && next.resources.water >= cap * 0.3 && next.resources.components >= cap * 0.3) { s = next; break; }
+      if (next && next.resources.water >= caps.water * 0.3 && next.resources.components >= caps.components * 0.3) { s = next; break; }
     }
   }
   // Drones: Entregador e Batedor primeiro (ligam automações); o resto vai para bônus.
@@ -144,12 +140,12 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
     const rest = droneFree(s);
     const hasColony = s.locations.some(l => l.outpost);
     const split: [Parameters<typeof assignDrones>[1], number][] = hasColony
-      ? [['mechanic', 0.4], ['hauler', 0.4], ['terraformer', s.upgrades.terraforming ? 0.2 : 0]]
-      : [['mechanic', 1]];
+      ? [['mechanic', 0.3], ['loader', 0.2], ['hauler', 0.35], ['terraformer', s.upgrades.terraforming ? 0.15 : 0]]
+      : [['mechanic', 0.6], ['loader', 0.4]];
     for (const [role, share] of split) if (share > 0 && rest >= 1) s = assignDrones(s, role, Math.max(1, Math.floor(rest * share))) ?? s;
   }
   // Contratos só com folga: depois de entregar, ainda sobra 30% do armazém para construir.
-  for (const c of s.contracts) if (s.resources[c.res] - c.amount >= cap * 0.3) s = fulfillContract(s, c.id)?.state ?? s;
+  for (const c of s.contracts) if (s.resources[c.res] - c.amount >= caps[c.res] * 0.3) s = fulfillContract(s, c.id)?.state ?? s;
   // Pesquisas contínuas: só com a árvore principal da fase atual já feita (sobra de ciência).
   // (reserva ciência para qualquer pesquisa da árvore cujos pré-requisitos já foram feitos)
   if (!UPGRADES.some(u => !s.upgrades[u.id] && upgradeRequirementsMet(u, s) && (u.cost.science ?? 0) > 0)) {
@@ -181,8 +177,12 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
     } else if (shortage?.kind === 'input' && PRODUCERS[shortage.res]) {
       for (const id of PRODUCERS[shortage.res]!) if ((next = tryBuy(s, id))) break;
       if (!next) next = null;
-    } else if (BUILDINGS.some(b => st[b.id]?.kind === 'full') || BUILDINGS.some(b => unlocked(s, b.id) && Object.entries(unitCost(b, s.buildings[b.id], getModifiers(s).cost)).some(([r, v]) => r !== 'credits' && RESOURCES[r as ResId].stored && (v ?? 0) > cap * 0.7))) {
-      next = tryBuy(s, 'storage');
+    } else if (BUILDINGS.some(b => st[b.id]?.kind === 'full') || BUILDINGS.some(b => unlocked(s, b.id) && Object.entries(unitCost(b, s.buildings[b.id], getModifiers(s).cost)).some(([r, v]) => r !== 'credits' && RESOURCES[r as ResId].stored && (v ?? 0) > capsOf(s)[r as ResId] * 0.7))) {
+      // Armazém cheio de um grupo: o armazém especializado daquele grupo rende o dobro; senão, o Armazém geral.
+      const full = BUILDINGS.map(b => st[b.id]).find(x => x?.kind === 'full');
+      const group = full?.kind === 'full' ? RESOURCES[full.res].group : undefined;
+      const special = BUILDINGS.find(b => b.storageGroup && b.storageGroup === group);
+      next = (special ? tryBuy(s, special.id) : null) ?? tryBuy(s, 'storage');
     }
 
     if (!next) {
@@ -200,18 +200,27 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
       // Crescimento: a estrutura liberada mais barata em créditos (ignora energia e bônus caros demais).
       const mod = getModifiers(s);
       const options = BUILDINGS
-        .filter(b => unlocked(s, b.id) && !ENERGY.includes(b.id) && b.id !== 'battery')
+        .filter(b => unlocked(s, b.id) && !ENERGY.includes(b.id) && b.id !== 'battery' && !b.storageGroup)
         .filter(b => !b.energyUse || e.supply - e.demand >= b.energyUse * mod.energyUse)
         .map(b => ({ b, c: credCost(s, b.id, mod.cost) }))
         .sort((x, y) => x.c - y.c)
         .map(x => x.b);
       // Crescimento sem zerar materiais: mantém 30% do armazém de cada um para as próprias indústrias.
+      const capsNow = capsOf(s, mod);
       const keepsBuffer = (id: BuildingId) => Object.entries(unitCost(BUILDING_BY_ID[id], s.buildings[id], mod.cost))
-        .every(([r, v]) => r === 'credits' || !RESOURCES[r as ResId].stored || s.resources[r as ResId] - (v ?? 0) >= cap * 0.3);
+        .every(([r, v]) => r === 'credits' || !RESOURCES[r as ResId].stored || s.resources[r as ResId] - (v ?? 0) >= capsNow[r as ResId] * 0.3);
       for (const b of options) if (keepsBuffer(b.id) && (next = buyBuilding(s, b.id, 1))) break;
     }
     if (!next) break;
     s = next;
+  }
+
+  // Vendas por último: excedentes perto do limite do armazém. (Vender antes de construir esvaziava justamente
+  // os materiais das construções de quem só aparece de vez em quando.) A escória sempre, se não há Recicladora.
+  const capsEnd = capsOf(s);
+  for (const r of RES_IDS) {
+    if (!RESOURCES[r].sellPrice || r === 'exotic') continue;
+    if (s.resources[r] > capsEnd[r] * 0.85 || (r === 'slag' && s.buildings.recycler === 0)) s = sell(s, r).state;
   }
   return s;
 }

@@ -7,6 +7,7 @@ export interface MegaprojectDef {
   /** Megaprojeto sem fim: gera o estágio n (0, 1, 2, …) sob demanda. */
   endless?: (n: number) => MegaStage;
   requires?: (s: GameState) => boolean;
+  requiresText?: string;     // o que falta para liberar (mostrado enquanto `requires` não vale)
 }
 
 // Projetos gigantes de fim de jogo (GDD, fase 6). Cada estágio é comprado inteiro e dá um bônus permanente
@@ -64,6 +65,7 @@ MEGAPROJECTS.push({
   id: 'core', name: 'Núcleo Estelar', desc: 'Uma estrela artificial no centro do império. Sempre pode crescer mais.',
   stages: [],
   requires: s => (s.megaprojects.dyson ?? 0) >= 4,
+  requiresText: 'Requer o Enxame de Dyson completo.',
   endless: n => {
     const k = Math.pow(2.4, n);
     return {
@@ -91,6 +93,7 @@ const singStage = (n: number, sprite: string, desc: string, effects: Effect[]): 
 MEGAPROJECTS.push({
   id: 'singularity', name: 'Singularidade', desc: 'O ponto final: curvar o espaço-tempo em torno do império.',
   requires: s => (s.megaprojects.core ?? 0) >= 5,
+  requiresText: 'Requer 5 estágios do Núcleo Estelar.',
   stages: [
     singStage(0, 'mega-gate', 'Anel de contenção: energia ×1,5.', [{ kind: 'energyOut', mult: 1.5 }]),
     singStage(1, 'mega-engine', 'Motor de curvatura: toda a produção ×1,3.', [{ kind: 'outputAll', mult: 1.3 }]),

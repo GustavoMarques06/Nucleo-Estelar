@@ -19,6 +19,7 @@ export const MARKET: Partial<Record<ResId, MarketCurve>> = {
   titanium:   { amp: 0.22, p1: 960,  p2: 360, ph1: 0.8, ph2: 3.9 },
   crystals:   { amp: 0.32, p1: 1140, p2: 420, ph1: 4.6, ph2: 1.7 },
   modules:    { amp: 0.28, p1: 1080, p2: 420, ph1: 3.1, ph2: 0.6 },
+  slag:       { amp: 0.10, p1: 600,  p2: 250, ph1: 2.2, ph2: 4.7 },
 };
 
 export const MARKET_MIN = 0.5;

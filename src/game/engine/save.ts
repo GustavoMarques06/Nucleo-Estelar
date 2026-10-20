@@ -18,7 +18,9 @@ import { DRONE_ROLES } from '../data/drones';
 import { STAR_PERK_BY_ID } from '../data/transcendence';
 import { CRISIS_BY_KIND } from '../data/crises';
 import { KEEP_STEPS, SELL_FLOORS } from '../data/market';
+import { BALANCE } from '../data/balance';
 import { newGame, SAVE_VERSION } from './state';
+import { THROTTLE_STEPS, prioritizable, throttleable } from './energy';
 
 const KEY = 'nucleo-estelar/save';
 const BACKUP_KEY = KEY + '.bak';            // cópia de segurança (a cada ~10 min)
@@ -150,6 +152,20 @@ export function parseSave(raw: string): GameState | null {
   for (const r of RES_IDS) if ((KEEP_STEPS as readonly number[]).includes(keep[r] as number) && (keep[r] as number) > 0) s.keep[r] = keep[r] as number;
   const rec = obj(d.recipes);
   for (const b of BUILDINGS) if (b.alt && rec[b.id] === true) s.recipes[b.id] = true;
+  // Ritmo, prioridade, sobrecarga e baterias (versão 11): só valores válidos; o padrão não é guardado.
+  const thr = obj(d.throttle), pri = obj(d.priority), ocs = obj(d.overclock);
+  for (const b of BUILDINGS) {
+    const v = thr[b.id];
+    if (throttleable(b.id) && typeof v === 'number' && (THROTTLE_STEPS as readonly number[]).includes(v) && v < 1) s.throttle[b.id] = v;
+    const p = pri[b.id];
+    if (prioritizable(b.id) && (p === 1 || p === -1)) s.priority[b.id] = p;
+    if (b.overclock && ocs[b.id]) {
+      const x = obj(ocs[b.id]);
+      const left = num(x.left, 0, BALANCE.overclockTime), cool = left > 0 ? 0 : num(x.cool, 0, BALANCE.overclockCooldown);
+      if (left > 0 || cool > 0) s.overclock[b.id] = { left, cool };
+    }
+  }
+  s.energyCharge = num(d.energyCharge, 0, 1e15);
   s.debt = num(d.debt, 0, 1e15);
   const floor = num(d.autosellFloor, 0, 5);
   s.autosellFloor = (SELL_FLOORS as readonly number[]).includes(floor) ? floor : 0;
