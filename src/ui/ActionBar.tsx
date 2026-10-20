@@ -4,6 +4,7 @@ import { BALANCE } from '../game/data/balance';
 import { getModifiers } from '../game/engine/modifiers';
 import { fmt } from '../game/engine/format';
 import { Icon } from './Icon';
+import { t } from '../i18n';
 
 export function ActionBar() {
   const game = useGame(s => s.game);
@@ -20,11 +21,11 @@ export function ActionBar() {
   return (
     <div className="actionbar">
       <button className={`btn primary big ${newbie ? 'nudge' : ''}`} onClick={() => mine()} onPointerDown={start} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
-        title="Clique ou segure para extrair">
-        <Icon name="nav-mining" size={30} /> Extrair minério <small>+{fmt(perClick)} por clique</small>
+        title={t('Clique ou segure para extrair')}>
+        <Icon name="nav-mining" size={30} /> {t('Extrair minério')} <small>{t('+{n} por clique', { n: fmt(perClick) })}</small>
       </button>
       <button className={`btn ${game.resources.iron >= 15 && game.buildings.miner === 0 ? 'nudge' : ''}`} disabled={game.resources.iron < 1} onClick={() => sell('iron')}>
-        <Icon name="icon-sell" size={24} /> Vender ferro
+        <Icon name="icon-sell" size={24} /> {t('Vender ferro')}
       </button>
     </div>
   );

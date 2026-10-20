@@ -3,7 +3,8 @@
 import { events } from '../game/events';
 import { useGame } from '../game/store';
 import { resumeContext, setVolume } from './context';
-import { startMusic, stopMusic } from './music';
+import { setMusicPhase, startMusic, stopMusic } from './music';
+import { phaseOf } from './phase';
 import { SFX } from './sfx';
 
 /** Liga efeitos, música e volume às configurações; devolve a função que desliga tudo. */
@@ -18,14 +19,15 @@ export function startAudio(): () => void {
   const offEvents = events.on(e => {
     const { settings } = useGame.getState().game;
     if (!settings.sound || settings.volume <= 0) return;
-    try { SFX[e.type]?.(); } catch { /* áudio indisponível */ }
+    try { (SFX[e.type] as ((x: typeof e) => void) | undefined)?.(e); } catch { /* áudio indisponível */ }
   });
 
   // Reage só quando as configurações de áudio mudam (o estado do jogo muda 4× por segundo).
   let last = '';
   const offStore = useGame.subscribe(s => {
-    const k = `${s.game.settings.music}|${s.game.settings.volume}`;
-    if (k !== last) { last = k; sync(); }
+    const phase = phaseOf(s.game);
+    const k = `${s.game.settings.music}|${s.game.settings.volume}|${phase}`;
+    if (k !== last) { last = k; setMusicPhase(phase); sync(); }
   });
 
   // O navegador só libera o áudio depois de um gesto do jogador.

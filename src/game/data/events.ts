@@ -1,5 +1,8 @@
 import type { Amounts, Effect, GameState } from '../types';
 import { FACTIONS, FACTION_BY_ID } from './factions';
+import { CHAIN_EVENTS } from './chains';
+
+export interface ChainStep { event: string; delay: number; p?: number }
 
 export interface EventChoice {
   label: string;
@@ -12,6 +15,10 @@ export interface EventChoice {
   relation?: Record<string, number>;
   /** Reputação comercial ganha. */
   reputation?: number;
+  /** Lembra desta escolha: as continuações da história podem reagir a ela. */
+  flag?: string;
+  /** O que acontece depois: uma continuação (ou várias, sorteadas por `p`; a sobra de probabilidade = nada). */
+  chain?: ChainStep | ChainStep[];
 }
 
 export interface EventDef {
@@ -21,6 +28,11 @@ export interface EventDef {
   sprite: string;
   minPhase: (s: GameState) => boolean;
   choices: EventChoice[];
+  /** Continuação de uma história: nunca é sorteada sozinha. `part` = [parte atual, total] para a interface. */
+  followUp?: boolean;
+  part?: [number, number];
+  /** História principal: entra no sorteio com preferência sobre os eventos comuns. */
+  priority?: boolean;
 }
 
 // Eventos espaciais (GDD, seção 15): sempre oportunidades, nunca destroem progresso.
@@ -52,6 +64,27 @@ export const EVENTS: EventDef[] = [
     choices: [
       { label: 'Absorver (energia ×2 por 90 s)', buff: { name: 'Explosão solar', duration: 90, effects: [{ kind: 'energyOut', mult: 2 }] } },
       { label: 'Medir a labareda', reward: (s, k) => (s.upgrades.lab ? { science: 3 * k } : { credits: 50 * k }) },
+    ],
+  },
+  {
+    id: 'solarStorm', name: 'Tempestade solar', sprite: 'event-solar-flare',
+    text: 'Uma tempestade de partículas carregadas varre o asteroide. Os painéis solares sofrem, mas há quem lucre com ela.',
+    minPhase: s => s.buildings.solar >= 5,
+    choices: [
+      { label: 'Recolher as partículas (painéis ×0,3 por 60 s, mas +ciência)',
+        buff: { name: 'Tempestade solar', duration: 60, effects: [{ kind: 'energyOut', building: 'solar', mult: 0.3 }] },
+        reward: (s, k) => (s.upgrades.lab ? { science: 8 * k } : { credits: 100 * k }) },
+      { label: 'Recolher os painéis (sem perda, sem ganho)', reward: (_, k) => ({ credits: 30 * k }) },
+    ],
+  },
+  {
+    id: 'reactorFault', name: 'Instabilidade no reator', sprite: 'event-solar-flare',
+    text: 'Os sensores de um reator acusam oscilação. Dá para reduzir a carga e esperar, ou pagar uma equipe para estabilizá-lo.',
+    minPhase: s => s.buildings.fission >= 1,
+    choices: [
+      { label: 'Reduzir a carga (fissão e fusão ×0,6 por 90 s)',
+        buff: { name: 'Reator instável', duration: 90, effects: [{ kind: 'energyOut', building: 'fission', mult: 0.6 }, { kind: 'energyOut', building: 'fusion', mult: 0.6 }] } },
+      { label: 'Equipe de estabilização', pay: (_, k) => ({ components: Math.max(1, Math.round(4 * k)) }), reward: (s, k) => (s.upgrades.lab ? { science: 10 * k } : { credits: 200 * k }) },
     ],
   },
   {
@@ -131,5 +164,7 @@ for (const f of FACTIONS) {
     ],
   });
 }
+
+EVENTS.push(...CHAIN_EVENTS);
 
 export const EVENT_BY_ID = Object.fromEntries(EVENTS.map(e => [e.id, e]));

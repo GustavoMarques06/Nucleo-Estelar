@@ -1,5 +1,6 @@
 import type { Amounts, Effect, GameState } from '../types';
 import { BALANCE } from './balance';
+import { t } from '../../i18n';
 
 export interface MegaStage { cost: Amounts; effects: Effect[]; desc: string; sprite: string }
 export interface MegaprojectDef {
@@ -70,7 +71,7 @@ MEGAPROJECTS.push({
     const k = Math.pow(2.4, n);
     return {
       sprite: n < 3 ? 'star-orange' : n < 8 ? 'star-yellow' : n < 15 ? 'star-blue-giant' : 'star-white-dwarf',
-      desc: `Estágio ${n + 1}: toda a produção ×1,2 e energia ×1,2.`,
+      desc: t('Estágio {n}: toda a produção ×1,2 e energia ×1,2.', { n: n + 1 }),
       cost: Object.fromEntries(Object.entries({ credits: 2e9, alloys: 2e6, components: 4e5, exotic: 5000, science: 5e7, modules: 2e4 }).map(([r, v]) => [r, Math.round(v * k)])),
       effects: [{ kind: 'outputAll', mult: 1.2 }, { kind: 'energyOut', mult: 1.2 }],
     };

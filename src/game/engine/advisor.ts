@@ -6,19 +6,23 @@ import { BALANCE } from '../data/balance';
 import { nextMilestone } from '../data/milestones';
 import { unitCost, canAfford, maxAffordable } from './costs';
 import { capsOf, getModifiers, isBuildingUnlocked, isUpgradeVisible } from './modifiers';
-import { fmt, fmtRate } from './format';
+import { fmt, fmtNum, fmtRate } from './format';
 import { CRISIS_BY_KIND } from '../data/crises';
+import { t } from '../../i18n';
 
 export type Severity = 'ok' | 'warn' | 'bad';
+/** O que o jogador pode fazer já para resolver o que limita: construir algo ou abrir uma aba (com destaque opcional). */
+export type AdviceAction = { build: BuildingId } | { tab: string; upgrade?: string };
 export interface Advice {
   producing: string;
   limiting: { text: string; severity: Severity };
   next: string;
+  action?: AdviceAction;
 }
 
 const costText = (s: GameState, id: BuildingId) =>
   Object.entries(unitCost(BUILDING_BY_ID[id], s.buildings[id], getModifiers(s).cost))
-    .map(([r, v]) => `${fmt(v ?? 0)} ${r === 'credits' ? 'cr' : RESOURCES[r as ResId].name.toLowerCase()}`).join(' + ');
+    .map(([r, v]) => `${fmt(v ?? 0)} ${r === 'credits' ? 'cr' : t(RESOURCES[r as ResId].name).toLowerCase()}`).join(' + ');
 
 const has = (s: GameState, id: BuildingId) => isBuildingUnlocked(BUILDING_BY_ID[id], s);
 
@@ -30,9 +34,9 @@ export function advise(s: GameState, report: TickReport | null, rates: Partial<R
   const producing = (Object.entries(rates) as [ResId, number][])
     .filter(([r, v]) => r !== 'credits' && r !== 'population' && v > 0.01)
     .slice(0, 6)
-    .map(([r, v]) => `${RESOURCES[r].name} ${fmtRate(v)}`).join(' · ') || 'nada automático ainda';
-  const ok = (next: string): Advice => ({ producing, limiting: { text: 'Nada — crescimento livre', severity: 'ok' }, next });
-  const warn = (text: string, next: string, severity: Severity = 'warn'): Advice => ({ producing, limiting: { text, severity }, next });
+    .map(([r, v]) => `${t(RESOURCES[r].name)} ${fmtRate(v)}`).join(' · ') || t('nada automático ainda');
+  const ok = (next: string, action?: AdviceAction): Advice => ({ producing, limiting: { text: t('Nada — crescimento livre'), severity: 'ok' }, next, action });
+  const warn = (text: string, next: string, severity: Severity = 'warn', action?: AdviceAction): Advice => ({ producing, limiting: { text, severity }, next, action });
 
   const st = report?.status ?? {};
   const e = report?.energy;
@@ -44,67 +48,74 @@ export function advise(s: GameState, report: TickReport | null, rates: Partial<R
     // À noite, se de dia sobra energia, o remédio é guardar a sobra (baterias), não só construir geradores.
     const night = e.day < 0.95 && s.buildings.solar > 0;
     const fix = night && has(s, 'battery')
-      ? `Baterias (${costText(s, 'battery')}) guardam a sobra do dia para a noite${s.buildings.fission > 0 || s.buildings.fusion > 0 ? '; a sobrecarga dos reatores também ajuda' : ''}.`
-      : `Construir ${BUILDING_BY_ID[best].name.toLowerCase()} (${costText(s, best)}).`;
-    return warn(`Energia insuficiente${night ? ' (noite)' : ''} — máquinas a ${Math.round(e.ratio * 100)}%`, fix, 'bad');
+      ? t('Baterias ({custo}) guardam a sobra do dia para a noite{extra}.', { custo: costText(s, 'battery'), extra: s.buildings.fission > 0 || s.buildings.fusion > 0 ? t('; a sobrecarga dos reatores também ajuda') : '' })
+      : t('Construir {nome} ({custo}).', { nome: t(BUILDING_BY_ID[best].name).toLowerCase(), custo: costText(s, best) });
+    return warn(t(night ? 'Energia insuficiente (noite) — máquinas a {n}%' : 'Energia insuficiente — máquinas a {n}%', { n: Math.round(e.ratio * 100) }), fix, 'bad',
+      { build: night && has(s, 'battery') ? 'battery' : best });
   }
   if (report && report.upkeep.ratio < 0.999) {
-    return warn(`Manutenção em atraso — estruturas caras a ${Math.round(report.upkeep.ratio * 100)}%`,
-      'Aumente a renda (colônias de comércio, venda automática) ou use o decreto Austeridade; veja a aba Finanças.', 'bad');
+    return warn(t('Manutenção em atraso — estruturas caras a {n}%', { n: Math.round(report.upkeep.ratio * 100) }),
+      t('Aumente a renda (colônias de comércio, venda automática) ou use o decreto Austeridade; veja a aba Finanças.'), 'bad', { tab: 'finance' });
   }
   const crisis = s.crises[0];
   if (crisis) {
     const loc = s.locations.find(l => l.id === crisis.locId);
-    return warn(`${CRISIS_BY_KIND[crisis.kind].name} em ${loc?.name ?? 'uma colônia'}`, 'Resolva no Mapa (pagando ou pedindo ajuda a uma facção) ou espere passar.', 'warn');
+    return warn(t('{crise} em {local}', { crise: t(CRISIS_BY_KIND[crisis.kind].name), local: loc?.name ?? t('uma colônia') }), t('Resolva no Mapa (pagando ou pedindo ajuda a uma facção) ou espere passar.'), 'warn', { tab: 'map' });
   }
   if (pop?.status === 'starving') {
-    return warn('População passando fome', has(s, 'hydroponics') ? `Mais estufas hidropônicas (${costText(s, 'hydroponics')}) e água para elas.` : 'Pesquise Habitats pressurizados.', 'bad');
+    return warn(t('População passando fome'), has(s, 'hydroponics') ? t('Mais estufas hidropônicas ({custo}) e água para elas.', { custo: costText(s, 'hydroponics') }) : t('Pesquise Habitats pressurizados.'), 'bad',
+      has(s, 'hydroponics') ? { build: 'hydroponics' } : { tab: 'research', upgrade: 'habitats' });
   }
   if (work && work.ratio < 0.999) {
-    return warn(`Falta mão de obra — estruturas a ${Math.round(work.ratio * 100)}%`,
-      `Mais moradia: ${has(s, 'residential') ? 'torres residenciais' : 'habitats'} e comida para a população crescer.`);
+    return warn(t('Falta mão de obra — estruturas a {n}%', { n: Math.round(work.ratio * 100) }),
+      t('Mais moradia: {tipo} e comida para a população crescer.', { tipo: has(s, 'residential') ? t('torres residenciais') : t('habitats') }), 'warn',
+      { build: has(s, 'residential') ? 'residential' : 'habitat' });
   }
   for (const b of BUILDINGS) {
     const x = st[b.id];
     if (x?.kind === 'input' && s.buildings[b.id] > 0) {
-      const name = RESOURCES[x.res].name.toLowerCase();
+      const name = t(RESOURCES[x.res].name).toLowerCase();
       const fix: Partial<Record<ResId, string>> = {
-        iron: 'mais mineradoras', copper: 'mais mineradoras', alloys: 'mais refinarias ou fundições',
-        water: 'extratores de gelo', components: 'mais fábricas', gold: 'prospecção de ouro', exotic: 'colônias em mundos raros',
+        iron: t('mais mineradoras'), copper: t('mais mineradoras'), alloys: t('mais refinarias ou fundições'),
+        water: t('extratores de gelo'), components: t('mais fábricas'), gold: t('prospecção de ouro'), exotic: t('colônias em mundos raros'),
       };
-      return warn(`${b.name} sem ${name}`, `Aumentar a oferta de ${name}${fix[x.res] ? ` com ${fix[x.res]}` : ''}.`);
+      const source: Partial<Record<ResId, BuildingId>> = { iron: 'miner', copper: 'miner', alloys: 'refinery', water: 'iceExtractor', components: 'factory' };
+      const src = source[x.res];
+      return warn(t('{nome} sem {recurso}', { nome: t(b.name), recurso: name }), fix[x.res] ? t('Aumentar a oferta de {recurso} com {como}.', { recurso: name, como: fix[x.res]! }) : t('Aumentar a oferta de {recurso}.', { recurso: name }),
+        'warn', src && has(s, src) ? { build: src } : undefined);
     }
   }
   for (const b of BUILDINGS) {
     const x = st[b.id];
     if (x?.kind === 'full' && s.buildings[b.id] > 0) {
-      return warn(`Armazém de ${RESOURCES[x.res].name.toLowerCase()} cheio`, 'Vender, ligar a venda automática ou construir armazéns.');
+      return warn(t('Armazém de {recurso} cheio', { recurso: t(RESOURCES[x.res].name).toLowerCase() }), t('Vender, ligar a venda automática ou construir armazéns.'), 'warn', has(s, 'storage') ? { build: 'storage' } : { tab: 'logistics' });
     }
   }
   if (pop?.status === 'housing' && pop.cap > 0 && s.resources.population >= pop.cap - 0.5) {
-    return warn('Moradia lotada', `Mais ${has(s, 'residential') ? 'torres residenciais' : 'habitats'} deixam a população (e os impostos) crescer.`);
+    return warn(t('Moradia lotada'), t('Mais {tipo} deixam a população (e os impostos) crescer.', { tipo: has(s, 'residential') ? t('torres residenciais') : t('habitats') }), 'warn',
+      { build: has(s, 'residential') ? 'residential' : 'habitat' });
   }
   const caps = capsOf(s);
   const tooBig = BUILDINGS.find(b => isBuildingUnlocked(b, s) && Object.entries(unitCost(b, s.buildings[b.id], getModifiers(s).cost))
     .some(([r, v]) => RESOURCES[r as ResId].stored && (v ?? 0) > caps[r as ResId]));
-  if (tooBig) return warn(`${tooBig.name} custa mais do que cabe no armazém`, `Construir armazéns (${costText(s, 'storage')}) para aumentar a capacidade.`);
+  if (tooBig) return warn(t('{nome} custa mais do que cabe no armazém', { nome: t(tooBig.name) }), t('Construir armazéns ({custo}) para aumentar a capacidade.', { custo: costText(s, 'storage') }), 'warn', { build: 'storage' });
   if (s.buildings.miner === 0) {
-    return warn('Produção apenas manual', s.resources.credits >= 15 ? 'Comprar a primeira mineradora automática.' : 'Clique no asteroide e venda o minério até comprar uma mineradora.');
+    return warn(t('Produção apenas manual'), s.resources.credits >= 15 ? t('Comprar a primeira mineradora automática.') : t('Clique no asteroide e venda o minério até comprar uma mineradora.'), 'warn', { build: 'miner' });
   }
   const readyContract = s.contracts.find(c => s.resources[c.res] >= c.amount);
-  if (readyContract) return ok(`Contrato pronto na aba Comércio: entregue ${fmt(readyContract.amount)} de ${RESOURCES[readyContract.res].name.toLowerCase()}.`);
-  if (s.buildings.refinery === 0 && has(s, 'refinery')) return ok(`Refinaria (${costText(s, 'refinery')}): 2 ferros (2 cr) viram 1 liga (5 cr).`);
+  if (readyContract) return ok(t('Contrato pronto na aba Comércio: entregue {n} de {recurso}.', { n: fmt(readyContract.amount), recurso: t(RESOURCES[readyContract.res].name).toLowerCase() }), { tab: 'commerce' });
+  if (s.buildings.refinery === 0 && has(s, 'refinery')) return ok(t('Refinaria ({custo}): 2 ferros (2 cr) viram 1 liga (5 cr).', { custo: costText(s, 'refinery') }), { build: 'refinery' });
   const research = UPGRADES.find(u => isUpgradeVisible(u, s) && canAfford(s, u.cost));
-  if (research) return ok(`Pesquisa disponível: ${research.name}.`);
+  if (research) return ok(t('Pesquisa disponível: {nome}.', { nome: t(research.name) }), { tab: 'research', upgrade: research.id });
   const fresh = BUILDINGS.find(b => s.buildings[b.id] === 0 && isBuildingUnlocked(b, s));
-  if (fresh) return ok(`Nova estrutura liberada: ${fresh.name} (${costText(s, fresh.id)}).`);
+  if (fresh) return ok(t('Nova estrutura liberada: {nome} ({custo}).', { nome: t(fresh.name), custo: costText(s, fresh.id) }), { build: fresh.id });
   // Marco ao alcance: a estrutura que chega ao próximo marco com menos compras (até 3), se couber no bolso agora.
   const near = BUILDINGS.filter(b => s.buildings[b.id] > 0 && isBuildingUnlocked(b, s))
     .map(b => ({ b, missing: nextMilestone(s.buildings[b.id]) - s.buildings[b.id] }))
     .filter(x => x.missing <= 3 && maxAffordable(s, x.b, getModifiers(s).cost) >= x.missing)
     .sort((a, b) => a.missing - b.missing)[0];
-  if (near) return ok(`Marco ao alcance: ${near.missing === 1 ? 'mais 1' : `mais ${near.missing}`} ${near.b.name} e ela rende ×${BALANCE.milestoneMult.toLocaleString('pt-BR')}.`);
-  if ((s.megaprojects.dyson ?? 0) >= 4) return ok('Contribua para o Núcleo Estelar (Megaprojetos): cada estágio multiplica toda a produção.');
-  if (s.upgrades.lab && s.buildings.observatory === 0) return ok(`Observatório (${costText(s, 'observatory')}) gera ciência para as pesquisas.`);
-  return ok(`Mais mineradoras (${costText(s, 'miner')}) ou pesquisas na aba Pesquisa.`);
+  if (near) return ok(t('Marco ao alcance: mais {n} {nome} e ela rende ×{m}.', { n: near.missing, nome: t(near.b.name), m: fmtNum(BALANCE.milestoneMult) }), { build: near.b.id });
+  if ((s.megaprojects.dyson ?? 0) >= 4) return ok(t('Contribua para o Núcleo Estelar (Megaprojetos): cada estágio multiplica toda a produção.'), { tab: 'megaprojects' });
+  if (s.upgrades.lab && s.buildings.observatory === 0) return ok(t('Observatório ({custo}) gera ciência para as pesquisas.', { custo: costText(s, 'observatory') }), { build: 'observatory' });
+  return ok(t('Mais mineradoras ({custo}) ou pesquisas na aba Pesquisa.', { custo: costText(s, 'miner') }), { build: 'miner' });
 }

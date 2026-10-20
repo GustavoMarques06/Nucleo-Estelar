@@ -9,12 +9,13 @@ import { isHigh, marketDepth, marketFactor, marketUnlocked, quoteSale, saturatio
 import { fmt, fmtDuration } from '../../game/engine/format';
 import { Icon } from '../Icon';
 import { BuildingList, BuyAmountPicker } from './BuildingsPanel';
+import { t } from '../../i18n';
 
 function Reward({ r }: { r: Amounts }) {
   return (
     <span className="cost">
       {(Object.entries(r) as [ResId, number][]).map(([k, v]) => (
-        <span key={k} title={RESOURCES[k].name}><Icon name={RESOURCES[k].icon} size={16} />+{fmt(v)}</span>
+        <span key={k} title={t(RESOURCES[k].name)}><Icon name={RESOURCES[k].icon} size={16} />+{fmt(v)}</span>
       ))}
     </span>
   );
@@ -28,10 +29,10 @@ function Reputation() {
   const next = BALANCE.repStep * Math.pow(lvl + 1, 2);
   const prev = BALANCE.repStep * lvl * lvl;
   return (
-    <div className="rep-box" title="Cada nível: rotas 3% mais baratas, contratos +3% e demanda do mercado +8%.">
-      <b><Icon name="icon-reputation" size={22} /> Reputação comercial · nível {lvl}</b>
+    <div className="rep-box" title={t('Cada nível: rotas 3% mais baratas, contratos +3% e demanda do mercado +8%.')}>
+      <b><Icon name="icon-reputation" size={22} /> {t('Reputação comercial · nível {n}', { n: lvl })}</b>
       <div className="bar"><div style={{ width: `${Math.min(100, ((rep - prev) / (next - prev)) * 100)}%` }} /></div>
-      <small>{fmt(rep)} / {fmt(next)} pontos · rotas −{Math.min(50, lvl * 3)}% · contratos +{lvl * 3}% · demanda +{lvl * 8}%</small>
+      <small>{t('{a} / {b} pontos · rotas −{r}% · contratos +{c}% · demanda +{d}%', { a: fmt(rep), b: fmt(next), r: Math.min(50, lvl * 3), c: lvl * 3, d: lvl * 8 })}</small>
     </div>
   );
 }
@@ -47,14 +48,14 @@ function ContractCard({ c }: { c: Contract }) {
       <Icon name={RESOURCES[c.res].icon} size={48} className="card-art" />
       <div className="card-main">
         <h3>
-          Entregar {fmt(c.amount)} {RESOURCES[c.res].name.toLowerCase()}
-          {c.risk && <span className="count warn" title={`Paga ${Math.round((BALANCE.contractRiskMult - 1) * 100)}% a mais, mas falhar custa ${BALANCE.repRiskFail} de reputação.`}>URGENTE</span>}
+          {t('Entregar {n} {recurso}', { n: fmt(c.amount), recurso: t(RESOURCES[c.res].name).toLowerCase() })}
+          {c.risk && <span className="count warn" title={t('Paga {p}% a mais, mas falhar custa {r} de reputação.', { p: Math.round((BALANCE.contractRiskMult - 1) * 100), r: BALANCE.repRiskFail })}>{t('URGENTE')}</span>}
         </h3>
-        <p className="desc">Você tem {fmt(have)} · expira em {fmtDuration(c.remaining)} · reputação +{c.risk ? BALANCE.repRiskContract : BALANCE.repContract}</p>
+        <p className="desc">{t('Você tem {n} · expira em {tempo} · reputação +{r}', { n: fmt(have), tempo: fmtDuration(c.remaining), r: c.risk ? BALANCE.repRiskContract : BALANCE.repContract })}</p>
         <div className="bar"><div style={{ width: `${(c.remaining / total) * 100}%` }} /></div>
       </div>
       <button className="btn buy" disabled={!ok} onClick={() => fulfill(c.id)}>
-        Entregar <Reward r={c.reward} />
+        {t('Entregar')} <Reward r={c.reward} />
       </button>
     </article>
   );
@@ -65,13 +66,13 @@ function Contracts() {
   if (!contractsUnlocked(game)) return null;
   return (
     <>
-      <h4 className="section">Contratos comerciais</h4>
+      <h4 className="section">{t('Contratos comerciais')}</h4>
       <p className="hint">
-        Pedidos com prazo que pagam bem acima do preço base (não variam com o mercado nem saturam a demanda). Novas ofertas a cada 3 minutos.
-        {game.stats.contractsDone >= BALANCE.contractRiskAfter && ' Os urgentes pagam mais, mas falhar custa reputação.'}
+        {t('Pedidos com prazo que pagam bem acima do preço base (não variam com o mercado nem saturam a demanda). Novas ofertas a cada 3 minutos.')}
+        {game.stats.contractsDone >= BALANCE.contractRiskAfter && ' ' + t('Os urgentes pagam mais, mas falhar custa reputação.')}
       </p>
       {game.stats.contractsDone > 0 && <Reputation />}
-      {game.contracts.length === 0 && <p className="hint">Nenhum contrato aberto agora. Aguarde a próxima oferta.</p>}
+      {game.contracts.length === 0 && <p className="hint">{t('Nenhum contrato aberto agora. Aguarde a próxima oferta.')}</p>}
       {game.contracts.map(c => <ContractCard key={c.id} c={c} />)}
     </>
   );
@@ -108,19 +109,19 @@ export function MarketPanel() {
   return (
     <div className="panel-body">
       <Contracts />
-      {game.upgrades.commerce && <><BuyAmountPicker /><BuildingList category="commerce" title="Estruturas comerciais" /></>}
-      <h4 className="section">Mercado</h4>
+      {game.upgrades.commerce && <><BuyAmountPicker /><BuildingList category="commerce" title={t('Estruturas comerciais')} /></>}
+      <h4 className="section">{t('Mercado')}</h4>
       <p className="hint">
         {dynamic
-          ? 'Os preços oscilam e a demanda de cada recurso satura quando você vende demais: segure o estoque na baixa, venda na alta e diversifique. A demanda se recupera com o tempo.'
-          : 'Vender gera créditos na hora. Pesquise Entrepostos comerciais para liberar o mercado dinâmico.'}
-        {!m.autosell && ' A pesquisa “Logística automatizada” libera a venda automática.'}
+          ? t('Os preços oscilam e a demanda de cada recurso satura quando você vende demais: segure o estoque na baixa, venda na alta e diversifique. A demanda se recupera com o tempo.')
+          : t('Vender gera créditos na hora. Pesquise Entrepostos comerciais para liberar o mercado dinâmico.')}
+        {!m.autosell && ' ' + t('A pesquisa “Logística automatizada” libera a venda automática.')}
       </p>
       {m.autosell && dynamic && (
         <div className="market-top">
-          <label>Venda automática só com preço
+          <label>{t('Venda automática só com preço')}
             <select value={game.autosellFloor} onChange={e => setFloor(Number(e.target.value))}>
-              {SELL_FLOORS.map(f => <option key={f} value={f}>{f === 0 ? 'qualquer' : `≥ ${Math.round(f * 100)}% do base`}</option>)}
+              {SELL_FLOORS.map(f => <option key={f} value={f}>{f === 0 ? t('qualquer') : t('≥ {n}% do base', { n: Math.round(f * 100) })}</option>)}
             </select>
           </label>
         </div>
@@ -142,37 +143,37 @@ export function MarketPanel() {
           <article key={r} className={`card market ${dynamic && isHigh(factor) && sat < 0.25 ? 'hot' : ''}`}>
             <Icon name={def.icon} size={48} className="card-art" />
             <div className="card-main">
-              <h3>{def.name}</h3>
-              <p className="desc">{fmt(game.resources[r])} em estoque</p>
+              <h3>{t(def.name)}</h3>
+              <p className="desc">{t('{n} em estoque', { n: fmt(game.resources[r]) })}</p>
               <p className={`price-tag ${dynamic ? (pct > 5 && satPct < 15 ? 'up' : pct < -5 || satPct > 30 ? 'down' : '') : ''}`}>
-                {fmt(now)} cr cada
-                {dynamic && <small>{pct >= 0 ? '+' : ''}{pct}% {trend > 0.004 ? '▲ subindo' : trend < -0.004 ? '▼ caindo' : '● estável'}</small>}
+                {t('{n} cr cada', { n: fmt(now) })}
+                {dynamic && <small>{pct >= 0 ? '+' : ''}{pct}% {trend > 0.004 ? t('▲ subindo') : trend < -0.004 ? t('▼ caindo') : t('● estável')}</small>}
               </p>
               {dynamic && (
                 <div className={`demand ${satPct > 40 ? 'high' : satPct > 15 ? 'mid' : ''}`}
-                  title={`O mercado absorve cerca de ${fmt(depth)} unidades antes de o preço cair à metade. Saturação atual: ${satPct}% do preço perdido; metade se recupera a cada ${fmtDuration(BALANCE.marketRecovery)}.`}>
-                  <span>Demanda {satPct === 0 ? 'livre' : `saturada ${satPct}%`}</span>
+                  title={t('O mercado absorve cerca de {n} unidades antes de o preço cair à metade. Saturação atual: {p}% do preço perdido; metade se recupera a cada {tempo}.', { n: fmt(depth), p: satPct, tempo: fmtDuration(BALANCE.marketRecovery) })}>
+                  <span>{satPct === 0 ? t('Demanda livre') : t('Demanda saturada {n}%', { n: satPct })}</span>
                   <i><b style={{ width: `${satPct}%` }} /></i>
                 </div>
               )}
-              {dynamic && units > 0 && avg < now * 0.97 && <small className="desc">Vender tudo agora rende em média {fmt(avg)} cr por unidade.</small>}
+              {dynamic && units > 0 && avg < now * 0.97 && <small className="desc">{t('Vender tudo agora rende em média {n} cr por unidade.', { n: fmt(avg) })}</small>}
               {dynamic && (
                 <>
                   <Spark res={r} clock={clock} />
-                  <small className="desc">{peak.in === 0 ? 'Este é o melhor momento dos próximos 30 min.' : `Pico em cerca de ${fmtDuration(peak.in)} (${peak.mult >= 1 ? '+' : ''}${Math.round((peak.mult - 1) * 100)}%).`}</small>
+                  <small className="desc">{peak.in === 0 ? t('Este é o melhor momento dos próximos 30 min.') : t('Pico em cerca de {tempo} ({p}%).', { tempo: fmtDuration(peak.in), p: `${peak.mult >= 1 ? '+' : ''}${Math.round((peak.mult - 1) * 100)}` })}</small>
                 </>
               )}
               {m.autosell && (
                 <div className="autosell-row">
                   <label className="toggle">
                     <input type="checkbox" checked={!!game.autosell[r]} onChange={e => setAutosell(r, e.target.checked)} />
-                    Venda automática
+                    {t('Venda automática')}
                   </label>
                   {game.autosell[r] && (
-                    <label className="toggle" title="Fração do armazém que a venda automática nunca vende (estoque de segurança para construir).">
-                      Reserva
+                    <label className="toggle" title={t('Fração do armazém que a venda automática nunca vende (estoque de segurança para construir).')}>
+                      {t('Reserva')}
                       <select value={game.keep[r] ?? 0} onChange={e => setKeep(r, Number(e.target.value))}>
-                        {KEEP_STEPS.map(k => <option key={k} value={k}>{k === 0 ? 'nenhuma' : `${Math.round(k * 100)}% do armazém`}</option>)}
+                        {KEEP_STEPS.map(k => <option key={k} value={k}>{k === 0 ? t('nenhuma') : t('{n}% do armazém', { n: Math.round(k * 100) })}</option>)}
                       </select>
                     </label>
                   )}
@@ -180,7 +181,7 @@ export function MarketPanel() {
               )}
             </div>
             <button className="btn buy" disabled={units < 1} onClick={() => sell(r)}>
-              Vender tudo
+              {t('Vender tudo')}
               <span className="cost"><span><Icon name="icon-credits" size={16} />{fmt(total)}</span></span>
             </button>
           </article>

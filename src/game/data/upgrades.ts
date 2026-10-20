@@ -131,6 +131,9 @@ export const UPGRADES: UpgradeDef[] = [
   { id: 'fusion', phase: 5, name: 'Fusão nuclear', icon: 'building-fusion-ring', requires: ['powerGrid', 'nanotech'],
     desc: 'Libera o Reator de fusão.', cost: { science: 40000, exotic: 20 }, effects: [] },
 
+  { id: 'antimatter', phase: 5, name: 'Antimatéria', icon: 'building-fusion-ring', requires: ['fusion'],
+    desc: 'Libera o Reator de antimatéria.', cost: { science: 70000, exotic: 40 }, effects: [] },
+
   // ---------- Fase 6: megaprojetos e Ascensão ----------
   { id: 'megaEngineering', phase: 6, name: 'Engenharia de megaestruturas', icon: 'mega-dyson-1', requires: ['fusion'],
     desc: 'Libera os Megaprojetos.', cost: { science: 80000, exotic: 50 }, effects: [] },

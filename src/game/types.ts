@@ -13,7 +13,8 @@ export type BuildingId =
   | 'habitat' | 'hydroponics' | 'hospital' | 'university' | 'residential' | 'market'
   | 'orbitalCollector' | 'fusion' | 'chemicalPlant' | 'shipyard' | 'comms' | 'harbor'
   | 'cleanroom' | 'refineryComplex' | 'spaceport' | 'embassy' | 'moduleLine' | 'quantumLab' | 'arcology' | 'deepDrill' | 'titaniumForge' | 'crystalArray'
-  | 'converter' | 'recycler' | 'silo' | 'tank' | 'depot';
+  | 'converter' | 'recycler' | 'silo' | 'tank' | 'depot'
+  | 'geothermal' | 'flowBattery' | 'antimatter';
 /** Grupos de armazenamento: armazéns especializados aumentam só a capacidade do seu grupo. */
 export type StorageGroup = 'ore' | 'fluid' | 'goods';
 /** Prioridade de uma indústria na disputa por insumos (1 = alta, −1 = baixa; ausente = normal). */
@@ -139,6 +140,7 @@ export interface Outpost {
   terra: number;             // nível de terraformação (0–5)
   terraRemaining: number;    // segundos até concluir o nível em andamento (0 = nada em andamento)
   terraTotal: number;
+  link?: boolean;            // ligada à rede de energia da base (rende mais, mas consome energia)
 }
 
 export interface Location {
@@ -179,7 +181,7 @@ export interface Contract {
 }
 
 // ---------- Colônias: crises, rotas e mercado ----------
-export type CrisisKind = 'drought' | 'unrest' | 'raid' | 'plague' | 'blockade';
+export type CrisisKind = 'drought' | 'unrest' | 'raid' | 'plague' | 'blockade' | 'blackout';
 export interface Crisis { id: string; locId: string; kind: CrisisKind; remaining: number; total: number }
 export interface TradeRoute { id: string; a: string; b: string; insured?: boolean }   // ids dos dois locais ligados; segurada = imune a bloqueios
 export interface MarketState {
@@ -188,13 +190,13 @@ export interface MarketState {
 }
 
 // ---------- Facções e drones ----------
-export interface FactionState { relation: number; cooldown: number; questTimer: number }   // relação 0–100; cooldown do próximo presente; segundos até o próximo pedido
+export interface FactionState { relation: number; cooldown: number; questTimer: number; done?: number }   // relação 0–100; cooldown do próximo presente; segundos até o próximo pedido
 /** Pedido de uma facção: entregar material em troca de relação e recompensas. */
-export interface FactionQuest { id: string; faction: string; res: ResId; amount: number; reward: Amounts; remaining: number; total: number }
+export interface FactionQuest { id: string; faction: string; res: ResId; amount: number; reward: Amounts; remaining: number; total: number; honor?: boolean }
 export type DroneRole = 'courier' | 'scout' | 'hauler' | 'mechanic' | 'terraformer' | 'loader';
 
 /** Sobrecarga de um reator: `left` segundos a mais de energia; depois `cool` segundos esfriando. */
-export interface Overclock { left: number; cool: number }
+export interface Overclock { left: number; cool: number; fault?: boolean }   // fault: pane — esfria mais tempo e gera menos
 
 // ---------- Fim de jogo ----------
 export interface TranscendenceState {
@@ -234,6 +236,7 @@ export interface GameState {
   goals: string[];                         // objetivos guiados concluídos (permanentes)
   story: string[];                         // registros do diário de bordo já lidos (permanentes)
   factions: Record<string, FactionState>;
+  claimTimer: number;                      // segundos até a próxima movimentação de território das facções
   quests: FactionQuest[];                  // pedidos abertos das facções (no máximo um por facção)
   crises: Crisis[];
   crisisTimer: number;                     // segundos até a próxima crise (só conta com colônias)
@@ -245,14 +248,18 @@ export interface GameState {
   throttle: Partial<Record<BuildingId, number>>; // ritmo escolhido (0–1; ausente = 100%)
   priority: Partial<Record<BuildingId, Priority>>; // prioridade na disputa por insumos (ausente = normal)
   overclock: Partial<Record<BuildingId, Overclock>>; // reatores em sobrecarga ou esfriando
+  protect: Category[];                     // categorias protegidas no racionamento: só perdem energia depois das outras
   energyCharge: number;                    // energia guardada nas baterias (energia·segundo)
   debt: number;                            // manutenção em atraso (créditos)
   drones: Record<DroneRole, number>;       // drones designados a cada função
   transcendence: TranscendenceState;
   buffs: Buff[];
   event: ActiveEvent | null;
+  chain: { event: string; remaining: number }[];           // continuações de eventos que ainda vão acontecer (segundos para surgirem)
+  flags: string[];                                         // escolhas lembradas nesta jornada (as continuações reagem a elas)
   eventTimer: number;              // segundos até o próximo evento
   ascension: AscensionState;
+  challenges: { active: string | null; done: string[] };   // desafio da jornada atual e os já concluídos (permanentes)
   stats: {
     totalMined: number;
     produced: Partial<Record<ResId, number>>;
@@ -263,6 +270,7 @@ export interface GameState {
     eventsSeen: number;            // eventos respondidos (todas as jornadas)
     crisesSolved: number;          // crises resolvidas (todas as jornadas)
     highSales: number;             // vendas feitas com preço 25% acima da base (todas as jornadas)
+    chains: number;                // histórias de eventos levadas até o fim (todas as jornadas)
     reputation: number;            // reputação comercial (todas as jornadas)
     questsDone: number;            // pedidos de facção cumpridos (todas as jornadas)
   };

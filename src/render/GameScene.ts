@@ -1,6 +1,7 @@
 import { AnimatedSprite, Application, Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import type { BuildingId, ResId } from '../game/types';
 import { useGame } from '../game/store';
+import { usePrefs } from '../prefs';
 import { events, type GameEvent } from '../game/events';
 import { RESOURCES } from '../game/data/resources';
 import { BUILDING_BY_ID } from '../game/data/buildings';
@@ -311,7 +312,8 @@ export class GameScene {
       const count = game.buildings[n.id];
       const visible = count >= SLOTS[n.id]!.thresholds[n.idx];
       n.sprite.visible = visible;
-      if (n.badge) { n.badge.visible = count > 0; if (count > 0) n.badge.text = `×${count}`; }
+      const labels = usePrefs.getState().sceneLabels;
+      if (n.badge) { n.badge.visible = labels && count > 1; if (count > 1) n.badge.text = `×${count}`; }   // contadores: opcionais (ruído visual); ×1 nunca aparece
       if (!visible) continue;
       const st = report?.status[n.id];
       const working = st?.kind === 'ok';

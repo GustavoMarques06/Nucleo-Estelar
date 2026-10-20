@@ -614,3 +614,262 @@ label.recipe { display: flex; gap: 6px; align-items: center; font-size: 16px; co
 .card.vein.layer small { display: block; }
 .chip.energy { position: relative; }
 .chip.energy .daynight { position: absolute; top: 1px; right: 4px; font-size: 13px; line-height: 1; }
+
+/* =====================================================================
+   Acessibilidade e preferências (idioma, tamanho do texto, daltonismo, contraste, teclado)
+   ===================================================================== */
+.skip-link { position: absolute; left: 8px; top: -60px; z-index: 100; padding: 8px 14px; background: var(--c-accent); color: #04121a; font-size: 20px; transition: top .15s; }
+.skip-link:focus { top: 8px; }
+:focus-visible { outline: 3px solid var(--c-gold); outline-offset: 2px; }
+.nav-item:focus-visible, .btn:focus-visible { outline-offset: -3px; }
+.panel:focus { outline: none; }
+
+.field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 19px; }
+.field > span:first-child { color: #9fc1d6; min-width: 150px; }
+.field select { font: inherit; font-size: 18px; background: rgba(4, 8, 22, .9); color: #e6fbff; border: 1px solid var(--hud-line-strong); padding: 3px 6px; }
+.seg { display: flex; gap: 4px; flex-wrap: wrap; }
+.seg .btn.small.active { border-color: var(--c-accent); color: var(--c-accent); }
+.shortcut-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.shortcut-list li { display: flex; gap: 10px; align-items: baseline; font-size: 18px; color: #cfe6f3; }
+.shortcut-list.big li { font-size: 20px; padding: 3px 0; border-bottom: 1px solid rgba(0, 229, 255, .12); }
+kbd { display: inline-block; min-width: 54px; padding: 0 8px; text-align: center; font: inherit; font-size: 17px; color: var(--c-gold); background: rgba(4, 8, 22, .9); border: 1px solid var(--hud-line-strong); }
+
+/* Tamanho do texto: amplia os painéis (o espaço do asteroide continua o mesmo). */
+html { --ts: 1; }
+.panel, .sidenav, .topbar, .advisor, .actionbar, .tip, .toasts, .modal-box { zoom: var(--ts); }
+
+/* Daltonismo: troca o par verde/vermelho por pares distinguíveis (o jogo também sempre escreve o sentido em texto: +/−, ▲/▼). */
+html[data-cb="redgreen"] { --c-ok: #4aa8ff; --c-bad: #ff9a1f; --c-warm: #ffd447; }
+html[data-cb="blueyellow"] { --c-ok: #2ee6c8; --c-bad: #ff5fa2; --c-warm: #ffb347; }
+
+/* Alto contraste: texto mais claro, contornos mais fortes e fundos mais sólidos. */
+html[data-contrast="high"] { --c-text: #ffffff; --c-neutral: #dbe6f2; --hud-line: rgba(0, 229, 255, .75); --hud-line-strong: #00e5ff; --hud-bg: rgba(2, 4, 12, .96); --hud-bg-strong: rgba(2, 4, 10, .98); }
+html[data-contrast="high"] body { color: #fff; }
+html[data-contrast="high"] #root { filter: contrast(1.18) brightness(1.06); }
+html[data-contrast="high"] :is(.desc, .hint, small, .cap, .count, .nav-group-label, .guide-text p, .stats li, .field > span:first-child) { color: #eaf5ff; }
+html[data-contrast="high"] .card, html[data-contrast="high"] .loc-card, html[data-contrast="high"] .advisor { background: rgba(3, 6, 16, .94); }
+/* O texto maior alarga o menu e o painel na mesma proporção. */
+@media (min-width: 1181px) { :root { --nav-w: calc(190px * var(--ts)); --panel-w: calc(430px * var(--ts)); } }
+@media (max-width: 1180px) and (min-width: 861px) { :root { --nav-w: calc(64px * var(--ts)); --panel-w: calc(380px * var(--ts)); } }
+
+/* Telas de toque: alvos maiores e campos mais fáceis de acertar. */
+@media (pointer: coarse) {
+  .btn.small, .seg .btn { min-height: 42px; min-width: 42px; }
+  .nav-item { min-height: 48px; }
+  .toggle input[type="checkbox"] { width: 24px; height: 24px; }
+  .field select, .market-top select, .autosell-row select { min-height: 40px; font-size: 19px; }
+  .btn.small { padding-left: 14px; padding-right: 14px; }
+}
+
+/* Celular: a barra de recursos vira uma única fileira que rola de lado (antes ocupava metade da tela). */
+@media (max-width: 860px) {
+  .topbar { flex-wrap: nowrap; align-items: center; }
+  .topbar .chips { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 4px; padding-bottom: 4px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+  .topbar .chip { flex: 0 0 auto; min-width: 112px; scroll-snap-align: start; }
+  .topbar .focus-toggle { flex: 0 0 auto; }
+}
+
+/* Desafios de Ascensão */
+.chip.challenge-chip { border-color: var(--c-warm); }
+.card.challenge.on { border-color: var(--c-warm); box-shadow: 0 0 12px rgba(255, 179, 71, .3); }
+.card.challenge.done { opacity: .8; }
+
+/* Painel de energia: gráfico do dia e racionamento */
+.energy-chart svg { display: block; background: rgba(0, 0, 0, .45); border: 1px solid var(--hud-line); }
+.ration { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.ration .btn.on { border-color: var(--c-gold); box-shadow: 0 0 8px rgba(255, 200, 80, .5); }
+
+/* =====================================================================
+   Leitura mais fácil: dois níveis na barra superior, telemetria em linhas, feedback de movimento
+   ===================================================================== */
+.chips { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 10px; }
+.chips-key { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; flex: 1 1 560px; }
+.chips-key .chip b { font-size: 24px; }
+.chips-key .chip small { font-size: 16px; }
+.chips-mini { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 100%; }
+.chip.mini { --cut: 5px; display: flex; align-items: center; gap: 5px; padding: 2px 8px 2px 5px; min-width: 0; }
+.chip.mini b { font-size: 18px; line-height: 1; }
+.chip.mini .fillbar { height: 3px; }
+.chip small.pos { color: #6ee7a0; }
+.chip small.neg { color: var(--c-bad); }
+.trend { font-style: normal; font-size: 12px; line-height: 1; }
+.trend.up { color: #6ee7a0; }
+.trend.down { color: var(--c-bad); }
+.trend.flat { color: #5d7a8c; }
+.trend.full { color: var(--c-warm); }
+
+/* Telemetria: rótulo à esquerda, texto à direita, uma cor por gravidade; o próximo passo se destaca */
+.advisor::before { display: none; }
+.advisor { display: grid; gap: 4px; }
+.advisor > div:not(.goal) { display: grid; grid-template-columns: 112px 1fr; align-items: baseline; gap: 10px; padding: 3px 0 3px 8px; border-left: 3px solid transparent; line-height: 1.15; }
+.advisor > div:nth-child(2) { border-left-color: var(--c-warm); }
+.advisor > div:nth-child(3) { border-left-color: var(--c-accent); background: linear-gradient(90deg, rgba(0, 229, 255, .12), transparent 80%); }
+.advisor .k { font-size: 14px; }
+.advisor .sev-bad { color: var(--c-bad); }
+.advisor .sev-warn { color: var(--c-warm); }
+.advisor .sev-ok { color: #6ee7a0; }
+
+/* Movimento: o que dá para comprar chama atenção, o resto fica quieto */
+.card, .btn { transition: filter .15s, transform .15s, box-shadow .15s; }
+.card:hover { filter: brightness(1.1); }
+.btn:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.12); }
+.btn:not(:disabled):active { transform: translateY(1px) scale(.98); }
+.card .btn.buy:not(:disabled) { animation: ready 2.6s ease-in-out infinite; }
+@keyframes ready { 50% { box-shadow: 0 0 12px 1px rgba(110, 231, 160, .55); } }
+.card .btn.buy:disabled { opacity: .55; }
+body.reduce-motion .card .btn.buy:not(:disabled) { animation: none; }
+body.reduce-motion .card, body.reduce-motion .btn { transition: none; }
+.chip.mini { container-type: normal; overflow: visible; }
+.chip.mini b { white-space: nowrap; }
+.chip.mini .fillbar { left: 0; bottom: 0; }
+.chips-key { order: 0; }
+.chips > .challenge-chip, .chips > .save-warn, .chips > .focus-toggle { order: 1; align-self: stretch; }
+.chips-mini { order: 2; }
+
+/* Textos longos recolhidos (clique abre/fecha) e cards mais compactos */
+[data-fold] { position: relative; padding-right: 20px; cursor: pointer; }
+[data-fold="closed"] { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+[data-fold]::after { content: '▾'; position: absolute; right: 2px; bottom: 0; color: var(--c-accent); font-size: 14px; }
+[data-fold="open"]::after { content: '▴'; top: 0; bottom: auto; }
+[data-fold]:hover { color: #cfeaff; }
+.panel .card { padding: 8px 10px; }
+.panel .card .desc { font-size: 17px; line-height: 1.15; }
+.panel .stats li { font-size: 16px; line-height: 1.15; }
+.panel .card h3 { margin-bottom: 2px; }
+
+/* Bússola: fase da jornada, meta da fase e o próximo passo, sempre no topo */
+.compass { padding: 8px 12px 10px; display: grid; gap: 6px; border: 1px solid transparent;
+  background: linear-gradient(var(--hud-bg-strong), var(--hud-bg-strong)) padding-box, linear-gradient(135deg, var(--c-accent), rgba(182, 140, 255, .5) 60%, var(--c-accent)) border-box;
+  clip-path: var(--chamfer); }
+.compass-steps { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; flex-wrap: wrap; font-size: 15px; }
+.compass-steps li { display: flex; align-items: center; gap: 5px; padding: 1px 8px 1px 5px; color: #5d7a8c; border-bottom: 2px solid #22344a; }
+.compass-steps li i { width: 8px; height: 8px; background: #22344a; display: inline-block; }
+.compass-steps li.done { color: #6ee7a0; border-bottom-color: #2f7a52; }
+.compass-steps li.done i { background: #6ee7a0; }
+.compass-steps li.now { color: #fff; border-bottom-color: var(--c-accent); text-shadow: 0 0 8px rgba(0, 229, 255, .6); }
+.compass-steps li.now i { background: var(--c-accent); box-shadow: 0 0 8px var(--c-accent); }
+.compass-phase { margin: 0; font-size: 18px; color: #cfe8f5; }
+.compass-phase span { color: var(--c-accent); text-transform: uppercase; font-size: 13px; letter-spacing: .08em; margin-right: 6px; }
+.compass-goal { display: flex; align-items: center; gap: 10px; }
+.compass-goal-text { flex: 1; min-width: 0; display: grid; gap: 1px; margin: 0; }
+.compass-goal-text b { font-weight: 400; font-size: 20px; color: var(--c-gold); }
+.compass-goal-text small { color: #8fb4cc; font-size: 16px; }
+.compass-goal .bar { height: 8px; margin-top: 3px; }
+.compass-goal .reward { color: #6ee7a0; white-space: nowrap; }
+
+/* =====================================================================
+   CELULAR (retrato): o jogo inteiro cabe na tela, sem rolar a página.
+   De cima para baixo: recursos, rumo, cena, ação, painel (rola por dentro) e abas na base.
+   ===================================================================== */
+@media (max-width: 860px) {
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: manipulation; }
+  .app {
+    height: 100dvh; min-height: 0; overflow: hidden;
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: 'top' 'stage' 'panel' 'nav';
+  }
+
+  /* Recursos: quatro essenciais numa linha + faixa de materiais que rola de lado */
+  .topbar { position: static; flex-direction: column; align-items: stretch; gap: 3px; padding: 4px 6px; }
+  .brand { display: none; }
+  .topbar .chips { display: flex; flex-wrap: wrap; overflow: visible; gap: 4px; padding: 0; }
+  .topbar .chips-key { flex: 1 1 calc(100% - 44px); grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+  .topbar .chips-key .chip { min-width: 0; flex: none; padding: 2px 4px 2px 3px; gap: 3px; }
+  .topbar .chips-key .chip img { width: 20px; height: 20px; }
+  .topbar .chips-key .chip b { font-size: 16px; }
+  .topbar .chips-key .chip .cap { display: none; }
+  .topbar .chips-key .chip small { font-size: 11px; }
+  .topbar .focus-toggle { flex: 0 0 40px; min-height: 0; padding: 0; justify-content: center; }
+  .topbar .focus-toggle span { display: none; }
+  .topbar .chips-mini { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; gap: 3px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .topbar .chips-mini::-webkit-scrollbar { display: none; }
+  .topbar .chip.mini { flex: 0 0 auto; min-width: 0; }
+  .topbar .challenge-chip { flex: 1 1 100%; min-width: 0; }
+
+  /* Palco: rumo compacto, cena baixa, botões grandes */
+  .stage { padding: 4px 6px; gap: 4px; min-height: 0; overflow: hidden; }
+  .compass { padding: 3px 8px 5px; gap: 2px; }
+  .compass-steps { gap: 2px; }
+  .compass-steps li:not(.now) { display: none; }
+  .compass-steps li.now { border: 0; font-size: 13px; padding: 0; }
+  .compass-phase { font-size: 14px; }
+  .compass-phase span { font-size: 11px; }
+  .compass-phase[data-fold="closed"] { -webkit-line-clamp: 1; line-clamp: 1; }
+  .compass-goal { gap: 6px; }
+  .compass-goal > img { width: 26px; height: 26px; }
+  .compass-goal-text b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .compass-goal-text small { display: none; }
+  .compass-goal .bar { height: 6px; margin-top: 2px; }
+  .scene-wrap, .app.focus .scene-wrap { flex: none; height: clamp(96px, 21dvh, 220px); min-height: 0; max-height: 220px; overflow: hidden; }
+  .actionbar { gap: 6px; }
+  .actionbar .btn { min-height: 48px; font-size: 18px; }
+  .actionbar .big small { display: none; }
+  .tip { position: fixed; left: 6px; right: 6px; bottom: calc(60px + env(safe-area-inset-bottom)); z-index: 24; padding: 4px 8px; gap: 6px; }
+  .tip img { width: 28px; height: 28px; }
+  .tip b { font-size: 16px; }
+  .tip p { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .advisor { padding: 2px 8px; }
+  .advisor > div:not(:nth-child(2)) { display: none; }
+  .advisor > div:nth-child(2) { grid-template-columns: 70px 1fr; font-size: 15px; }
+  .advisor .k { font-size: 11px; min-width: 0; }
+
+  /* Evento e avisos: por cima de tudo, acima das abas */
+  .event-card { position: fixed; left: 6px; right: 6px; bottom: calc(64px + env(safe-area-inset-bottom)); width: auto; max-height: 55dvh; overflow-y: auto; z-index: 30; }
+  .toasts { top: auto; bottom: calc(66px + env(safe-area-inset-bottom)); left: 8px; right: 8px; width: auto; }
+
+  /* Painel: ocupa o resto da tela e rola por dentro */
+  .panel { min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-left: 0; border-top: 1px solid var(--hud-line-strong); -webkit-overflow-scrolling: touch; }
+  .panel-title { font-size: 12px; padding: 4px 8px; position: sticky; top: 0; z-index: 2; background: var(--hud-bg-strong); }
+  .panel-title img { width: 20px; height: 20px; }
+  .panel-body { overflow: visible; padding: 6px; }
+  .panel .card { padding: 6px 8px; }
+
+  /* Abas na base, ao alcance do polegar */
+  .sidenav { flex-direction: row; overflow-x: auto; gap: 4px; padding: 3px 4px calc(3px + env(safe-area-inset-bottom)); border: 0; border-top: 1px solid var(--hud-line-strong); background: var(--hud-bg-strong); scrollbar-width: none; }
+  .sidenav::-webkit-scrollbar { display: none; }
+  .nav-item { flex: 0 0 auto; flex-direction: column; justify-content: center; gap: 0; min-width: 62px; min-height: 50px; padding: 3px 6px; font-size: 12px; }
+  .nav-item img { width: 24px; height: 24px; }
+  .nav-item span { display: block; white-space: nowrap; font-size: 12px; }
+  .nav-item .dot { top: 2px; right: 6px; }
+}
+
+/* CELULAR deitado: volta ao desenho em colunas, tudo reduzido */
+@media (max-width: 960px) and (max-height: 520px) {
+  :root { --nav-w: 54px; --panel-w: 42vw; }
+  .app { grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--panel-w); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: 'top top top' 'nav stage panel'; }
+  .topbar .chips-mini { display: none; }
+  .topbar .chips-key .chip small { display: none; }
+  .compass-steps, .compass-phase { display: none; }
+  .scene-wrap, .app.focus .scene-wrap { flex: 1; height: auto; max-height: none; min-height: 70px; }
+  .advisor { display: none; }
+  .sidenav { flex-direction: column; overflow-x: hidden; overflow-y: auto; border-top: 0; border-right: 1px solid var(--hud-line-strong); padding: 3px; }
+  .nav-item { min-width: 0; min-height: 40px; }
+  .nav-item span { display: none; }
+  .nav-group { flex-direction: column; border-left: 0 !important; padding-left: 0 !important; }
+  .panel { border-top: 0; border-left: 1px solid var(--hud-line-strong); }
+  .event-card { bottom: 6px; left: auto; right: 6px; width: 60%; }
+  .toasts { bottom: 8px; }
+}
+
+/* Celulares baixos (≈640–720 px de altura): corta o que é só informação extra para sobrar espaço ao painel */
+@media (max-width: 860px) and (max-height: 720px) and (min-height: 521px) {
+  .compass-phase, .advisor { display: none; }
+  .scene-wrap, .app.focus .scene-wrap { height: clamp(80px, 16dvh, 140px); }
+  .actionbar .btn { min-height: 42px; }
+}
+@media (max-width: 400px) { .actionbar .btn { font-size: 16px; padding-left: 4px; padding-right: 4px; } .actionbar .btn img { width: 22px; height: 22px; } }
+
+/* Holofote: o card que o "Ir" apontou pisca em dourado por alguns segundos */
+.card.spot { outline: 2px solid var(--c-gold); outline-offset: 2px; animation: spot 1s ease-in-out infinite; }
+@keyframes spot { 50% { box-shadow: 0 0 20px 5px rgba(255, 212, 71, .75); } }
+body.reduce-motion .card.spot { animation: none; box-shadow: 0 0 14px 3px rgba(255, 212, 71, .7); }
+
+/* Conselheiro: o botão que resolve fica ao lado do problema */
+.advisor-limit { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.advisor-limit .btn { flex: 0 0 auto; min-height: 30px; }
+@media (max-width: 860px) { .advisor-limit { gap: 6px; flex-wrap: nowrap; } .advisor-limit > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .advisor-limit .btn { font-size: 14px; padding: 0 8px; } }
+
+/* Diário: o ato aparece acima do título do capítulo */
+.story-act { margin: 8px 18px 0; font-family: var(--font-title); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--violet); }
+summary .story-act { margin: 0; font-size: 9px; }

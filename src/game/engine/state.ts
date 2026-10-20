@@ -4,7 +4,7 @@ import { BALANCE } from '../data/balance';
 import { BUILDING_IDS } from '../data/buildings';
 import { FACTIONS } from '../data/factions';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 14;
 
 export function newGame(now = Date.now()): GameState {
   return {
@@ -29,6 +29,7 @@ export function newGame(now = Date.now()): GameState {
     story: [],
     factions: Object.fromEntries(FACTIONS.map(f => [f.id, { relation: 0, cooldown: 0, questTimer: 240 }])),
     quests: [],
+    claimTimer: 600,
     crises: [],
     crisisTimer: BALANCE.crisisFirstDelay,
     routes: [],
@@ -39,15 +40,19 @@ export function newGame(now = Date.now()): GameState {
     throttle: {},
     priority: {},
     overclock: {},
+    protect: [],
     energyCharge: 0,
     debt: 0,
     drones: { courier: 0, scout: 0, hauler: 0, mechanic: 0, terraformer: 0, loader: 0 },
     transcendence: { seeds: 0, total: 0, count: 0, perks: {}, unlocked: false },
     buffs: [],
     event: null,
+    chain: [],
+    flags: [],
     eventTimer: BALANCE.eventMinGap,
     ascension: { points: 0, total: 0, count: 0, perks: {} },
-    stats: { totalMined: 0, produced: {}, earned: 0, lifetimeEarned: 0, playTime: 0, contractsDone: 0, eventsSeen: 0, crisesSolved: 0, highSales: 0, reputation: 0, questsDone: 0 },
+    challenges: { active: null, done: [] },
+    stats: { totalMined: 0, produced: {}, earned: 0, lifetimeEarned: 0, playTime: 0, contractsDone: 0, eventsSeen: 0, crisesSolved: 0, highSales: 0, reputation: 0, questsDone: 0, chains: 0 },
     settings: { reduceMotion: false, sound: true, music: true, volume: 0.6, focus: false },
     savedAt: now,
   };
@@ -83,11 +88,15 @@ export function cloneState(s: GameState): GameState {
     recipes: { ...s.recipes },
     throttle: { ...s.throttle },
     priority: { ...s.priority },
+    protect: [...s.protect],
     overclock: Object.fromEntries(Object.entries(s.overclock).map(([k, v]) => [k, { ...v! }])),
     transcendence: { ...s.transcendence, perks: { ...s.transcendence.perks } },
     buffs: s.buffs.map(b => ({ ...b })),
     event: s.event && { ...s.event },
+    chain: s.chain.map(c => ({ ...c })),
+    flags: [...s.flags],
     ascension: { ...s.ascension, perks: { ...s.ascension.perks } },
+    challenges: { active: s.challenges.active, done: [...s.challenges.done] },
     stats: { ...s.stats, produced: { ...s.stats.produced } },
     settings: { ...s.settings },
   };

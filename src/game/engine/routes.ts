@@ -4,6 +4,7 @@ import { BALANCE } from '../data/balance';
 import { repLevel } from './modifiers';
 import { cloneState } from './state';
 import { canAfford, payCost } from './costs';
+import { t } from '../../i18n';
 
 export const routesUnlocked = (s: GameState) => !!s.upgrades.logisticsNet;
 
@@ -67,7 +68,7 @@ export function canOpenRoute(s: GameState, aId: string, bId: string): { ok: bool
   if (!a?.outpost || !b?.outpost || aId === bId) return { ok: false, reason: 'Escolha duas colônias diferentes.' };
   if (s.routes.some(r => (r.a === aId && r.b === bId) || (r.a === bId && r.b === aId))) return { ok: false, reason: 'Essas colônias já estão ligadas.' };
   const max = maxRoutes(s);
-  if (routesOf(s, aId).length >= max || routesOf(s, bId).length >= max) return { ok: false, reason: `Limite de ${max} rotas por colônia (Portos de carga aumentam).` };
+  if (routesOf(s, aId).length >= max || routesOf(s, bId).length >= max) return { ok: false, reason: t('Limite de {n} rotas por colônia (Portos de carga aumentam).', { n: max }) };
   if (!canAfford(s, routeCost(s, a, b))) return { ok: false, reason: 'Faltam créditos ou combustível.' };
   return { ok: true };
 }

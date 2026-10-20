@@ -15,6 +15,8 @@ Comece com uma broca num asteroide frio. Termine com uma estrela artificial no c
 ![Testes](https://img.shields.io/badge/testes-160%2B-4caf50)
 ![Sem servidor](https://img.shields.io/badge/backend-nenhum-00e5ff)
 
+Português · [English](README.en.md)
+
 [Como jogar](#-como-se-joga) · [O que tem no jogo](#-o-que-tem-no-jogo) · [Rodar](#-rodando) · [Por dentro](#-por-dentro) · [Documentação](#-documentação)
 
 <br />
@@ -31,7 +33,7 @@ Comece com uma broca num asteroide frio. Termine com uma estrela artificial no c
 
 - **Infinito de verdade:** o *Núcleo Estelar* (megaprojeto) não tem último estágio, as pesquisas contínuas não têm nível máximo e cada novo local explorado é mais rico que o anterior.
 - **Lento por design:** a primeira Ascensão leva cerca de um dia de jogo. A atenção é recompensada, mas nunca exigida.
-- **Funciona offline:** a base continua produzindo por até 8 horas com a aba fechada.
+- **Funciona offline:** com a aba fechada a base continua produzindo por até 8 horas, mas em ritmo bem reduzido (3% do normal).
 - **Tudo no navegador:** sem servidor, sem conta. O progresso fica no seu `localStorage`, com backup automático e exportação em arquivo.
 
 <div align="center">
@@ -65,7 +67,7 @@ A crosta do asteroide é infinita, mas rende pouco. Com **Geologia** você prosp
 <td width="50%" valign="top">
 
 ### 🏭 Cadeias de produção
-**35 estruturas** em 9 categorias, com três níveis de cadeia (minério → liga → componente → módulo), receitas alternativas e status claro do que trava cada máquina: energia, mão de obra, insumo ou armazém cheio.
+**43 estruturas** em 9 categorias, com três níveis de cadeia (minério → liga → componente → módulo), receitas alternativas e status claro do que trava cada máquina: energia, mão de obra, insumo ou armazém cheio.
 
 </td>
 </tr>
@@ -79,7 +81,7 @@ Expedições com naves e combustível, **mundos procedurais** de 10 tipos, colô
 <td valign="top">
 
 ### 🤝 Facções
-Três facções rivais com **pedidos**, tratados, alianças e **irmandade**. Quem é aliado de uma esfria a rival dela, e a desconfiança vira evento. A **influência** das embaixadas compra decretos e resolve disputas por territórios.
+Três facções rivais com **pedidos**, tratados, alianças e **irmandade**. Quem é aliado de uma esfria a rival dela, e a desconfiança vira evento. A **influência** das embaixadas compra decretos e resolve disputas por territórios. As fronteiras mudam com o tempo, aliados recebem **missões de honra** e cada facção tem a sua história no Diário.
 
 </td>
 </tr>
@@ -93,7 +95,7 @@ Mercado com preços que oscilam **e uma demanda que satura** quando você vende 
 <td valign="top">
 
 ### ♾️ Fim de jogo que recomeça
-Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da história), **Ascensão** e **Transcendência**: duas camadas de recomeço com melhorias permanentes, conquistas que nunca se perdem e um catálogo de minerais.
+Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da história), **Ascensão** e **Transcendência**: duas camadas de recomeço com melhorias permanentes, conquistas que nunca se perdem e um catálogo de minerais. Na Ascensão você pode escolher um **desafio** (sem comércio, sem colônias, energia racionada…) e ganhar uma melhoria permanente ao vencê-lo.
 
 </td>
 </tr>
@@ -116,14 +118,16 @@ Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da hist
 
 | | |
 |---|---|
-| Estruturas | 35 |
-| Pesquisas (árvore em 6 fases) | 53, mais pesquisas contínuas sem fim |
+| Estruturas | 43 |
+| Pesquisas (árvore em 6 fases) | 54, mais pesquisas contínuas sem fim |
 | Tipos de mundo | 10 |
 | Facções | 3, cada uma com pedidos e quatro níveis de relação |
-| Eventos espaciais | 12 |
-| Conquistas | 46 (+2% de produção cada, permanentes) |
-| Objetivos guiados | 31 |
-| Registros do diário | 13 |
+| Eventos espaciais | 27, 13 deles em histórias encadeadas que lembram suas escolhas |
+| Conquistas | 51 (+2% de produção cada, permanentes) |
+| Objetivos guiados | 33 |
+| Registros do diário | 28 (16 da jornada, em cinco atos, + 12 das facções), mais 18 do Arquivo (10 fragmentos e 8 transmissões) |
+| Desafios de Ascensão | 8, cada um com uma regra especial e uma melhoria permanente |
+| Idiomas | Português e inglês (automático pelo navegador, ou escolha nas Opções) |
 | Sprites | cerca de 380, recortados das pranchas de arte originais |
 
 </details>
@@ -180,7 +184,8 @@ src/
 │  ├─ store.ts     estado global (Zustand) e ações do jogador
 │  └─ loop.ts      simulação a 4 Hz, separada da renderização, e salvamento automático
 ├─ render/         cena PixiJS (asteroide, estruturas animadas, naves, drones)
-├─ audio/          efeitos e música gerados com Web Audio
+├─ audio/          efeitos e música (por fase da jornada) gerados com Web Audio
+├─ i18n/           t(), <Tx> e o dicionário inglês (en/), com teste de cobertura
 └─ ui/             componentes React e painéis
 ```
 
@@ -214,6 +219,13 @@ Todos os sprites vêm de pranchas geradas por IA (em `Assets/`) e são recortado
 
 ---
 
+## ♿ Acessibilidade e idiomas
+
+- **Português e inglês**, com troca imediata nas Opções (o texto-fonte é o português; o inglês é um dicionário em `src/i18n/en`, coberto por teste).
+- **Tamanho do texto** de 90% a 150%, **modos para daltonismo** (vermelho-verde e azul-amarelo), **alto contraste** e **redução de animações**.
+- **Atalhos de teclado** (`1`–`0` trocam de aba, `E` extrai, `V` vende, `F` modo foco, `M` som, `?` ajuda), foco visível, janelas que prendem o foco e fecham com `Esc`, e um link para pular ao conteúdo.
+- A **música muda conforme a fase** da jornada e há efeitos sonoros próprios para construir, pesquisar, colonizar e muito mais.
+
 ## 📚 Documentação
 
 - [Guia de desenvolvimento](docs/DESENVOLVIMENTO.md): sistemas, balanceamento, sprites e publicação em detalhe.
@@ -228,6 +240,6 @@ Todos os sprites vêm de pranchas geradas por IA (em `Assets/`) e são recortado
 
 <div align="center">
 
-Feito por [**Gustavo Marques**](https://github.com/GustavoMarques06).
+Feito por [**Gustavo Marques**](https://github.com/GustavoMarques06) · Licença [MIT](LICENSE).
 
 </div>

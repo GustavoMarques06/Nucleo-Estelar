@@ -1,21 +1,21 @@
 import { create } from 'zustand';
-import type { BuildingId, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
+import type { BuildingId, Category, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
 import { RES_IDS } from './data/resources';
 import { BALANCE } from './data/balance';
 import { BUILDING_BY_ID } from './data/buildings';
 import { newGame } from './engine/state';
 import { buyBuilding, buyUpgrade, goldenStrike, mineClick, sell, simulate } from './engine/economy';
-import { overclockReactor, setPriority, setThrottle } from './engine/energy';
+import { overclockReactor, setPriority, setThrottle, toggleProtect } from './engine/energy';
 import { layerIndex } from './engine/deposit';
 import { LAYERS } from './data/layers';
 import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneLevel } from './data/milestones';
-import { fmt } from './engine/format';
+import { fmt, fmtNum } from './engine/format';
 import { clearSave, loadBackup, loadGame, parseSave, saveGame, serialize } from './engine/save';
 import { applyOffline, type OfflineSummary } from './engine/offline';
 import { energyBalance, getModifiers } from './engine/modifiers';
 import { maxAffordable } from './engine/costs';
-import { establishOutpost, launchExpedition, setSpecialization, startTerraform, upgradeOutpost } from './engine/expansion';
-import { fulfillQuest, giveGift, lobbyFaction } from './engine/factions';
+import { establishOutpost, launchExpedition, linkColony, setSpecialization, startTerraform, upgradeOutpost } from './engine/expansion';
+import { fulfillQuest, giveGift, lobbyFaction, territoryTick } from './engine/factions';
 import { prospect, setAutoDeposit, setFocus } from './engine/deposit';
 import { enactDecree } from './engine/decrees';
 import { DECREE_BY_ID } from './data/decrees';
@@ -25,10 +25,14 @@ import { closeRoute, dropInsurance, insureRoute, openRoute } from './engine/rout
 import { CRISIS_BY_KIND } from './data/crises';
 import { assignDrones } from './engine/drones';
 import { GOAL_BY_ID } from './data/goals';
-import { checkGoals, checkStory, ascend, buildMegaStage, buyPerk, buyStarPerk, transcend, buyRepeatable, checkAchievements, chooseEvent, dismissEvent, spawnEvent } from './engine/progression';
+import { LORE_BY_ID } from './data/lore';
+import { surfaceChain, checkGoals, checkStory, ascend, buildMegaStage, buyPerk, buyStarPerk, transcend, buyRepeatable, checkAchievements, chooseEvent, dismissEvent, spawnEvent } from './engine/progression';
 import { fulfillContract } from './engine/contracts';
 import { ACHIEVEMENT_BY_ID } from './data/achievements';
 import { events } from './events';
+import { activeChallenge, challengeMet } from './engine/challenges';
+import { CHALLENGE_BY_ID } from './data/challenges';
+import { t, tName, tStatic } from '../i18n';
 
 export type BuyAmount = 1 | 10 | 'max';
 export type History = Partial<Record<ResId, number[]>>;
@@ -57,15 +61,19 @@ interface Store {
   overclock(id: BuildingId): void;
   setThrottle(id: BuildingId, value: number): void;
   setPriority(id: BuildingId, p: Priority | 0): void;
+  toggleProtect(cat: Category): void;
+  linkColony(locId: string): void;
   sell(res: ResId): void;
   buy(id: BuildingId): void;
+  buyAmountOf(id: BuildingId, amount: number): void;
   upgrade(id: string): void;
   launchExpedition(): void;
   establishOutpost(locId: string, spec: Specialization, byInfluence?: boolean): void;
   upgradeOutpost(locId: string): void;
   setSpecialization(locId: string, spec: Specialization): void;
   buildMega(id: string): void;
-  ascend(): void;
+  ascend(next?: string | null): void;
+  abandonChallenge(): void;
   buyPerk(id: string): void;
   buyStarPerk(id: string): void;
   transcend(): void;
@@ -163,6 +171,7 @@ export const useGame = create<Store>()((set, get) => {
       const terraformed: string[] = [];
       const layerBefore = layerIndex(game);
       const before = { ...game.resources };
+      const veinsBefore = game.deposit.veins.filter(v => v.reserve > 0).length;
       // Passos de 1 s; um intervalo enorme (computador suspenso) usa no máximo ~400 passos, como o cálculo offline.
       const stepSize = Math.max(1, remaining / 400);
       while (remaining > 0) {
@@ -172,7 +181,17 @@ export const useGame = create<Store>()((set, get) => {
         terraformed.push(...report.finishedTerraforms);
         remaining -= step;
       }
-      if (longGap) game = { ...game, crisisTimer: Math.max(game.crisisTimer, 240) };
+      if (longGap) game = { ...game, crisisTimer: Math.max(game.crisisTimer, 240), claimTimer: Math.max(game.claimTimer, 300) };
+      // Território: as facções se movem só com o jogo aberto.
+      if (game.claimTimer <= 0) {
+        const r = territoryTick(game);
+        game = r.state;
+        if (r.note) {
+          const fname = t(FACTION_BY_ID[r.note.faction].name);
+          events.emit({ type: 'territory' });
+          get().toast(r.note.kind === 'claim' ? t('{faccao} reivindicou {local}.', { faccao: fname, local: r.note.location }) : t('{faccao} liberou {local} para você.', { faccao: fname, local: r.note.location }), r.note.kind === 'claim' ? 'warn' : 'info');
+        }
+      }
       // Crises de colônia e eventos espaciais só surgem com o jogo aberto.
       if (game.crisisTimer <= 0) {
         const had = game.crises.length;
@@ -181,10 +200,14 @@ export const useGame = create<Store>()((set, get) => {
         if (game.crises.length > had && c) {
           const loc = game.locations.find(l => l.id === c.locId);
           events.emit({ type: 'crisis' });
-          get().toast(`${CRISIS_BY_KIND[c.kind].name} em ${loc?.name ?? 'uma colônia'}! Veja no Mapa.`, 'warn');
+          get().toast(t('{crise} em {local}! Veja no Mapa.', { crise: t(CRISIS_BY_KIND[c.kind].name), local: loc?.name ?? t('uma colônia') }), 'warn');
         }
       }
-      // Eventos espaciais só surgem com o jogo aberto.
+      // Eventos espaciais só surgem com o jogo aberto; as continuações das histórias vêm primeiro.
+      {
+        const next = surfaceChain(game);
+        if (next !== game) { game = next; events.emit({ type: 'spaceEvent', id: game.event!.id }); get().toast(t('A história continua…')); }
+      }
       if (game.eventTimer <= 0) {
         game = spawnEvent(game);
         if (game.event) events.emit({ type: 'spaceEvent', id: game.event.id });
@@ -219,29 +242,34 @@ export const useGame = create<Store>()((set, get) => {
         history = { ...history };
         for (const r of RES_IDS) history[r] = [...(history[r] ?? []), rates[r]].slice(-HISTORY_MAX);
       }
+      if (game.deposit.veins.filter(v => v.reserve > 0).length < veinsBefore) { events.emit({ type: 'veinDepleted' }); get().toast(t('Um veio se esgotou: a extração voltou para a crosta.')); }
       set({ game, report, rates, flows, history, ...(story.fresh.length ? { storyQueue: [...get().storyQueue, ...story.fresh] } : {}) });
+      if (story.lore.length) {
+        const first = LORE_BY_ID[story.lore[0]];
+        get().toast(story.lore.length === 1 ? t('Novo no Arquivo: {titulo}', { titulo: t(first.title) }) : t('{n} novos registros no Arquivo (aba Registro).', { n: story.lore.length }));
+      }
       for (const id of goals.done) {
         events.emit({ type: 'goal' });
         const g = GOAL_BY_ID[id];
-        get().toast(`Objetivo concluído: ${g.title}${g.reward ? ` (+${g.reward.credits} créditos)` : ''}`);
+        get().toast(t('Objetivo concluído: {titulo}', { titulo: t(g.title) }) + (g.reward ? ' ' + t('(+{n} créditos)', { n: g.reward.credits ?? 0 }) : ''));
       }
       for (const id of ach.unlocked) {
         events.emit({ type: 'achievement', id });
-        get().toast(`Conquista: ${ACHIEVEMENT_BY_ID[id].name} (+2% de produção)`);
+        get().toast(t('Conquista: {nome} (+2% de produção)', { nome: t(ACHIEVEMENT_BY_ID[id].name) }));
       }
       for (const id of terraformed) {
         events.emit({ type: 'terraformed' });
-        get().toast(`Terraformação concluída em ${game.locations.find(l => l.id === id)?.name ?? 'uma colônia'}!`);
+        get().toast(t('Terraformação concluída em {local}!', { local: game.locations.find(l => l.id === id)?.name ?? t('uma colônia') }));
       }
       if (found > 0) {
         events.emit({ type: 'discovered', count: found });
-        get().toast(found === 1 ? 'Expedição concluída: novo local descoberto!' : `${found} novos locais descobertos!`);
+        get().toast(found === 1 ? t('Expedição concluída: novo local descoberto!') : t('{n} novos locais descobertos!', { n: found }));
       }
       const layerNow = layerIndex(game);
       if (layerNow > layerBefore) {
         const L = LAYERS[layerNow];
         events.emit({ type: 'layer', index: layerNow });
-        get().toast(`Nova camada do asteroide: ${L.name}. A crosta agora rende ×${L.yield.toLocaleString('pt-BR')}.`);
+        get().toast(t('Nova camada do asteroide: {nome}. A crosta agora rende ×{n}.', { nome: t(L.name), n: fmtNum(L.yield) }));
       }
     },
 
@@ -259,17 +287,25 @@ export const useGame = create<Store>()((set, get) => {
       events.emit({ type: 'golden', x, y });
       events.emit({ type: 'mined', gained, x, y });
       const total = Object.values(gained).reduce((a, b) => a + (b ?? 0), 0);
-      get().toast(`Ponto brilhante: +${fmt(total)} de minério!`);
+      get().toast(t('Ponto brilhante: +{n} de minério!', { n: fmt(total) }));
     },
 
     overclock(id) {
       commit(overclockReactor(get().game, id), () => {
+        const nome = t(BUILDING_BY_ID[id].name);
+        if (get().game.overclock[id]?.fault) {
+          events.emit({ type: 'denied' });
+          get().toast(t('Pane! {nome} desarmou na sobrecarga: gera metade e esfria por mais tempo.', { nome }));
+          return;
+        }
         events.emit({ type: 'overclock', id });
-        get().toast(`Sobrecarga: ${BUILDING_BY_ID[id].name} gera ×${BALANCE.overclockMult} por ${BALANCE.overclockTime} s.`);
+        get().toast(t('Sobrecarga: {nome} gera ×{m} por {s} s.', { nome, m: BALANCE.overclockMult, s: BALANCE.overclockTime }));
       });
     },
     setThrottle(id, value) { commit(setThrottle(get().game, id, value)); },
     setPriority(id, p) { commit(setPriority(get().game, id, p)); },
+    toggleProtect(cat) { commit(toggleProtect(get().game, cat)); },
+    linkColony(locId) { commit(linkColony(get().game, locId), () => events.emit({ type: 'outpost' })); },
 
     sell(res) {
       const { state, earned } = sell(get().game, res);
@@ -279,6 +315,12 @@ export const useGame = create<Store>()((set, get) => {
     buy(id) {
       const { game, buyAmount } = get();
       const amount = buyAmount === 'max' ? maxAffordable(game, BUILDING_BY_ID[id], getModifiers(game).cost) : buyAmount;
+      get().buyAmountOf(id, amount);
+    },
+
+    /** Compra exatamente `amount` (os botões de correção do conselheiro compram uma por vez, qualquer que seja o seletor). */
+    buyAmountOf(id, amount) {
+      const { game } = get();
       const next = buyBuilding(game, id, amount);
       commit(next, () => {
         events.emit({ type: 'built', id, amount });
@@ -288,7 +330,7 @@ export const useGame = create<Store>()((set, get) => {
         if (hasMilestones(def) && milestoneLevel(now) > milestoneLevel(was)) {
           const special = was < SPECIAL_AT && now >= SPECIAL_AT ? MILESTONE_SPECIALS[id] : undefined;
           events.emit({ type: 'milestone', id, special: !!special });
-          get().toast(`Marco: ${now} × ${def.name} — rende ×${BALANCE.milestoneMult.toLocaleString('pt-BR')}!${special ? ` Bônus especial: ${special.text}.` : ''}`);
+          get().toast(t('Marco: {n} × {nome} — rende ×{m}!', { n: now, nome: t(def.name), m: fmtNum(BALANCE.milestoneMult) }) + (special ? ' ' + t('Bônus especial: {texto}.', { texto: t(special.text) }) : ''));
         }
         if (def.energyUse) {
           const e = energyBalance(next!);
@@ -317,17 +359,17 @@ export const useGame = create<Store>()((set, get) => {
     giveGift(id) { commit(giveGift(get().game, id), () => events.emit({ type: 'gift' })); },
     fulfillQuest(id) {
       const r = fulfillQuest(get().game, id);
-      commit(r?.state ?? null, () => { events.emit({ type: 'contract' }); get().toast(`Pedido cumprido: ${FACTION_BY_ID[r!.quest.faction].name} (+${QUEST_RELATION} de relação).`); });
+      commit(r?.state ?? null, () => { events.emit({ type: 'contract' }); get().toast(t('Pedido cumprido: {faccao} (+{n} de relação).', { faccao: t(FACTION_BY_ID[r!.quest.faction].name), n: QUEST_RELATION })); });
     },
     prospect() {
       const before = new Set(get().game.deposit.veins.map(v => v.id));
       const next = prospect(get().game);
-      commit(next, () => { const v = next!.deposit.veins.find(x => !before.has(x.id)); get().toast(`Veio encontrado: ${v?.name ?? 'novo veio'}.`); });
+      commit(next, () => { const v = next!.deposit.veins.find(x => !before.has(x.id)); events.emit({ type: 'prospect' }); get().toast(t('Veio encontrado: {nome}.', { nome: v ? tName(v.name) : t('novo veio') })); });
     },
     setFocus(id) { commit(setFocus(get().game, id)); },
     setAutoDeposit(on) { commit(setAutoDeposit(get().game, on)); },
     lobby(id) { commit(lobbyFaction(get().game, id), () => events.emit({ type: 'gift' })); },
-    enactDecree(id) { commit(enactDecree(get().game, id), () => { events.emit({ type: 'upgraded', id }); get().toast(`Decreto: ${DECREE_BY_ID[id].name}.`); }); },
+    enactDecree(id) { commit(enactDecree(get().game, id), () => { events.emit({ type: 'decree', id }); get().toast(t('Decreto: {nome}.', { nome: t(DECREE_BY_ID[id].name) })); }); },
     insureRoute(id) { commit(insureRoute(get().game, id), () => get().toast('Rota segurada: imune a bloqueios.')); },
     dropInsurance(id) { commit(dropInsurance(get().game, id)); },
     setRecipe(id, alt) {
@@ -360,13 +402,24 @@ export const useGame = create<Store>()((set, get) => {
     dismissEnding() { set({ ending: false }); },
     selectLoc(id) { set({ selectedLoc: id }); },
 
-    ascend() {
-      commit(ascend(get().game), () => {
+    ascend(next = null) {
+      const prev = get().game;
+      const cleared = activeChallenge(prev) && challengeMet(prev) ? activeChallenge(prev) : null;
+      commit(ascend(prev, Date.now(), next), () => {
         set({ report: null, rates: zeroRates(), flows: null, history: {} });
         events.emit({ type: 'ascended' });
-        get().toast('Projeto Ascensão concluído. Uma nova jornada começa.');
+        get().toast(t('Projeto Ascensão concluído. Uma nova jornada começa.'));
+        if (cleared) { events.emit({ type: 'challenge', done: true }); get().toast(t('Desafio concluído: {nome}! {recompensa}.', { nome: t(cleared.name), recompensa: t(cleared.rewardText) })); }
+        const now = get().game.challenges.active;
+        if (now) { events.emit({ type: 'challenge', done: false }); get().toast(t('Desafio ativo: {nome}.', { nome: t(CHALLENGE_BY_ID[now].name) }), 'warn'); }
         get().save();
       });
+    },
+    abandonChallenge() {
+      const g = get().game;
+      if (!g.challenges.active) return;
+      set({ game: { ...g, challenges: { ...g.challenges, active: null } } });
+      get().toast(t('Desafio abandonado. Nada foi perdido.'));
     },
     buyPerk(id) { commit(buyPerk(get().game, id), () => events.emit({ type: 'upgraded', id })); },
     buyRepeatable(id) { commit(buyRepeatable(get().game, id), () => events.emit({ type: 'upgraded', id })); },
@@ -403,11 +456,12 @@ export const useGame = create<Store>()((set, get) => {
     dismissStory() { set({ storyQueue: get().storyQueue.slice(1) }); },
 
     // Avisos iguais se agrupam num só (com contador) em vez de empilhar; clicar dispensa.
-    toast(text, kind = 'info') {
-      const same = get().toasts.find(t => t.text === text);
+    toast(raw, kind = 'info') {
+      const text = tStatic(raw);
+      const same = get().toasts.find(x => x.text === text);
       const id = same?.id ?? ++toastId;
       const toast: Toast = { id, text, kind, count: (same?.count ?? 0) + 1 };
-      const rest = get().toasts.filter(t => t.id !== id);
+      const rest = get().toasts.filter(x => x.id !== id);
       set({ toasts: [...rest, toast].slice(-MAX_TOASTS) });
       clearTimeout(toastTimers.get(id));
       toastTimers.set(id, setTimeout(() => get().dismissToast(id), 4000));
@@ -415,7 +469,7 @@ export const useGame = create<Store>()((set, get) => {
     dismissToast(id) {
       clearTimeout(toastTimers.get(id));
       toastTimers.delete(id);
-      set({ toasts: get().toasts.filter(t => t.id !== id) });
+      set({ toasts: get().toasts.filter(x => x.id !== id) });
     },
 
     save() {

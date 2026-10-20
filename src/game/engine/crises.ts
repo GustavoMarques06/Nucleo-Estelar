@@ -29,6 +29,7 @@ export function crisisCost(s: GameState, c: Crisis): Amounts {
     case 'unrest': return { credits: amt(15000 * Math.pow(1.6, lv)) };
     case 'raid': return { fuel: amt(cap.fuel * k * 0.6), components: amt(cap.components * k * 0.6) };
     case 'plague': return { food: amt(cap.food * k) };
+    case 'blackout': return { components: amt(cap.components * k * 0.5), alloys: amt(cap.alloys * k * 0.5) };
     case 'blockade': return { fuel: amt(cap.fuel * k * 0.5), credits: amt(8000 * Math.pow(1.5, lv)) };
   }
 }

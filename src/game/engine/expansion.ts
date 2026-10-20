@@ -8,6 +8,9 @@ import { canAfford, payCost, scaleCost } from './costs';
 import { getModifiers, prodMult, type Modifiers } from './modifiers';
 import { crisisFactor } from './crises';
 import { routeInfo } from './routes';
+import { LINK_BONUS, linkDemand, linkLoss } from './grid';
+import { challengeBlocks } from './challenges';
+import { t } from '../../i18n';
 
 /** Gera um local a partir da semente: mesmas regras, variações controladas (GDD, seção 8). */
 /** `depth` = quantos locais já foram descobertos: quanto mais fundo no espaço, mais rico e mais distante. */
@@ -45,7 +48,7 @@ export function expeditionDuration(s: GameState, m: Modifiers = getModifiers(s))
 
 export function canLaunch(s: GameState): { ok: boolean; reason?: string } {
   if (!expeditionsUnlocked(s)) return { ok: false, reason: 'Pesquise Exploração estelar.' };
-  if (s.expeditions.length >= BALANCE.expeditionMax) return { ok: false, reason: `No máximo ${BALANCE.expeditionMax} expedições ao mesmo tempo.` };
+  if (s.expeditions.length >= BALANCE.expeditionMax) return { ok: false, reason: t('No máximo {n} expedições ao mesmo tempo.', { n: BALANCE.expeditionMax }) };
   if (!canAfford(s, expeditionCost(s))) return { ok: false, reason: 'Faltam naves ou combustível.' };
   return { ok: true };
 }
@@ -96,7 +99,7 @@ export function outpostUpgradeCost(loc: Location): Amounts {
 
 export function establishOutpost(prev: GameState, locId: string, spec: Specialization, byInfluence = false): GameState | null {
   const i = prev.locations.findIndex(l => l.id === locId);
-  if (i < 0 || prev.locations[i].outpost) return null;
+  if (i < 0 || prev.locations[i].outpost || challengeBlocks(prev, 'outpost')) return null;
   const cost = outpostCost(prev, prev.locations[i], byInfluence);
   if (!canAfford(prev, cost)) return null;
   const s = cloneState(prev);
@@ -121,6 +124,29 @@ export function upgradeOutpost(prev: GameState, locId: string): GameState | null
   return s;
 }
 
+// ---------- Rede de energia ----------
+export { LINK_BONUS, linkDemand, linkLoss };
+export const LINK_UNLOCK = 'powerGrid';
+export const linkUnlocked = (s: GameState) => !!s.upgrades[LINK_UNLOCK];
+
+/** Custo de ligar a colônia à rede da base (cresce com o nível e a distância). */
+export function linkCost(loc: Location): Amounts {
+  const l = loc.outpost?.level ?? 1;
+  const k = 1 + 0.2 * loc.distance;
+  return { credits: Math.ceil(12000 * k * l), alloys: Math.ceil(250 * k * l), components: Math.ceil(50 * k * l) };
+}
+
+export function linkColony(prev: GameState, locId: string): GameState | null {
+  const loc = prev.locations.find(l => l.id === locId);
+  if (!loc?.outpost || loc.outpost.link || !linkUnlocked(prev)) return null;
+  const cost = linkCost(loc);
+  if (!canAfford(prev, cost)) return null;
+  const s = cloneState(prev);
+  payCost(s, cost);
+  s.locations.find(l => l.id === locId)!.outpost!.link = true;
+  return s;
+}
+
 export function setSpecialization(prev: GameState, locId: string, spec: Specialization): GameState | null {
   const loc = prev.locations.find(l => l.id === locId);
   if (!loc?.outpost || loc.outpost.spec === spec) return null;
@@ -130,7 +156,8 @@ export function setSpecialization(prev: GameState, locId: string, spec: Speciali
 }
 
 /** Produção por segundo de um posto (já com bônus). */
-export function outpostYield(loc: Location, m: Modifiers, s?: GameState): Amounts {
+/** `power` = fração da energia que a rede entrega à colônia (só importa se ela estiver ligada). */
+export function outpostYield(loc: Location, m: Modifiers, s?: GameState, power = 1): Amounts {
   if (!loc.outpost) return {};
   const { level, spec, terra } = loc.outpost;
   const k = loc.richness * level * (1 + 0.3 * terra);
@@ -147,7 +174,8 @@ export function outpostYield(loc: Location, m: Modifiers, s?: GameState): Amount
   // Mundos já terraformados cultivam alimento por conta própria.
   if (terra >= 3) add('food', 4 * loc.richness * (terra - 2));
   const route = s ? routeInfo(s, loc).mult : 1;
-  for (const r of Object.keys(y) as ResId[]) y[r]! *= m.outpost * prodMult(m, r) * route * (s ? crisisFactor(s, loc.id, r) : 1);
+  const grid = loc.outpost.link ? 1 + LINK_BONUS * power : 1;
+  for (const r of Object.keys(y) as ResId[]) y[r]! *= m.outpost * prodMult(m, r) * route * grid * (s ? crisisFactor(s, loc.id, r) : 1);
   return y;
 }
 

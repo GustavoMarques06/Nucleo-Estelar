@@ -40,6 +40,10 @@ export const CRISES: CrisisDef[] = [
     text: 'Piratas fecham as rotas comerciais desta colônia: os bônus de rota ficam suspensos até a passagem ser liberada. Rotas seguradas não são afetadas.',
     hit: () => 1, helper: 'vesper', fixLabel: 'Escoltar as rotas',
     weight: (_, hostile, uninsured) => (uninsured > 0 ? (hostile ? 3 : 2) : 0) },
+  { kind: 'blackout', name: 'Apagão na linha', icon: 'icon-power-plug',
+    text: 'A linha de transmissão que alimenta esta colônia falhou: ela produz menos até o reparo. Só atinge colônias ligadas à rede.',
+    hit: (_, p) => p * 1.25, helper: 'ferrum', fixLabel: 'Reparar a linha',
+    weight: l => (l.outpost?.link ? 2 : 0) },
 ];
 
 export const CRISIS_BY_KIND = Object.fromEntries(CRISES.map(c => [c.kind, c])) as Record<CrisisKind, CrisisDef>;

@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { usePrefs } from './prefs';
+import { t } from './i18n';
+import { events } from './game/events';
+import { ShortcutsHelp, useShortcuts } from './ui/Shortcuts';
 import type { GameState } from './game/types';
 import { useGame } from './game/store';
 import { startGameLoop } from './game/loop';
@@ -34,6 +38,8 @@ import { Icon } from './ui/Icon';
 import { Splash } from './ui/Splash';
 import { Tips } from './ui/Tips';
 import { FocusBoard } from './ui/FocusBoard';
+import { useFoldText } from './ui/useFoldText';
+import { Compass } from './ui/Compass';
 
 type Tab = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
   | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
@@ -69,12 +75,12 @@ const GROUPS: { label: string; tabs: TabDef[] }[] = [
   ] },
 ];
 
-function Panel({ tab }: { tab: Tab }) {
+function Panel({ tab, onHelp }: { tab: Tab; onHelp: () => void }) {
   switch (tab) {
-    case 'mining': return <div className="panel-body"><DepositSection /><BuildingsPanel category="mining" intro="Extração de matéria-prima: minério e água." /></div>;
-    case 'industry': return <BuildingsPanel category="industry" intro="Transforma matéria-prima em produtos de maior valor." />;
-    case 'energy': return <BuildingsPanel category="energy" intro="Geração de energia para todas as máquinas." />;
-    case 'logistics': return <><BuildingsPanel category="logistics" intro="Armazenamento e produção de drones." /><div className="panel-body drones"><DronesSection /></div></>;
+    case 'mining': return <div className="panel-body"><DepositSection /><BuildingsPanel category="mining" intro={t('Extração de matéria-prima: minério e água.')} /></div>;
+    case 'industry': return <BuildingsPanel category="industry" intro={t('Transforma matéria-prima em produtos de maior valor.')} />;
+    case 'energy': return <BuildingsPanel category="energy" intro={t('Geração de energia para todas as máquinas.')} />;
+    case 'logistics': return <><BuildingsPanel category="logistics" intro={t('Armazenamento e produção de drones.')} /><div className="panel-body drones"><DronesSection /></div></>;
     case 'research': return <UpgradesPanel />;
     case 'civilization': return <CivilizationPanel />;
     case 'commerce': return <MarketPanel />;
@@ -86,19 +92,23 @@ function Panel({ tab }: { tab: Tab }) {
     case 'megaprojects': return <MegaprojectsPanel />;
     case 'ascension': return <AscensionPanel />;
     case 'records': return <RecordsPanel />;
-    case 'options': return <OptionsPanel />;
+    case 'options': return <OptionsPanel onShowShortcuts={onHelp} />;
   }
 }
 
 export function App() {
   const [tab, setTab] = useState<Tab>('mining');
   const [sceneReady, setSceneReady] = useState(false);
+  const [help, setHelp] = useState(false);
+  const lang = usePrefs(p => p.language);       // trocar de idioma redesenha a interface inteira
   const game = useGame(s => s.game);
   const behind = useGame(s => (s.report?.upkeep.ratio ?? 1) < 0.999);
   const reduce = game.settings.reduceMotion;
 
   useEffect(() => startGameLoop(), []);
   useEffect(() => startAudio(), []);
+  useFoldText('painel');
+  useFoldText('compass');
   const focus = game.settings.focus;
   useEffect(() => { document.body.classList.toggle('reduce-motion', reduce); }, [reduce]);
   useEffect(() => { document.body.classList.toggle('focus-mode', focus); }, [focus]);
@@ -111,27 +121,30 @@ export function App() {
   const questReady = game.quests.some(q => game.resources[q.res] >= q.amount);
   // Título da aba mostra quantos alertas pedem atenção (útil com o jogo em segundo plano).
   const alerts = game.crises.length + (game.event ? 1 : 0) + game.contracts.filter(c => game.resources[c.res] >= c.amount).length + (researchReady ? 1 : 0) + (behind ? 1 : 0) + game.quests.filter(q => game.resources[q.res] >= q.amount).length;
-  useEffect(() => { document.title = alerts > 0 ? `(${alerts}) Núcleo Estelar` : 'Núcleo Estelar'; }, [alerts]);
+  useEffect(() => { document.title = alerts > 0 ? `(${alerts}) ${t('Núcleo Estelar')}` : t('Núcleo Estelar'); }, [alerts, lang]);
+  useShortcuts(i => { if (tabs[i]) setTab(tabs[i].id); }, () => setHelp(h => !h));
 
   return (
     <div className={`app ${focus ? 'focus' : ''}`}>
+      <a className="skip-link" href="#painel" onClick={e => { e.preventDefault(); document.getElementById('painel')?.focus(); }}>{t('Pular para o conteúdo')}</a>
       <TopBar />
-      <nav className="sidenav" aria-label="Seções">
+      <nav className="sidenav" aria-label={t('Seções')}>
         {groups.map(g => (
           <div key={g.label} className="nav-group">
-            <span className="nav-group-label">{g.label}</span>
-            {g.tabs.map(t => (
-              <button key={t.id} className={`nav-item ${current.id === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)} aria-current={current.id === t.id}>
-                <Icon name={t.icon} size={28} /> <span>{t.label}</span>
-                {t.id === 'research' && researchReady && <i className="dot" aria-label="pesquisa disponível" />}
-                {t.id === 'diplomacy' && questReady && <i className="dot" aria-label="pedido de facção pronto para entregar" />}
-                {t.id === 'commerce' && contractReady && <i className="dot" aria-label="contrato pronto para entregar" />}
+            <span className="nav-group-label">{t(g.label)}</span>
+            {g.tabs.map(tb => (
+              <button key={tb.id} className={`nav-item ${current.id === tb.id ? 'active' : ''}`} onClick={() => { if (tb.id !== current.id) events.emit({ type: 'nav' }); setTab(tb.id); }} aria-current={current.id === tb.id ? 'page' : undefined}>
+                <Icon name={tb.icon} size={28} /> <span>{t(tb.label)}</span>
+                {tb.id === 'research' && researchReady && <i className="dot" role="img" aria-label={t('pesquisa disponível')} />}
+                {tb.id === 'diplomacy' && questReady && <i className="dot" role="img" aria-label={t('pedido de facção pronto para entregar')} />}
+                {tb.id === 'commerce' && contractReady && <i className="dot" role="img" aria-label={t('contrato pronto para entregar')} />}
               </button>
             ))}
           </div>
         ))}
       </nav>
       <main className="stage">
+        <Compass goTo={setTab} available={tabs.map(x => x.id)} />
         <div className="scene-wrap">
           {/* Modo foco: sem a cena Pixi (libera a GPU); o painel de alertas ocupa o lugar dela. */}
           {!focus && <SceneView onReady={() => setSceneReady(true)} />}
@@ -142,16 +155,17 @@ export function App() {
         </div>
         <Tips />
         <ActionBar />
-        <Advisor />
+        <Advisor goTo={setTab} />
       </main>
-      <section className="panel" aria-label={current.label}>
-        <h2 className="panel-title"><Icon name={current.icon} size={28} />{current.label}</h2>
-        <Panel tab={current.id} />
+      <section className="panel" id="painel" tabIndex={-1} aria-label={t(current.label)}>
+        <h2 className="panel-title"><Icon name={current.icon} size={28} />{t(current.label)}</h2>
+        <Panel tab={current.id} onHelp={() => setHelp(true)} />
       </section>
       <Toasts />
       <Splash ready={sceneReady || focus} />
       <OfflineModal />
       <StoryModal />
+      {help && <ShortcutsHelp onClose={() => setHelp(false)} />}
       <EndingModal onTranscend={() => setTab('transcendence')} />
     </div>
   );

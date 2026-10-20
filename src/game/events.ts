@@ -27,6 +27,12 @@ export type GameEvent =
   | { type: 'layer'; index: number }                          // a extração chegou a uma camada mais funda
   | { type: 'golden'; x?: number; y?: number }                // ponto brilhante coletado
   | { type: 'overclock'; id: BuildingId }
+  | { type: 'prospect' }                                      // veio de minério descoberto
+  | { type: 'veinDepleted' }                                  // o veio em foco acabou
+  | { type: 'decree'; id: string }
+  | { type: 'challenge'; done: boolean }                       // desafio de Ascensão iniciado ou concluído
+  | { type: 'territory' }                                     // uma facção reivindicou ou liberou um local
+  | { type: 'nav' }                                           // troca de aba
   | { type: 'denied' };
 
 type Listener = (e: GameEvent) => void;

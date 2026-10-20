@@ -10,9 +10,11 @@ import { ACHIEVEMENT_BONUS } from '../data/achievements';
 import { FACTIONS, tierOf } from '../data/factions';
 import { STAR_PERKS } from '../data/transcendence';
 import { DRONE_ROLES, droneBonus } from '../data/drones';
+import { CHALLENGE_BY_ID } from '../data/challenges';
 import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneMult } from '../data/milestones';
 import { colonyCount } from '../selectors';
 import { dayFactor } from './daylight';
+import { linkDemand } from './grid';
 
 export interface Modifiers {
   click: number;
@@ -96,6 +98,9 @@ export function getModifiers(s: GameState): Modifiers {
   const m = base();
   for (const u of UPGRADES) if (s.upgrades[u.id]) u.effects.forEach(e => applyEffect(m, e));
   for (const p of PERKS) { const l = s.ascension.perks[p.id] ?? 0; if (l > 0) p.effects(l).forEach(e => applyEffect(m, e)); }
+  // Desafios: a regra do ativo vale agora; as recompensas dos concluídos valem para sempre.
+  for (const id of s.challenges.done) CHALLENGE_BY_ID[id]?.reward.forEach(e => applyEffect(m, e));
+  if (s.challenges.active) CHALLENGE_BY_ID[s.challenges.active]?.effects.forEach(e => applyEffect(m, e));
   for (const mp of MEGAPROJECTS) {
     const done = s.megaprojects[mp.id] ?? 0;
     for (let i = 0; i < done; i++) {
@@ -126,7 +131,11 @@ export function getModifiers(s: GameState): Modifiers {
     if (b.energyOut) mul(m.energyOut, b.id, k);
   }
   // Reatores em sobrecarga
-  for (const [id, oc] of Object.entries(s.overclock)) if (oc && oc.left > 0) mul(m.energyOut, id as BuildingId, BALANCE.overclockMult);
+  for (const [id, oc] of Object.entries(s.overclock)) {
+    if (!oc) continue;
+    if (oc.left > 0) mul(m.energyOut, id as BuildingId, BALANCE.overclockMult);
+    else if (oc.fault && oc.cool > 0) mul(m.energyOut, id as BuildingId, BALANCE.overclockFaultOutput);
+  }
   for (const b of BUILDINGS) {
     const n = s.buildings[b.id];
     if (!b.boost || n <= 0) continue;
@@ -260,15 +269,24 @@ export function energyOutOf(s: GameState, b: BuildingDef, m: Modifiers, dt = 0):
  * `dt` = duração do passo: o fator solar é a média do intervalo; dt = 0 dá o valor de agora (interface).
  */
 export function energyBalance(s: GameState, m = getModifiers(s), dt = 0) {
-  let supply = BALANCE.baseEnergy, demand = 0;
+  let supply = BALANCE.baseEnergy, demand = 0, protectedDemand = 0;
+  const protect = new Set<string>(s.protect);
   for (const b of BUILDINGS) {
     const n = s.buildings[b.id];
     if (n <= 0) continue;
     if (b.energyOut) supply += energyOutOf(s, b, m, dt);
-    if (b.energyUse) demand += n * throttleOf(s, b.id) * b.energyUse * m.energyUse * recipeOf(s, b).energy;
+    if (b.energyUse) {
+      const d = n * throttleOf(s, b.id) * b.energyUse * m.energyUse * recipeOf(s, b).energy;
+      demand += d;
+      if (protect.has(b.category)) protectedDemand += d;
+    }
   }
+  // Linhas de transmissão das colônias ligadas contam como demanda de expansão.
+  const links = s.locations.reduce((a, l) => a + linkDemand(l), 0) * m.energyUse;
+  demand += links;
+  if (protect.has('expansion')) protectedDemand += links;
   const ratio = demand > 0 ? Math.min(1, supply / demand) : 1;
-  return { supply, demand, ratio };
+  return { supply, demand, ratio, protectedDemand };
 }
 
 /** Carga máxima das baterias (energia·segundo). */

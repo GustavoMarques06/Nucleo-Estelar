@@ -1,4 +1,4 @@
-import type { Amounts, BuildingDef, BuildingId, FlowSource, Flows, GameState, PopStatus, ResId, TickReport } from '../types';
+import type { Amounts, BuildingDef, BuildingId, Category, FlowSource, Flows, GameState, PopStatus, ResId, TickReport } from '../types';
 import { BUILDINGS, BUILDING_BY_ID } from '../data/buildings';
 import { UPGRADE_BY_ID } from '../data/upgrades';
 import { BALANCE } from '../data/balance';
@@ -18,6 +18,7 @@ import { payUpkeep, upkeepBreakdown, upkeepRatio } from './upkeep';
 import { FACTIONS, tierOf } from '../data/factions';
 import { activeMix, autoDeposit, drain, extractionRate } from './deposit';
 import { advanceFactions } from './factions';
+import { challengeBlocks } from './challenges';
 import { addProduced, gain } from './stock';
 import { dayFactor } from './daylight';
 import { advanceOverclock } from './energy';
@@ -36,6 +37,8 @@ interface Tick {
   caps: Caps;             // capacidade do armazém para cada recurso (geral + grupo)
   general: number;        // capacidade geral (só Armazéns): base da reserva de construção
   energyRatio: number;    // fração da energia necessária que existe (0–1), já com as baterias
+  energyProt: number;     // idem para as categorias protegidas no racionamento (igual a energyRatio sem racionamento)
+  energyRest: number;     // idem para as demais
   workRatio: number;      // fração da mão de obra necessária que existe (0–1)
   upkeepRatio: number;    // fração do ritmo que a manutenção em dia permite às estruturas caras (0–1)
   status: TickReport['status'];
@@ -81,8 +84,10 @@ function runInputGenerators(t: Tick) {
 }
 
 /** Status "normal" de uma estrutura: o que a limita além de insumos e armazém (energia ou mão de obra). */
+const powerOf = (t: Tick, category: Category) => (t.s.protect.includes(category) ? t.energyProt : t.energyRest);
+
 function baseStatus(t: Tick, b: BuildingDef): Status {
-  if (b.energyUse && t.energyRatio < 0.999) return { kind: 'power', ratio: t.energyRatio };
+  if (b.energyUse && powerOf(t, b.category) < 0.999) return { kind: 'power', ratio: powerOf(t, b.category) };
   if (b.workers && t.workRatio < 0.999) return { kind: 'workers', ratio: t.workRatio };
   return { kind: 'ok' };
 }
@@ -168,7 +173,7 @@ function runBuildings(t: Tick) {
     if (n <= 0 || dt <= 0) { t.status[b.id] = { kind: 'idle' }; continue; }
     const th = throttleOf(s, b.id);
     if (th <= 0 && (b.extract || b.outputs || b.energyOut)) { t.status[b.id] = { kind: 'paused' }; continue; }
-    const ratio = th * (b.energyUse ? t.energyRatio : 1) * (b.workers ? t.workRatio : 1) * (b.upkeep ? t.upkeepRatio : 1);
+    const ratio = th * (b.energyUse ? powerOf(t, b.category) : 1) * (b.workers ? t.workRatio : 1) * (b.upkeep ? t.upkeepRatio : 1);
     if (b.extract) runExtractor(t, b, n, ratio);
     else if (b.outputs) runConverter(t, b, n, ratio);
     else t.status[b.id] = baseStatus(t, b);
@@ -258,11 +263,24 @@ function runPopulation(t: Tick): { cap: number; status: PopStatus; foodNeed: num
   return { cap: popCap, status, foodNeed };
 }
 
+/**
+ * Racionamento: com falta de energia, as categorias protegidas são servidas primeiro e as outras dividem o que sobrar.
+ * Sem falta ou sem proteção, todas recebem a mesma razão.
+ */
+function rationing(s: GameState, raw: { demand: number; protectedDemand: number }, grid: { ratio: number; supply: number }) {
+  if (!s.protect.length || grid.ratio >= 0.999 || raw.demand <= 0) return { energyProt: grid.ratio, energyRest: grid.ratio };
+  const pd = raw.protectedDemand, rest = raw.demand - pd;
+  return {
+    energyProt: pd > 0 ? Math.min(1, grid.supply / pd) : 1,
+    energyRest: rest > 0 ? Math.max(0, Math.min(1, (grid.supply - pd) / rest)) : 1,
+  };
+}
+
 /** Colônias: produção passiva enviada para a base. */
 function runColonies(t: Tick) {
   for (const loc of t.s.locations) {
     if (!loc.outpost) continue;
-    for (const [r, v] of Object.entries(outpostYield(loc, t.m, t.s))) gain(t.s, r as ResId, (v ?? 0) * t.dt, t.caps[r as ResId]);
+    for (const [r, v] of Object.entries(outpostYield(loc, t.m, t.s, powerOf(t, 'expansion')))) gain(t.s, r as ResId, (v ?? 0) * t.dt, t.caps[r as ResId]);
   }
   t.track?.('colonies');
 }
@@ -285,6 +303,7 @@ function runTimers(s: GameState, dt: number) {
   for (const b of s.buffs) b.remaining -= dt;
   s.buffs = s.buffs.filter(b => b.remaining > 0);
   if (s.event) { s.event.remaining -= dt; if (s.event.remaining <= 0) s.event = null; }
+  for (const c of s.chain) c.remaining = Math.max(0, c.remaining - dt);
   s.eventTimer -= dt;
   s.stats.playTime += dt;
   s.market.clock += dt;
@@ -306,7 +325,7 @@ function sellUnits(s: GameState, m: Modifiers, res: ResId, units: number): numbe
 /** Venda automática: respeita o piso de preço, a reserva escolhida e a saturação (vende só o que o mercado paga bem). */
 function runAutosell(t: Tick) {
   const { s, m } = t;
-  if (!m.autosell) return;
+  if (!m.autosell || challengeBlocks(s, 'sell')) return;
   for (const r of RES_IDS) {
     if (!s.autosell[r] || s.resources[r] <= 0) continue;
     const base = RESOURCES[r].sellPrice ?? 0;
@@ -335,7 +354,7 @@ export function simulate(prev: GameState, dt: number, opts: { flows?: boolean } 
   const upkeep = upkeepBreakdown(s, m);
   const tracker = opts.flows ? makeTracker(s) : null;
   const t: Tick = {
-    s, m, dt, caps: capsOf(s, m), general: storageCap(s, m), energyRatio: grid.ratio, workRatio: workforce(s).ratio,
+    s, m, dt, caps: capsOf(s, m), general: storageCap(s, m), energyRatio: grid.ratio, ...rationing(s, raw, grid), workRatio: workforce(s).ratio,
     upkeepRatio: upkeepRatio(s.debt, upkeep.total), status: {}, track: tracker?.track ?? null,
   };
   const before = { ...s.resources };
@@ -422,7 +441,7 @@ export function goldenStrike(prev: GameState): { state: GameState; gained: Amoun
 export function sell(prev: GameState, res: ResId): { state: GameState; earned: number } {
   const units = Math.floor(prev.resources[res]);
   const m = getModifiers(prev);
-  if (units < 1 || !RESOURCES[res].sellPrice) return { state: prev, earned: 0 };
+  if (units < 1 || !RESOURCES[res].sellPrice || challengeBlocks(prev, 'sell')) return { state: prev, earned: 0 };
   const s = cloneState(prev);
   const high = isHigh(marketFactor(prev, res) / (1 + saturationOf(prev, res)));
   const earned = sellUnits(s, m, res, units);

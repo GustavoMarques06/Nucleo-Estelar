@@ -58,6 +58,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'bond1', name: 'Irmandade', desc: 'Alcance relação 90 com uma facção.', icon: 'region-system', check: s => Object.values(s.factions).some(f => f.relation >= 90) },
   { id: 'veins8', name: 'Geólogo', desc: 'Prospecte 8 veios numa só jornada.', icon: 'ore-gold', check: s => s.deposit.found >= 8 },
   { id: 'titanium1k', name: 'Metal leve', desc: 'Extraia 1.000 de titânio.', icon: 'ingot-titanium', check: s => (s.stats.produced.titanium ?? 0) >= 1000 },
+  { id: 'challenge3', name: 'Sem rede de proteção', desc: 'Conclua 3 desafios de Ascensão.', icon: 'icon-trophy', check: s => s.challenges.done.length >= 3 },
+  { id: 'challengeAll', name: 'Mestre dos desafios', desc: 'Conclua todos os desafios de Ascensão.', icon: 'star-blue-giant', check: s => s.challenges.done.length >= 8 },
+  { id: 'chain1', name: 'Contador de histórias', desc: 'Leve uma história de eventos até o fim.', icon: 'event-comet', check: s => s.stats.chains >= 1 },
+  { id: 'chain6', name: 'Cronista do espaço', desc: 'Leve 6 histórias de eventos até o fim.', icon: 'event-trader', check: s => s.stats.chains >= 6 },
+  { id: 'honor3', name: 'Homem de honra', desc: 'Cumpra 3 missões de honra de facções.', icon: 'icon-check', check: s => Object.values(s.factions).reduce((a, f) => a + Math.floor((f.done ?? 0) / 3), 0) >= 3 },
   { id: 'ascend1', name: 'Renascimento', desc: 'Complete o Projeto Ascensão.', icon: 'icon-star', check: s => s.ascension.count >= 1 },
   { id: 'ascend5', name: 'Ciclo eterno', desc: 'Ascenda 5 vezes.', icon: 'icon-trophy', check: s => s.ascension.count >= 5 },
 ];

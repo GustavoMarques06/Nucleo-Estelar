@@ -131,3 +131,23 @@ qualquer hospedagem estática:
 - **itch.io:** compacte o conteúdo de `dist/` em um .zip e envie como jogo HTML.
 
 O progresso fica salvo no `localStorage` do navegador do jogador. Nenhum servidor é necessário.
+
+## Idiomas (tradução)
+
+O texto-fonte do jogo é o **português**: ele é a própria chave do dicionário. No código:
+
+- `t('Texto {n}', { n: 3 })` devolve o texto no idioma atual; `tp(n, '{n} rota', '{n} rotas')` faz plural;
+  `<Tx k="Texto com <b>negrito</b>" v={{ ... }} />` traduz texto com marcação simples.
+- Campos de dados (`name`, `desc`, `text`…) ficam em português nos arquivos de `game/data/` e são traduzidos **na tela**:
+  `t(def.name)`. Descrições que dependem de nível ou de números usam `t()` dentro da própria função.
+- Os marcadores `{nome}` precisam ser ASCII (`\w+`) e iguais no inglês.
+- O inglês fica em `src/i18n/en/{ui,data,content}.ts`. Textos que chegam ao `t()` por variável (tabelas) entram em `src/i18n/extra.ts`.
+
+`npm test` roda `src/i18n/coverage.test.ts`: ele varre o código e os dados e **falha se algum texto não tiver tradução**,
+se os marcadores divergirem ou se sobrarem traduções órfãs. Para listar o que falta:
+`I18N_DUMP=falta.json npx vitest run src/i18n`. As ferramentas `scripts/i18n-scan.cjs` (acha texto ainda sem `t()`),
+`scripts/i18n-wrap.cjs` (trocas exatas em vários arquivos) e `scripts/i18n-merge.cjs` (junta traduções ao dicionário) ajudam na rotina.
+Jogando em inglês, `window.__i18nMissing` lista os textos que ainda cairam para o português.
+
+As preferências de idioma, tamanho do texto, daltonismo, contraste e atalhos ficam em `localStorage` (`nucleo-estelar/prefs`),
+fora do save do jogo.

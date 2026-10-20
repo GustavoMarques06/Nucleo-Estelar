@@ -55,6 +55,8 @@ export const GOALS: GoalDef[] = [
     progress: s => have(Math.max(0, ...Object.values(s.factions).map(f => f.relation)), 25) },
   { id: 'quest1', title: 'Cumpra um pedido de facção', hint: 'Na aba Diplomacia, cada facção pede um material e paga bem: relação, influência e mais.', icon: 'icon-check',
     progress: s => have(s.stats.questsDone, 1) },
+  { id: 'chain1', title: 'Leve uma história de eventos até o fim', hint: 'Eventos aparecem de tempos em tempos sobre a cena. Alguns têm continuação: responda e acompanhe a história até o fim.', icon: 'event-comet',
+    progress: s => have(s.stats.chains, 1) },
   { id: 'route1', title: 'Abra uma rota comercial', hint: 'No Mapa, ligue duas colônias: uma abastece a outra.', icon: 'icon-sell',
     progress: s => have(s.routes.length, 1) },
   { id: 'embassy1', title: 'Construa uma Embaixada', hint: 'Pesquise Corpo diplomático: a influência compra decretos e resolve disputas.', icon: 'building-embassy',
@@ -75,6 +77,8 @@ export const GOALS: GoalDef[] = [
     progress: s => have(s.megaprojects.dyson ?? 0, 1) },
   { id: 'ascension1', title: 'Conclua o Projeto Ascensão', hint: 'Pesquise Projeto Ascensão e recomece com bônus permanentes.', icon: 'icon-star',
     progress: s => have(s.ascension.count, 1) },
+  { id: 'challenge1', title: 'Conclua um desafio de Ascensão', hint: 'Ao ascender, escolha uma regra especial para a jornada seguinte; chegue à Ascensão com ela valendo.', icon: 'icon-trophy',
+    progress: s => have(s.challenges.done.length, 1) },
   { id: 'singularity', title: 'Complete a Singularidade', hint: 'O desfecho da história: depois do Núcleo Estelar estágio 5.', icon: 'star-neutron',
     progress: s => have(s.megaprojects.singularity ?? 0, 5) },
 ];

@@ -12,6 +12,7 @@ import { isHigh, marketFactor, marketUnlocked, quoteSale, tradedResources } from
 import { fmt, fmtDuration, fmtRate } from '../game/engine/format';
 import { Buffs, EventCard } from './EventCard';
 import { Icon } from './Icon';
+import { t } from '../i18n';
 
 type Goto = 'research' | 'commerce' | 'map' | 'expansion' | 'finance';
 
@@ -54,13 +55,13 @@ export function FocusBoard({ goTo }: { goTo: (tab: Goto) => void }) {
   const needsYou = !!game.event || !!behind || game.crises.length + contracts.length + hot.length + research.length + boostable.length > 0;
 
   return (
-    <div className="focus-board" aria-label="Painel do modo foco">
+    <div className="focus-board" aria-label={t('Painel do modo foco')}>
       {top.length > 0 && (
         <div className="focus-rates">
           {top.map(([r, v]) => (
-            <div key={r} className={`rate-tile ${v < 0 ? 'neg' : ''}`} title={RESOURCES[r].name}>
+            <div key={r} className={`rate-tile ${v < 0 ? 'neg' : ''}`} title={t(RESOURCES[r].name)}>
               <Icon name={RESOURCES[r].icon} size={26} />
-              <b>{fmtRate(v)}</b><small>{RESOURCES[r].name}</small>
+              <b>{fmtRate(v)}</b><small>{t(RESOURCES[r].name)}</small>
             </div>
           ))}
         </div>
@@ -68,38 +69,38 @@ export function FocusBoard({ goTo }: { goTo: (tab: Goto) => void }) {
       <Buffs />
       <EventCard />
       <div className="focus-grid">
-        {behind && <Alert tone="bad" icon="icon-warning" title="Manutenção em atraso" sub={`estruturas caras a ${Math.round(behind.ratio * 100)}% do ritmo · dívida ${fmt(behind.debt)}`} action="Ver finanças" onAction={() => goTo('finance')} />}
+        {behind && <Alert tone="bad" icon="icon-warning" title={t('Manutenção em atraso')} sub={t('estruturas caras a {n}% do ritmo · dívida {d}', { n: Math.round(behind.ratio * 100), d: fmt(behind.debt) })} action={t('Ver finanças')} onAction={() => goTo('finance')} />}
         {boostable.map(b => (
-          <Alert key={b.id} tone="bad" icon={b.sprite} title={`Energia em falta: ${b.name} pronto para sobrecarga`}
-            sub={`energia ×${BALANCE.overclockMult} por ${BALANCE.overclockTime} s`} action="Sobrecarga" onAction={() => overclock(b.id)} />
+          <Alert key={b.id} tone="bad" icon={b.sprite} title={t('Energia em falta: {nome} pronto para sobrecarga', { nome: t(b.name) })}
+            sub={t('energia ×{m} por {s} s', { m: BALANCE.overclockMult, s: BALANCE.overclockTime })} action={t('Sobrecarga')} onAction={() => overclock(b.id)} />
         ))}
         {game.crises.map(c => {
           const l = game.locations.find(x => x.id === c.locId);
-          return <Alert key={c.id} tone="bad" icon={CRISIS_BY_KIND[c.kind].icon} title={`${CRISIS_BY_KIND[c.kind].name} em ${l?.name}`}
-            sub={`termina em ${fmtDuration(c.remaining)}`} action="Resolver" onAction={() => goTo('map')} />;
+          return <Alert key={c.id} tone="bad" icon={CRISIS_BY_KIND[c.kind].icon} title={t('{crise} em {local}', { crise: t(CRISIS_BY_KIND[c.kind].name), local: l?.name ?? '' })}
+            sub={t('termina em {tempo}', { tempo: fmtDuration(c.remaining) })} action={t('Resolver')} onAction={() => goTo('map')} />;
         })}
         {contracts.map(c => (
-          <Alert key={c.id} tone="ok" icon={RESOURCES[c.res].icon} title={`Contrato pronto: ${fmt(c.amount)} ${RESOURCES[c.res].name.toLowerCase()}`}
-            sub={`+${fmt(c.reward.credits ?? 0)} créditos · expira em ${fmtDuration(c.remaining)}`} action="Entregar" onAction={() => fulfill(c.id)} />
+          <Alert key={c.id} tone="ok" icon={RESOURCES[c.res].icon} title={t('Contrato pronto: {n} {recurso}', { n: fmt(c.amount), recurso: t(RESOURCES[c.res].name).toLowerCase() })}
+            sub={t('+{n} créditos · expira em {tempo}', { n: fmt(c.reward.credits ?? 0), tempo: fmtDuration(c.remaining) })} action={t('Entregar')} onAction={() => fulfill(c.id)} />
         ))}
         {hot.map(({ r, f }) => (
-          <Alert key={r} tone="ok" icon={RESOURCES[r].icon} title={`${RESOURCES[r].name} em alta: +${Math.round((f - 1) * 100)}%`}
-            sub={`${fmt(quoteSale(game, m, r, Math.floor(game.resources[r])).earned)} créditos pelo estoque`} action="Vender" onAction={() => sell(r)} />
+          <Alert key={r} tone="ok" icon={RESOURCES[r].icon} title={t('{recurso} em alta: +{n}%', { recurso: t(RESOURCES[r].name), n: Math.round((f - 1) * 100) })}
+            sub={t('{n} créditos pelo estoque', { n: fmt(quoteSale(game, m, r, Math.floor(game.resources[r])).earned) })} action={t('Vender')} onAction={() => sell(r)} />
         ))}
         {research.map(u => (
-          <Alert key={u.id} tone="info" icon={u.icon} title={`Pesquisa: ${u.name}`} sub={u.desc} action="Pesquisar" onAction={() => upgrade(u.id)} />
+          <Alert key={u.id} tone="info" icon={u.icon} title={t('Pesquisa: {nome}', { nome: t(u.name) })} sub={t(u.desc)} action={t('Pesquisar')} onAction={() => upgrade(u.id)} />
         ))}
         {terra.map(l => (
-          <Alert key={l.id} tone="info" icon={l.sprite} title={`Terraformando ${l.name}`} sub={`${fmtDuration(l.outpost!.terraRemaining / m.terraSpeed)} restantes`} onClick={() => goTo('map')} />
+          <Alert key={l.id} tone="info" icon={l.sprite} title={t('Terraformando {local}', { local: l.name })} sub={t('{tempo} restantes', { tempo: fmtDuration(l.outpost!.terraRemaining / m.terraSpeed) })} onClick={() => goTo('map')} />
         ))}
         {game.expeditions.length > 0 && (
-          <Alert tone="info" icon="ship-explorer" title={`${game.expeditions.length} expedição(ões) em viagem`}
-            sub={`a próxima chega em ${fmtDuration(Math.min(...game.expeditions.map(e => e.remaining)) / m.expeditionSpeed)}`} onClick={() => goTo('expansion')} />
+          <Alert tone="info" icon="ship-explorer" title={t('{n} expedição(ões) em viagem', { n: game.expeditions.length })}
+            sub={t('a próxima chega em {tempo}', { tempo: fmtDuration(Math.min(...game.expeditions.map(e => e.remaining)) / m.expeditionSpeed) })} onClick={() => goTo('expansion')} />
         )}
       </div>
       {!needsYou && (
-        <Alert tone="calm" icon="icon-check" title={inProgress ? 'Nada precisa de você agora' : 'Tudo em ordem'}
-          sub="Sua base está produzindo. Os alertas aparecem aqui — e no título da aba — quando algo pedir sua atenção." />
+        <Alert tone="calm" icon="icon-check" title={inProgress ? t('Nada precisa de você agora') : t('Tudo em ordem')}
+          sub={t('Sua base está produzindo. Os alertas aparecem aqui — e no título da aba — quando algo pedir sua atenção.')} />
       )}
     </div>
   );

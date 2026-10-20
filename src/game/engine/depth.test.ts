@@ -193,15 +193,15 @@ describe('energia: dia, noite e baterias', () => {
     s.buildings.fission = 1;
     expect(overclockReactor(s, 'solar')).toBeNull();        // painel solar não tem sobrecarga
     const before = energyBalance(s).supply;
-    s = overclockReactor(s, 'fission')!;
+    s = overclockReactor(s, 'fission', () => 1)!;
     expect(energyBalance(s).supply - BALANCE.baseEnergy).toBeCloseTo((before - BALANCE.baseEnergy) * BALANCE.overclockMult);
     s = simulate(s, 61).state;
     expect(overclockPhase(s, 'fission').kind).toBe('cooling');
     expect(energyBalance(s).supply).toBeCloseTo(before);
-    expect(overclockReactor(s, 'fission')).toBeNull();
+    expect(overclockReactor(s, 'fission', () => 1)).toBeNull();
     s = simulate(s, BALANCE.overclockCooldown).state;
     expect(s.overclock.fission).toBeUndefined();
-    expect(overclockReactor(s, 'fission')).not.toBeNull();
+    expect(overclockReactor(s, 'fission', () => 1)).not.toBeNull();
   });
 });
 
@@ -300,7 +300,7 @@ describe('salvamento dos sistemas novos', () => {
     s.buildings.factory = 1; s.buildings.battery = 2; s.energyCharge = 345;
     s = setThrottle(s, 'miner', 0.25)!;
     s = setPriority(s, 'factory', -1)!;
-    s = overclockReactor(s, 'fission')!;
+    s = overclockReactor(s, 'fission', () => 1)!;
     const back = parseSave(serialize(s))!;
     expect(back.throttle).toEqual({ miner: 0.25 });
     expect(back.priority).toEqual({ factory: -1 });
@@ -331,7 +331,7 @@ describe('salvamento dos sistemas novos', () => {
     const s = research(base(), 'energyStorage', 'metallurgy');
     Object.assign(s.buildings, { solar: 30, battery: 3, converter: 2, miner: 20, foundry: 2, recycler: 1 });
     s.resources.population = 20;
-    const o = overclockReactor(s, 'fission')!;
+    const o = overclockReactor(s, 'fission', () => 1)!;
     const { state } = applyOffline({ ...o, savedAt: 0 }, 8 * 3600 * 1000);
     expect(Number.isFinite(state.energyCharge)).toBe(true);
     expect(state.energyCharge).toBeLessThanOrEqual(batteryCap(state) + 1e-6);

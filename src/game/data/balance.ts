@@ -7,6 +7,7 @@ export const BALANCE = {
   baseEnergy: 2,              // gerador de emergência
   clickAmount: 1,
   offlineCapSeconds: 8 * 3600,
+  offlineRate: 0.03,          // com o jogo fechado a base rende só 3% do ritmo normal (cada hora fora vale ~1,8 min de jogo)
   simulationHz: 4,
   // Indústrias não consomem os últimos 10% do armazém: sobra material para construir (evita travar a base)
   constructionReserve: 0.1,
@@ -102,4 +103,7 @@ export const BALANCE = {
   overclockMult: 2,
   overclockTime: 60,
   overclockCooldown: 240,
+  overclockFault: 0.1,        // chance de pane ao ligar a sobrecarga (fissão; fusão e antimatéria são mais arriscadas)
+  overclockFaultCool: 1.5,    // a pane esfria 1,5× mais tempo e o reator gera só metade até lá
+  overclockFaultOutput: 0.5,
 };

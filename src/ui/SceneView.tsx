@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { GameScene } from '../render/GameScene';
+import { t } from '../i18n';
 
 export function SceneView({ onReady }: { onReady?: () => void }) {
   const host = useRef<HTMLDivElement>(null);
@@ -19,5 +20,5 @@ export function SceneView({ onReady }: { onReady?: () => void }) {
     });
     return () => { disposed = true; scene?.destroy(); };
   }, []);
-  return <div ref={host} className="scene" aria-label="Asteroide — clique para extrair minério" />;
+  return <div ref={host} className="scene" aria-label={t('Asteroide — clique para extrair minério')} />;
 }

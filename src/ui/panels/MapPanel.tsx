@@ -8,6 +8,7 @@ import { Icon } from '../Icon';
 import { CRISIS_BY_KIND } from '../../game/data/crises';
 import { fmtDuration } from '../../game/engine/format';
 import { LocationCard, Yields } from './LocationCard';
+import { t, tp } from '../../i18n';
 
 /** Detalhes do local selecionado no mapa e lista de todos os locais. */
 export function MapPanel() {
@@ -23,8 +24,8 @@ export function MapPanel() {
   return (
     <div className="panel-body">
       <p className="hint">
-        {game.locations.length} locais · {colonies.length} colônias · {game.locations.filter(l => l.claimedBy && !l.outpost).length} reivindicados · {game.routes.length} {game.routes.length === 1 ? 'rota' : 'rotas'}.
-        Escolha um local no mapa para fundar, ampliar ou terraformar.
+        {t('{a} locais · {b} colônias · {c} reivindicados · {d}.', { a: game.locations.length, b: colonies.length, c: game.locations.filter(l => l.claimedBy && !l.outpost).length, d: tp(game.routes.length, '{n} rota', '{n} rotas') })}
+        {' '}{t('Escolha um local no mapa para fundar, ampliar ou terraformar.')}
       </p>
       {game.crises.length > 0 && (
         <div className="crisis-list">
@@ -33,17 +34,17 @@ export function MapPanel() {
             return (
               <button key={c.id} className="crisis-chip" onClick={() => select(c.locId)}>
                 <Icon name={CRISIS_BY_KIND[c.kind].icon} size={24} />
-                <b>{CRISIS_BY_KIND[c.kind].name}</b> em {l?.name ?? '?'} · {fmtDuration(c.remaining)}
+                <b>{t(CRISIS_BY_KIND[c.kind].name)}</b> {t('em')} {l?.name ?? '?'} · {fmtDuration(c.remaining)}
               </button>
             );
           })}
         </div>
       )}
-      {colonies.length > 0 && <p className="hint">Produção das colônias: <Yields y={total} /></p>}
-      {loc ? <LocationCard loc={loc} /> : game.locations.length > 0 && <p className="hint">Nenhum local selecionado.</p>}
+      {colonies.length > 0 && <p className="hint">{t('Produção das colônias:')} <Yields y={total} /></p>}
+      {loc ? <LocationCard loc={loc} /> : game.locations.length > 0 && <p className="hint">{t('Nenhum local selecionado.')}</p>}
       {game.locations.length > 0 && (
         <>
-          <h4 className="section">Todos os locais</h4>
+          <h4 className="section">{t('Todos os locais')}</h4>
           <div className="loc-list">
             {game.locations.slice().reverse().map(l => {
               const claim = l.claimedBy ? FACTION_BY_ID[l.claimedBy] : null;
@@ -51,10 +52,10 @@ export function MapPanel() {
                 <button key={l.id} className={`loc-row ${selected === l.id ? 'sel' : ''}`} onClick={() => select(l.id)}>
                   <Icon name={locationSprite(l)} size={28} />
                   <span className="loc-row-name">{l.name}</span>
-                  <small>{LOCATION_BY_TYPE[l.type].name}</small>
-                  {claim && !l.outpost && <i className="faction-dot" style={{ background: claim.color }} title={claim.name} />}
-                  {isDisputed(game, l) && <small className="sev-warn">disputa</small>}
-                  {l.outpost && <b className="count">nv {l.outpost.level}{l.outpost.terra > 0 ? ` · ★${l.outpost.terra}` : ''}</b>}
+                  <small>{t(LOCATION_BY_TYPE[l.type].name)}</small>
+                  {claim && !l.outpost && <i className="faction-dot" style={{ background: claim.color }} title={t(claim.name)} />}
+                  {isDisputed(game, l) && <small className="sev-warn">{t('disputa')}</small>}
+                  {l.outpost && <b className="count">{t('nv')} {l.outpost.level}{l.outpost.terra > 0 ? ` · ★${l.outpost.terra}` : ''}</b>}
                 </button>
               );
             })}

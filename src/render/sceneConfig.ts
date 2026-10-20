@@ -51,6 +51,9 @@ export const SLOTS: Partial<Record<BuildingId, { at: [number, number][]; thresho
   silo: { at: [[0.18, 0.36]], thresholds: [1], size: 0.12 },
   tank: { at: [[-0.68, -0.1]], thresholds: [1], size: 0.11 },
   depot: { at: [[0.68, 0.22]], thresholds: [1], size: 0.12 },
+  geothermal: { at: [[-0.1, 0.3]], thresholds: [1], size: 0.11 },
+  flowBattery: { at: [[0.1, 0.42]], thresholds: [1], size: 0.11 },
+  antimatter: { at: [[-0.24, -0.58]], thresholds: [1], size: 0.15 },
 };
 
 /** Indústrias entre as quais os drones Carregadores voam (as que estiverem construídas). */

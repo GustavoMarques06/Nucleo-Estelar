@@ -4,15 +4,19 @@ import { ACHIEVEMENTS, ACHIEVEMENT_BONUS } from '../../game/data/achievements';
 import { MINERALS } from '../../game/data/minerals';
 import { fmt, fmtDuration } from '../../game/engine/format';
 import { GUIDE } from '../../game/data/guide';
-import { STORY } from '../../game/data/story';
+import { STORY, STORY_BY_ID } from '../../game/data/story';
+import { LORE } from '../../game/data/lore';
 import { artUrl } from '../../assets';
 import { buildingCount, colonyCount } from '../../game/selectors';
 import { Icon } from '../Icon';
+import { Tx } from '../../i18n/Tx';
+import { t } from '../../i18n';
 
-type Section = 'guide' | 'diary' | 'achievements' | 'catalog' | 'stats';
+type Section = 'guide' | 'diary' | 'archive' | 'achievements' | 'catalog' | 'stats';
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'guide', label: 'Guia' },
   { id: 'diary', label: 'Diário' },
+  { id: 'archive', label: 'Arquivo' },
   { id: 'achievements', label: 'Conquistas' },
   { id: 'catalog', label: 'Minerais' },
   { id: 'stats', label: 'Estatísticas' },
@@ -21,12 +25,31 @@ const SECTIONS: { id: Section; label: string }[] = [
 function Guide() {
   return (
     <div className="guide">
-      <p className="hint">Toque em um tópico para ler. Tudo o que o jogo faz está explicado aqui em poucas linhas.</p>
+      <p className="hint">{t('Toque em um tópico para ler. Tudo o que o jogo faz está explicado aqui em poucas linhas.')}</p>
       {GUIDE.map((g, i) => (
         <details key={g.id} open={i === 0}>
-          <summary><Icon name={g.icon} size={26} />{g.title}</summary>
-          <div className="guide-text">{g.text.map((t, k) => <p key={k}>{t}</p>)}</div>
+          <summary><Icon name={g.icon} size={26} />{t(g.title)}</summary>
+          <div className="guide-text">{g.text.map((x, k) => <p key={k}>{t(x)}</p>)}</div>
         </details>
+      ))}
+    </div>
+  );
+}
+
+/** Arquivo: fragmentos dos Acendedores e transmissões das vozes recorrentes. */
+function Archive() {
+  const read = useGame(s => s.game.story);
+  const found = LORE.filter(e => read.includes(e.id)).length;
+  return (
+    <div className="guide diary archive">
+      <p className="hint">{t('{a} de {b} registros do Arquivo. Fragmentos aparecem ao explorar; transmissões, ao conhecer as vozes do jogo.', { a: found, b: LORE.length })}</p>
+      {LORE.map(e => read.includes(e.id) ? (
+        <details key={e.id} className={e.kind}>
+          <summary>{e.speaker && <small className="story-act">{t(e.speaker)} · </small>}{t(e.title)}</summary>
+          <div className="guide-text">{e.text.map((x, k) => <p key={k}>{t(x)}</p>)}</div>
+        </details>
+      ) : (
+        <div key={e.id} className="diary-locked">??? <small>{e.kind === 'fragment' ? t('fragmento ainda não encontrado') : t('transmissão ainda não recebida')}</small></div>
       ))}
     </div>
   );
@@ -36,17 +59,17 @@ function Diary() {
   const read = useGame(s => s.game.story);
   return (
     <div className="guide diary">
-      <p className="hint">{read.length} de {STORY.length} registros. Novos aparecem quando você cruza um marco grande da jornada.</p>
+      <p className="hint">{t('{a} de {b} registros. Novos aparecem quando você cruza um marco grande da jornada.', { a: read.filter(id => STORY_BY_ID[id]).length, b: STORY.length })}</p>
       {STORY.map(e => read.includes(e.id) ? (
         <details key={e.id}>
-          <summary>{e.title}</summary>
+          <summary>{e.act && <small className="story-act">{t(e.act)} · </small>}{t(e.title)}</summary>
           <div className="guide-text">
             <div className="story-art small" style={{ backgroundImage: `url(${artUrl(e.art)})` }} />
-            {e.text.map((t, k) => <p key={k}>{t}</p>)}
+            {e.text.map((x, k) => <p key={k}>{t(x)}</p>)}
           </div>
         </details>
       ) : (
-        <div key={e.id} className="diary-locked">??? <small>registro ainda não liberado</small></div>
+        <div key={e.id} className="diary-locked">??? <small>{t('registro ainda não liberado')}</small></div>
       ))}
     </div>
   );
@@ -57,16 +80,15 @@ function Achievements() {
   return (
     <>
       <p className="hint">
-        {got.length} de {ACHIEVEMENTS.length} conquistas · bônus permanente de <b className="sev-ok">+{Math.round(got.length * ACHIEVEMENT_BONUS * 100)}%</b> em toda
-        a produção. Conquistas não se perdem na Ascensão.
+        <Tx k="{a} de {b} conquistas · bônus permanente de <b>+{p}%</b> em toda a produção. Conquistas não se perdem na Ascensão." v={{ a: got.length, b: ACHIEVEMENTS.length, p: Math.round(got.length * ACHIEVEMENT_BONUS * 100) }} />
       </p>
       <div className="achievements">
         {ACHIEVEMENTS.map(a => {
           const done = got.includes(a.id);
           return (
-            <div key={a.id} className={`achievement ${done ? 'done' : ''}`} title={a.desc}>
+            <div key={a.id} className={`achievement ${done ? 'done' : ''}`} title={t(a.desc)}>
               <Icon name={a.icon} size={44} />
-              <div><b>{done ? a.name : '???'}</b><small>{a.desc}</small></div>
+              <div><b>{done ? t(a.name) : '???'}</b><small>{t(a.desc)}</small></div>
             </div>
           );
         })}
@@ -79,15 +101,15 @@ function Catalog() {
   const discovered = useGame(s => s.game.discovered);
   return (
     <>
-      <p className="hint">{discovered.length} de {MINERALS.length} minerais descobertos. Novos minerais aparecem nos locais explorados.</p>
+      <p className="hint">{t('{a} de {b} minerais descobertos. Novos minerais aparecem nos locais explorados.', { a: discovered.length, b: MINERALS.length })}</p>
       <div className="catalog">
         {MINERALS.map(x => {
           const known = discovered.includes(x.id);
           return (
-            <div key={x.id} className={`mineral ${known ? '' : 'unknown'} r-${x.rarity}`} title={known ? `${x.name} — ${x.use}` : 'Não descoberto'}>
+            <div key={x.id} className={`mineral ${known ? '' : 'unknown'} r-${x.rarity}`} title={known ? `${t(x.name)} — ${t(x.use)}` : t('Não descoberto')}>
               <Icon name={x.sprite} size={56} />
-              <b>{known ? x.name : '???'}</b>
-              <small>{known ? x.use : x.rarity}</small>
+              <b>{known ? t(x.name) : '???'}</b>
+              <small>{known ? t(x.use) : t(x.rarity)}</small>
             </div>
           );
         })}
@@ -112,7 +134,7 @@ function Stats() {
   ];
   return (
     <table className="stats-table">
-      <tbody>{rows.map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}</tbody>
+      <tbody>{rows.map(([k, v]) => <tr key={k}><th>{t(k)}</th><td>{v}</td></tr>)}</tbody>
     </table>
   );
 }
@@ -124,11 +146,12 @@ export function RecordsPanel() {
     <div className="panel-body">
       <div className="subtabs" role="tablist">
         {SECTIONS.map(s => (
-          <button key={s.id} role="tab" aria-selected={sec === s.id} className={`btn small ${sec === s.id ? 'active' : ''}`} onClick={() => setSec(s.id)}>{s.label}</button>
+          <button key={s.id} role="tab" aria-selected={sec === s.id} className={`btn small ${sec === s.id ? 'active' : ''}`} onClick={() => setSec(s.id)}>{t(s.label)}</button>
         ))}
       </div>
       {sec === 'guide' && <Guide />}
       {sec === 'diary' && <Diary />}
+      {sec === 'archive' && <Archive />}
       {sec === 'achievements' && <Achievements />}
       {sec === 'catalog' && <Catalog />}
       {sec === 'stats' && <Stats />}

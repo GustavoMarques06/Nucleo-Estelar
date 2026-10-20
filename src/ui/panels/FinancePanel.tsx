@@ -7,6 +7,7 @@ import { getModifiers, inflation, repLevel } from '../../game/engine/modifiers';
 import { upkeepBreakdown } from '../../game/engine/upkeep';
 import { fmt, fmtDuration, fmtRate } from '../../game/engine/format';
 import { Icon } from '../Icon';
+import { t } from '../../i18n';
 
 const SOURCE_LABEL: Record<FlowSource, string> = {
   mining: 'Mineração', industry: 'Indústria', energy: 'Geradores', logistics: 'Logística', science: 'Ciência', civilization: 'Civilização',
@@ -19,7 +20,7 @@ const short = (n: number) => (n >= 0 ? '+' : '−') + fmt(Math.abs(n));
 
 /** Histórico do saldo por segundo (últimos 30 min): a linha pontilhada é o zero. */
 function Chart({ data }: { data: number[] }) {
-  if (data.length < 3) return <p className="hint">Coletando dados… o gráfico aparece depois de alguns segundos.</p>;
+  if (data.length < 3) return <p className="hint">{t('Coletando dados… o gráfico aparece depois de alguns segundos.')}</p>;
   const lo = Math.min(0, ...data), hi = Math.max(0, ...data);
   const span = hi - lo || 1;
   const x = (i: number) => ((i + (HISTORY_MAX - data.length)) / (HISTORY_MAX - 1)) * 100;
@@ -31,7 +32,7 @@ function Chart({ data }: { data: number[] }) {
         <line x1="0" x2="100" y1={y(0)} y2={y(0)} />
         <path d={d} />
       </svg>
-      <div className="chart-scale"><span>{fmtRate(hi)}</span><span>últimos {fmtDuration(data.length * HISTORY_STEP)}</span><span>{fmtRate(lo)}</span></div>
+      <div className="chart-scale"><span>{fmtRate(hi)}</span><span>{t('últimos {tempo}', { tempo: fmtDuration(data.length * HISTORY_STEP) })}</span><span>{fmtRate(lo)}</span></div>
     </div>
   );
 }
@@ -66,41 +67,41 @@ export function FinancePanel() {
 
   return (
     <div className="panel-body finance">
-      <p className="hint">Balanço em tempo real, vindo das máquinas, colônias e impostos. Compras e vendas manuais aparecem só no saldo geral. Toque numa linha para ver as origens e o histórico.</p>
+      <p className="hint">{t('Balanço em tempo real, vindo das máquinas, colônias e impostos. Compras e vendas manuais aparecem só no saldo geral. Toque numa linha para ver as origens e o histórico.')}</p>
 
-      <h4 className="section">Créditos</h4>
+      <h4 className="section">{t('Créditos')}</h4>
       <div className="fin-summary">
-        <div><small>Entrada</small><b className="sev-ok">{fmtRate(income)}</b></div>
-        <div><small>Saída (manutenção)</small><b className={spent > 0 ? 'sev-bad' : ''}>{fmtRate(-spent)}</b></div>
-        <div><small>Saldo geral</small><b className={rates.credits < 0 ? 'sev-bad' : 'sev-ok'}>{fmtRate(rates.credits)}</b></div>
+        <div><small>{t('Entrada')}</small><b className="sev-ok">{fmtRate(income)}</b></div>
+        <div><small>{t('Saída (manutenção)')}</small><b className={spent > 0 ? 'sev-bad' : ''}>{fmtRate(-spent)}</b></div>
+        <div><small>{t('Saldo geral')}</small><b className={rates.credits < 0 ? 'sev-bad' : 'sev-ok'}>{fmtRate(rates.credits)}</b></div>
       </div>
       <div className="fin-upkeep">
-        <b>Custo de vida: {fmt(up.total)} créditos/s</b>
-        {income > 0 && <small> ({Math.round(burden * 100)}% da renda automática)</small>}
+        <b>{t('Custo de vida: {n} créditos/s', { n: fmt(up.total) })}</b>
+        {income > 0 && <small> ({t('{n}% da renda automática', { n: Math.round(burden * 100) })})</small>}
         <ul className="stats">
-          <li>Estruturas: {fmt(up.buildings)}/s</li>
-          <li>Colônias: {fmt(up.colonies)}/s</li>
-          {up.insurance > 0 && <li>Seguros de rota: {fmt(up.insurance)}/s</li>}
-          <li>Inflação: custo das estruturas +{(inflation(game) * 100).toFixed(1)}% (zera na Ascensão)</li>
-          {m.upkeep !== 1 && <li>Redutores de manutenção: ×{m.upkeep.toFixed(2)}</li>}
+          <li>{t('Estruturas: {n}/s', { n: fmt(up.buildings) })}</li>
+          <li>{t('Colônias: {n}/s', { n: fmt(up.colonies) })}</li>
+          {up.insurance > 0 && <li>{t('Seguros de rota: {n}/s', { n: fmt(up.insurance) })}</li>}
+          <li>{t('Inflação: custo das estruturas +{n}% (zera na Ascensão)', { n: (inflation(game) * 100).toFixed(1) })}</li>
+          {m.upkeep !== 1 && <li>{t('Redutores de manutenção: ×{n}', { n: m.upkeep.toFixed(2) })}</li>}
         </ul>
         {game.debt > 0.5 && (
           <p className={`status ${debtInfo && debtInfo.ratio < 0.999 ? 'sev-bad' : 'sev-warn'}`}>
-            Manutenção em atraso: {fmt(game.debt)} créditos
-            {debtInfo && debtInfo.ratio < 0.999 ? ` — estruturas caras a ${Math.round(debtInfo.ratio * 100)}% do ritmo.` : ` (tolerância de ${fmtDuration(BALANCE.upkeepGrace)} de manutenção antes de punir).`}
+            {t('Manutenção em atraso: {n} créditos', { n: fmt(game.debt) })}
+            {debtInfo && debtInfo.ratio < 0.999 ? ' — ' + t('estruturas caras a {n}% do ritmo.', { n: Math.round(debtInfo.ratio * 100) }) : ' ' + t('(tolerância de {tempo} de manutenção antes de punir).', { tempo: fmtDuration(BALANCE.upkeepGrace) })}
           </p>
         )}
-        <p className="hint">Reputação comercial nível {repLevel(game)} · Austeridade (decreto) reduz a manutenção em 60%.</p>
+        <p className="hint">{t('Reputação comercial nível {n} · Austeridade (decreto) reduz a manutenção em 60%.', { n: repLevel(game) })}</p>
       </div>
 
-      <h4 className="section">Balanço por recurso</h4>
-      {!flows && <p className="hint">Coletando dados…</p>}
+      <h4 className="section">{t('Balanço por recurso')}</h4>
+      {!flows && <p className="hint">{t('Coletando dados…')}</p>}
       <div className="fin-table" role="table">
-        <div className="fin-row head" role="row"><span /><span>Recurso (por s)</span><span>Entra</span><span>Sai</span><span>Saldo</span></div>
+        <div className="fin-row head" role="row"><span /><span>{t('Recurso (por s)')}</span><span>{t('Entra')}</span><span>{t('Sai')}</span><span>{t('Saldo')}</span></div>
         {rows.map(x => (
           <button key={x.r} className={`fin-row ${sel === x.r ? 'on' : ''}`} onClick={() => setSel(x.r)} role="row" aria-pressed={sel === x.r}>
             <Icon name={RESOURCES[x.r].icon} size={22} />
-            <span>{RESOURCES[x.r].name}</span>
+            <span>{t(RESOURCES[x.r].name)}</span>
             <span className="pos">{x.inn > 0.001 ? short(x.inn) : '—'}</span>
             <span className="neg">{x.out > 0.001 ? short(-x.out) : '—'}</span>
             <b className={x.net < -0.001 ? 'neg' : x.net > 0.001 ? 'pos' : ''}>{short(x.net)}</b>
@@ -108,16 +109,16 @@ export function FinancePanel() {
         ))}
       </div>
 
-      <h4 className="section">{RESOURCES[sel].name}: origens</h4>
-      {sources.length === 0 && <p className="hint">Sem fluxo automático deste recurso agora.</p>}
+      <h4 className="section">{t('{recurso}: origens', { recurso: t(RESOURCES[sel].name) })}</h4>
+      {sources.length === 0 && <p className="hint">{t('Sem fluxo automático deste recurso agora.')}</p>}
       {sources.map(({ src, v }) => (
         <div key={src} className="fin-src">
-          <span>{SOURCE_LABEL[src]}</span>
+          <span>{t(SOURCE_LABEL[src])}</span>
           <i><b className={v < 0 ? 'neg' : ''} style={{ width: `${(Math.abs(v) / maxAbs) * 100}%` }} /></i>
           <span className={v < 0 ? 'neg' : 'pos'}>{fmtRate(v)}</span>
         </div>
       ))}
-      <h4 className="section">{RESOURCES[sel].name}: saldo nos últimos minutos</h4>
+      <h4 className="section">{t('{recurso}: saldo nos últimos minutos', { recurso: t(RESOURCES[sel].name) })}</h4>
       <Chart data={history[sel] ?? []} />
     </div>
   );

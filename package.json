@@ -2,6 +2,7 @@
   "name": "nucleo-estelar",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Núcleo Estelar — tycoon espacial idle em pixel art para navegador.",
   "type": "module",
   "scripts": {

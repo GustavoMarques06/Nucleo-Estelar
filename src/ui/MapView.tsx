@@ -9,6 +9,7 @@ import { routeInfo } from '../game/engine/routes';
 import { artUrl } from '../assets';
 import { SECTOR_SIZE, nodePosition, sectorBackground, sectorCount, sectorName, sectorOf } from './mapLayout';
 import { Icon } from './Icon';
+import { t } from '../i18n';
 
 /** Mapa estelar: sobrepõe a cena central quando a aba Mapa está aberta. */
 export function MapView() {
@@ -29,7 +30,7 @@ export function MapView() {
   const colonies = locs.filter(x => x.l.outpost);
 
   return (
-    <div className="map-view" role="region" aria-label="Mapa estelar">
+    <div className="map-view" role="region" aria-label={t('Mapa estelar')}>
       <div className="map-bg" style={{ backgroundImage: `url(${artUrl(sectorBackground(cur))})` }} />
       <svg className="map-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {colonies.map(({ l, i }) => {
@@ -59,12 +60,12 @@ export function MapView() {
         const x = Math.min(94, Math.max(6, p.x + (dx / len) * 9)), y = Math.min(90, Math.max(8, p.y + (dy / len) * 9));
         return [(
           <button key={r.id} className="route-stub" style={{ left: `${x}%`, top: `${y}%` }} onClick={() => select(game.locations[far].id)}
-            title={`Rota para ${game.locations[far].name} (${sectorName(sectorOf(far))})`}>
+            title={t('Rota para {nome} ({setor})', { nome: game.locations[far].name, setor: sectorName(sectorOf(far)) })}>
             → {game.locations[far].name}
           </button>
         )];
       })}
-      <div className="map-home" title="Sua base"><Icon name="asteroid-main-big" size={64} /><span>Base</span></div>
+      <div className="map-home" title={t('Sua base')}><Icon name="asteroid-main-big" size={64} /><span>{t('Base')}</span></div>
 
       {locs.map(({ l, i }) => {
         const p = nodePosition(i);
@@ -74,11 +75,11 @@ export function MapView() {
           (l.outpost?.terra ?? 0) > 0 ? 'terra' : '', (l.outpost?.terraRemaining ?? 0) > 0 ? 'working' : ''].join(' ');
         return (
           <button key={l.id} className={cls} style={{ left: `${p.x}%`, top: `${p.y}%`, ['--faction' as string]: claim?.color ?? 'transparent' }}
-            onClick={() => select(l.id)} title={`${l.name}${claim ? ` · reivindicado: ${claim.name}` : ''}`}>
+            onClick={() => select(l.id)} title={`${l.name}${claim ? ` · ${t('reivindicado: {nome}', { nome: t(claim.name) })}` : ''}`}>
             <Icon name={locationSprite(l)} size={44} />
             <span className="map-label">{l.name}</span>
             {l.outpost && <span className="map-badge">{l.outpost.level}</span>}
-            {crisis && <span className="map-alert" aria-label="crise ativa">!</span>}
+            {crisis && <span className="map-alert" aria-label={t('crise ativa')}>!</span>}
           </button>
         );
       })}
@@ -94,20 +95,20 @@ export function MapView() {
       })}
 
       <div className="map-pager">
-        <button className="btn small" disabled={cur <= 0} onClick={() => setSector(cur - 1)} aria-label="Setor anterior">◀</button>
+        <button className="btn small" disabled={cur <= 0} onClick={() => setSector(cur - 1)} aria-label={t('Setor anterior')}>◀</button>
         <span>{sectorName(cur)} · {cur + 1}/{sectors}</span>
-        <button className="btn small" disabled={cur >= sectors - 1} onClick={() => setSector(cur + 1)} aria-label="Próximo setor">▶</button>
+        <button className="btn small" disabled={cur >= sectors - 1} onClick={() => setSector(cur + 1)} aria-label={t('Próximo setor')}>▶</button>
       </div>
       <div className="map-legend">
-        <span><i className="lg colony" />Colônia</span>
-        <span><i className="lg free" />Livre</span>
-        <span><i className="lg claim" />Reivindicado</span>
-        <span><i className="lg garden" />Terraformado</span>
-        <span><i className="lg route" />Rota</span>
-        <span><i className="lg alert" />Crise</span>
+        <span><i className="lg colony" />{t('Colônia')}</span>
+        <span><i className="lg free" />{t('Livre')}</span>
+        <span><i className="lg claim" />{t('Reivindicado')}</span>
+        <span><i className="lg garden" />{t('Terraformado')}</span>
+        <span><i className="lg route" />{t('Rota')}</span>
+        <span><i className="lg alert" />{t('Crise')}</span>
       </div>
-      {total === 0 && <p className="map-empty">Nenhum local descoberto ainda. Lance uma expedição na aba Expansão.</p>}
-      <small className="map-cap">{SECTOR_SIZE} locais por setor</small>
+      {total === 0 && <p className="map-empty">{t('Nenhum local descoberto ainda. Lance uma expedição na aba Expansão.')}</p>}
+      <small className="map-cap">{t('{n} locais por setor', { n: SECTOR_SIZE })}</small>
     </div>
   );
 }

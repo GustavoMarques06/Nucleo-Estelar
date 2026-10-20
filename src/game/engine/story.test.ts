@@ -11,7 +11,7 @@ describe('diário de bordo', () => {
     expect(new Set(STORY.map(e => e.id)).size).toBe(STORY.length);
     for (const e of STORY) {
       expect(e.text.length, e.id).toBeGreaterThanOrEqual(1);
-      expect(e.text.join(' ').length, e.id).toBeLessThan(500);
+      expect(e.text.join(' ').length, e.id).toBeLessThan(1000);
       expect(typeof e.when(newGame(0)), e.id).toBe('boolean');
     }
     expect(STORY.filter(e => e.when(newGame(0))).map(e => e.id)).toEqual(['start']);   // só a abertura vale de início
@@ -40,7 +40,7 @@ describe('diário de bordo', () => {
     expect(checkStory(back).fresh).toEqual([]);
     // lixo é descartado
     old.story = ['start', 'nao-existe', 5];
-    old.version = 8;
+    old.version = 14;
     expect(parseSave(JSON.stringify(old))!.story).toEqual(['start']);
   });
 

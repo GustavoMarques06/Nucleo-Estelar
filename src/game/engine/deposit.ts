@@ -7,6 +7,7 @@ import { RESOURCES } from '../data/resources';
 import { cloneState, rng } from './state';
 import { depositShares, getModifiers, type Modifiers } from './modifiers';
 import { canAfford, payCost } from './costs';
+import { t } from '../../i18n';
 
 // Jazida: a crosta do asteroide é infinita (e fica mais rica nas camadas profundas); os veios são reservas finitas
 // que rendem mais e trazem minérios novos. Enquanto houver um veio em foco, a extração sai dele; esgotado, volta para a crosta.
@@ -82,7 +83,7 @@ export const availableKinds = (s: GameState): VeinKind[] =>
 
 export function canProspect(s: GameState): { ok: boolean; reason?: string } {
   if (!prospectingUnlocked(s)) return { ok: false, reason: 'Pesquise Geologia.' };
-  if (veinsLeft(s).length >= BALANCE.veinMaxActive) return { ok: false, reason: `No máximo ${BALANCE.veinMaxActive} veios ao mesmo tempo: esgote um antes.` };
+  if (veinsLeft(s).length >= BALANCE.veinMaxActive) return { ok: false, reason: t('No máximo {n} veios ao mesmo tempo: esgote um antes.', { n: BALANCE.veinMaxActive }) };
   if (!canAfford(s, prospectCost(s))) return { ok: false, reason: 'Faltam créditos.' };
   return { ok: true };
 }

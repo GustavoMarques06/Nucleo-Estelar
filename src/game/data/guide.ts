@@ -69,10 +69,20 @@ export const GUIDE: GuideEntry[] = [
     'Cada facção faz um pedido por vez (um material que valoriza), com prazo de 15 minutos. Cumprir rende +10 de relação, influência e uma recompensa própria: mais barato que presentes, e sem esfriar a rival.',
     'Relação 25 = tratado, 60 = aliança, 90 = irmandade (bônus ainda maior). Quem é aliado de uma facção esfria a rival dela aos poucos, e a rival pode cobrar uma prova de boa-fé (evento).',
     'Vesper é rival da Ferrum e da Helix: escolher um lado é uma decisão de verdade.',
+    'Aliados em diante recebem, a cada 3 pedidos, uma missão de honra: três vezes maior e mais longa, mas com recompensa quádrupla e um prêmio que só aquela facção tem (exóticos, módulos, titânio).',
+    'De tempos em tempos as facções movem as fronteiras: as de relação baixa reivindicam locais livres (e fundar neles custa mais); aliadas às vezes liberam o que já reivindicavam. Cada facção também tem a sua história no Diário, em quatro capítulos.',
+  ] },
+  { id: 'events', title: 'Eventos e histórias', icon: 'event-comet', text: [
+    'Eventos espaciais surgem de tempos em tempos com escolhas rápidas. Alguns começam histórias de dois ou três capítulos: o que você escolhe decide se e quando a continuação aparece, alguns minutos depois (o jogo avisa quando ela chega).',
+    'As escolhas ficam lembradas durante a jornada: uma pessoa que você ajudou antes pode retribuir depois. Cada história só começa uma vez por jornada.',
   ] },
   { id: 'drones', title: 'Drones', icon: 'drone-transport', text: [
     'O Hangar monta drones. Na aba Logística você designa cada um a uma função. O primeiro drone de uma função liga a automação dela; os demais dão bônus com retornos decrescentes.',
     'Carregadores aceleram as indústrias da base (mais insumo e mais produto pela mesma energia) e aparecem voando entre as estruturas.',
+  ] },
+  { id: 'challenges', title: 'Desafios de Ascensão', icon: 'icon-trophy', text: [
+    'Depois da primeira Ascensão, você pode começar a jornada seguinte com uma regra especial: sem comércio, sem colônias, energia racionada… Chegue de novo à Ascensão com a regra valendo e ganhe uma melhoria permanente (uma vez por desafio).',
+    'Abandonar um desafio não custa nada. Cada desafio fica marcado como concluído na aba Ascensão.',
   ] },
   { id: 'legacy', title: 'Ascensão e Transcendência', icon: 'icon-star', text: [
     'A Ascensão recomeça a jornada em troca de Dados de Ascensão, que compram melhorias permanentes. Cada jornada fica mais rápida.',

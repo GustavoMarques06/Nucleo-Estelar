@@ -1,7 +1,8 @@
 import type { Amounts, GameState, ResId } from '../types';
 import { MEGA_BY_ID } from '../data/megaprojects';
 import { PERK_BY_ID, ascensionGain, perkCost } from '../data/ascension';
-import { EVENTS, EVENT_BY_ID } from '../data/events';
+import { EVENTS, EVENT_BY_ID, type ChainStep } from '../data/events';
+import { rng } from './state';
 import { UPGRADES } from '../data/upgrades';
 import { BALANCE } from '../data/balance';
 import { cloneState, newGame } from './state';
@@ -14,6 +15,9 @@ import { REPEATABLE_BY_ID, repeatableCost } from '../data/repeatables';
 import { ACHIEVEMENTS } from '../data/achievements';
 import { GOALS } from '../data/goals';
 import { STORY } from '../data/story';
+import { LORE } from '../data/lore';
+import { challengeBlocks, challengeMet } from './challenges';
+import { CHALLENGE_BY_ID } from '../data/challenges';
 
 // ---------- Megaprojetos ----------
 export const megaprojectsUnlocked = (s: GameState) => !!s.upgrades.megaEngineering;
@@ -80,7 +84,8 @@ export const pendingAscension = (s: GameState) =>
 export const canAscend = (s: GameState) => !!s.upgrades.ascensionProject && pendingAscension(s) > 0;
 
 /** Recomeça a jornada mantendo Dados de Ascensão, melhorias permanentes, catálogo e opções. */
-export function ascend(prev: GameState, now = Date.now()): GameState | null {
+/** `next`: desafio escolhido para a próxima jornada (null/omitido = jornada normal). Ascender com um desafio cumprido o conclui. */
+export function ascend(prev: GameState, now = Date.now(), next: string | null = null): GameState | null {
   if (!canAscend(prev)) return null;
   const gainPts = pendingAscension(prev);
   const s = newGame(now);
@@ -100,6 +105,7 @@ export function ascend(prev: GameState, now = Date.now()): GameState | null {
   s.stats.highSales = prev.stats.highSales;
   s.stats.reputation = prev.stats.reputation;
   s.stats.questsDone = prev.stats.questsDone;
+  s.stats.chains = prev.stats.chains;
   s.autosellFloor = prev.autosellFloor;
   s.keep = { ...prev.keep };
   s.throttle = { ...prev.throttle };
@@ -108,7 +114,11 @@ export function ascend(prev: GameState, now = Date.now()): GameState | null {
   s.tips = [...prev.tips];
   s.goals = [...prev.goals];
   s.story = [...prev.story];
+  s.flags = prev.flags.filter(f => f.startsWith('ending-'));      // a escolha final vale para sempre
   s.transcendence = { ...prev.transcendence, perks: { ...prev.transcendence.perks } };
+  const done = [...prev.challenges.done];
+  if (prev.challenges.active && challengeMet(prev) && !done.includes(prev.challenges.active)) done.push(prev.challenges.active);
+  s.challenges = { active: next && CHALLENGE_BY_ID[next] && !done.includes(next) ? next : null, done };
   applyStartBonuses(s);
   return s;
 }
@@ -143,11 +153,22 @@ const eventScale = (s: GameState) => Math.max(1, Math.sqrt(s.stats.earned) / 20)
 
 export function spawnEvent(prev: GameState, random: () => number = Math.random): GameState {
   const s = cloneState(prev);
-  const eligible = EVENTS.filter(e => e.minPhase(s));
+  const eligible = EVENTS.filter(e => !e.followUp && e.minPhase(s) && !(challengeBlocks(s, 'diplomacy') && /^(envoy|tribute)/.test(e.id)));
   s.eventTimer = BALANCE.eventMinGap + random() * (BALANCE.eventMaxGap - BALANCE.eventMinGap);
   if (!eligible.length || s.event) return s;
-  const def = eligible[Math.floor(random() * eligible.length)];
+  // Eventos de história principal (priority) têm preferência: o jogador não os perde no meio de 30 outros.
+  const def = eligible.find(e => e.priority) ?? eligible[Math.floor(random() * eligible.length)];
   s.event = { id: def.id, remaining: BALANCE.eventDuration, seed: Math.floor(random() * 1e9) };
+  return s;
+}
+
+/** Se não há evento na tela, traz a primeira continuação cujo tempo chegou (dura mais que um evento comum). */
+export function surfaceChain(prev: GameState): GameState {
+  if (prev.event || !prev.chain.some(c => c.remaining <= 0 && EVENT_BY_ID[c.event])) return prev;
+  const s = cloneState(prev);
+  const i = s.chain.findIndex(c => c.remaining <= 0 && EVENT_BY_ID[c.event]);
+  const next = s.chain.splice(i, 1)[0];
+  s.event = { id: next.event, remaining: BALANCE.eventDuration * 3, seed: s.nextSeed++ };
   return s;
 }
 
@@ -174,6 +195,16 @@ export function chooseEvent(prev: GameState, choice: number): { state: GameState
     s.buffs = s.buffs.filter(b => b.name !== c.buff!.name);
     s.buffs.push({ id: `${def.id}-${s.event!.seed}`, name: c.buff.name, effects: c.buff.effects, remaining: c.buff.duration });
   }
+  if (c.flag && !s.flags.includes(c.flag)) s.flags.push(c.flag);
+  // Continuação: sorteada pela semente do evento (mesma escolha, mesmo desfecho).
+  const steps: ChainStep[] = c.chain ? [c.chain].flat() : [];
+  let scheduled = false;
+  if (steps.length && s.chain.length < 4) {
+    const roll = rng(s.event!.seed * 31 + 7)();
+    let acc = 0;
+    for (const st of steps) { acc += st.p ?? 1; if (roll < acc) { s.chain.push({ event: st.event, remaining: st.delay }); scheduled = true; break; } }
+  }
+  if (def.followUp && !scheduled) s.stats.chains++;       // a história terminou
   s.event = null;
   s.stats.eventsSeen++;
   return { state: s, reward };
@@ -235,6 +266,8 @@ export function transcend(prev: GameState, now = Date.now()): GameState | null {
   s.tips = [...prev.tips];
   s.goals = [...prev.goals];
   s.story = [...prev.story];
+  s.flags = prev.flags.filter(f => f.startsWith('ending-'));      // a escolha final vale para sempre
+  s.challenges = { active: null, done: [...prev.challenges.done] };
   s.stats.lifetimeEarned = prev.stats.lifetimeEarned + prev.stats.earned;
   s.stats.contractsDone = prev.stats.contractsDone;
   s.stats.eventsSeen = prev.stats.eventsSeen;
@@ -242,6 +275,7 @@ export function transcend(prev: GameState, now = Date.now()): GameState | null {
   s.stats.highSales = prev.stats.highSales;
   s.stats.reputation = prev.stats.reputation;
   s.stats.questsDone = prev.stats.questsDone;
+  s.stats.chains = prev.stats.chains;
   s.autosellFloor = prev.autosellFloor;
   s.keep = { ...prev.keep };
   s.throttle = { ...prev.throttle };
@@ -279,10 +313,12 @@ export function checkGoals(prev: GameState): { state: GameState; done: string[] 
 
 // ---------- Diário de bordo ----------
 /** Registros do diário cujas condições acabaram de valer (devolve só os ids novos, na ordem da história). */
-export function checkStory(prev: GameState): { state: GameState; fresh: string[] } {
+export function checkStory(prev: GameState): { state: GameState; fresh: string[]; lore: string[] } {
   const fresh = STORY.filter(e => !prev.story.includes(e.id) && e.when(prev)).map(e => e.id);
-  if (!fresh.length) return { state: prev, fresh };
+  // Arquivo (fragmentos e transmissões): chega em silêncio, só com um aviso; não interrompe o jogo.
+  const lore = LORE.filter(e => !prev.story.includes(e.id) && e.when(prev)).map(e => e.id);
+  if (!fresh.length && !lore.length) return { state: prev, fresh, lore };
   const s = cloneState(prev);
-  s.story.push(...fresh);
-  return { state: s, fresh };
+  s.story.push(...fresh, ...lore);
+  return { state: s, fresh, lore };
 }

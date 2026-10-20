@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 // Posição dos locais no mapa. Cada setor mostra até 24 locais numa espiral de ângulo áureo: a posição de
 // um local depende só do seu índice, então nunca muda quando novos locais são descobertos.
 export const SECTOR_SIZE = 24;
@@ -19,4 +20,4 @@ export function nodePosition(index: number): { x: number; y: number } {
 const SECTOR_BACKGROUNDS = ['scene-system-map', 'scene-system-map-b', 'scene-galaxy-map'];
 export const sectorBackground = (sector: number) => SECTOR_BACKGROUNDS[Math.min(sector, SECTOR_BACKGROUNDS.length - 1)];
 export const sectorName = (sector: number) =>
-  sector === 0 ? 'Sistema natal' : sector === 1 ? 'Sistemas vizinhos' : `Espaço profundo ${sector - 1}`;
+  sector === 0 ? t('Sistema natal') : sector === 1 ? t('Sistemas vizinhos') : t('Espaço profundo {n}', { n: sector - 1 });

@@ -1,4 +1,4 @@
-import type { Buff, Effect, GameState, Location, LocationType, ResId, Specialization } from '../types';
+import type { Buff, Category, Effect, GameState, Location, LocationType, ResId, Specialization } from '../types';
 import { RES_IDS, RESOURCES } from '../data/resources';
 import { BUILDINGS, BUILDING_IDS } from '../data/buildings';
 import { UPGRADES } from '../data/upgrades';
@@ -12,6 +12,8 @@ import { ACHIEVEMENT_BY_ID } from '../data/achievements';
 import { TIPS } from '../data/tips';
 import { GOALS } from '../data/goals';
 import { STORY } from '../data/story';
+import { LORE } from '../data/lore';
+import { CHALLENGE_BY_ID } from '../data/challenges';
 import { VEIN_KIND_BY_ID } from '../data/deposit';
 import { FACTIONS, FACTION_BY_ID } from '../data/factions';
 import { DRONE_ROLES } from '../data/drones';
@@ -20,7 +22,7 @@ import { CRISIS_BY_KIND } from '../data/crises';
 import { KEEP_STEPS, SELL_FLOORS } from '../data/market';
 import { BALANCE } from '../data/balance';
 import { newGame, SAVE_VERSION } from './state';
-import { THROTTLE_STEPS, prioritizable, throttleable } from './energy';
+import { PROTECTABLE, THROTTLE_STEPS, prioritizable, throttleable } from './energy';
 
 const KEY = 'nucleo-estelar/save';
 const BACKUP_KEY = KEY + '.bak';            // cópia de segurança (a cada ~10 min)
@@ -59,6 +61,7 @@ function parseLocation(x: unknown): Location | null {
       terra: Math.floor(num(op.terra, 0, 5)),
       terraRemaining: num(op.terraRemaining, 0, 1e7),
       terraTotal: num(op.terraTotal, 0, 1e7),
+      ...(op.link === true ? { link: true } : {}),
     } : null,
   };
 }
@@ -140,6 +143,7 @@ export function parseSave(raw: string): GameState | null {
   }).filter(c => c.remaining > 0);
   // no máximo uma crise por colônia
   s.crises = s.crises.filter((c, i) => s.crises.findIndex(o => o.locId === c.locId) === i);
+  if (typeof d.claimTimer === 'number' && Number.isFinite(d.claimTimer)) s.claimTimer = Math.min(1e5, Math.max(-1e5, d.claimTimer));
   if (typeof d.crisisTimer === 'number' && Number.isFinite(d.crisisTimer)) s.crisisTimer = Math.min(1e5, Math.max(-1e5, d.crisisTimer));
   s.routes = arr(d.routes).slice(0, 2000).flatMap(x => {
     const r = obj(x), a = str(r.a), b = str(r.b);
@@ -161,10 +165,12 @@ export function parseSave(raw: string): GameState | null {
     if (prioritizable(b.id) && (p === 1 || p === -1)) s.priority[b.id] = p;
     if (b.overclock && ocs[b.id]) {
       const x = obj(ocs[b.id]);
-      const left = num(x.left, 0, BALANCE.overclockTime), cool = left > 0 ? 0 : num(x.cool, 0, BALANCE.overclockCooldown);
-      if (left > 0 || cool > 0) s.overclock[b.id] = { left, cool };
+      const left = num(x.left, 0, BALANCE.overclockTime), fault = left <= 0 && x.fault === true;
+      const cool = left > 0 ? 0 : num(x.cool, 0, BALANCE.overclockCooldown * (fault ? BALANCE.overclockFaultCool : 1));
+      if (left > 0 || cool > 0) s.overclock[b.id] = fault ? { left, cool, fault } : { left, cool };
     }
   }
+  s.protect = [...new Set(arr(d.protect).map(c => str(c) as Category))].filter(c => PROTECTABLE.includes(c));
   s.energyCharge = num(d.energyCharge, 0, 1e15);
   s.debt = num(d.debt, 0, 1e15);
   const floor = num(d.autosellFloor, 0, 5);
@@ -172,7 +178,7 @@ export function parseSave(raw: string): GameState | null {
   const fac = obj(d.factions);
   for (const f of FACTIONS) {
     const x = obj(fac[f.id]);
-    s.factions[f.id] = { relation: num(x.relation, 0, 100), cooldown: num(x.cooldown, 0, 3600), questTimer: typeof x.questTimer === 'number' ? num(x.questTimer, 0, 1e5) : 240 };
+    s.factions[f.id] = { relation: num(x.relation, 0, 100), cooldown: num(x.cooldown, 0, 3600), questTimer: typeof x.questTimer === 'number' ? num(x.questTimer, 0, 1e5) : 240, ...(num(x.done) > 0 ? { done: Math.floor(num(x.done, 0, 1e9)) } : {}) };
   }
   s.quests = arr(d.quests).slice(0, 10).flatMap(x => {
     const q = obj(x), res = str(q.res) as ResId, fid = str(q.faction), reward = obj(q.reward);
@@ -180,7 +186,7 @@ export function parseSave(raw: string): GameState | null {
     const rw: Record<string, number> = {};
     for (const r of RES_IDS) if (reward[r] !== undefined && num(reward[r]) > 0) rw[r] = num(reward[r]);
     const total = num(q.total, 1, 1e5);
-    return [{ id: str(q.id, 'q'), faction: fid, res, amount: num(q.amount, 1, 1e300), reward: rw, remaining: num(q.remaining, 0, total), total }];
+    return [{ id: str(q.id, 'q'), faction: fid, res, amount: num(q.amount, 1, 1e300), reward: rw, remaining: num(q.remaining, 0, total), total, ...(q.honor === true ? { honor: true } : {}) }];
   }).filter((q, i, all) => q.remaining > 0 && all.findIndex(o => o.faction === q.faction) === i);
   const dr = obj(d.drones);
   for (const r of DRONE_ROLES) s.drones[r.id] = Math.floor(num(dr[r.id], 0, 1e9));
@@ -198,7 +204,7 @@ export function parseSave(raw: string): GameState | null {
   }
   const goalIds = new Set(GOALS.map(g => g.id));
   s.goals = [...new Set(arr(d.goals).filter((x): x is string => typeof x === 'string' && goalIds.has(x)))];
-  const storyIds = new Set(STORY.map(e => e.id));
+  const storyIds = new Set([...STORY, ...LORE].map(e => e.id));
   s.story = [...new Set(arr(d.story).filter((x): x is string => typeof x === 'string' && storyIds.has(x)))];
   const tipIds = new Set(TIPS.map(t => t.id));
   s.tips = [...new Set(arr(d.tips).filter((x): x is string => typeof x === 'string' && tipIds.has(x)))];
@@ -207,8 +213,13 @@ export function parseSave(raw: string): GameState | null {
   s.buffs = arr(d.buffs).slice(0, 10).map(parseBuff).filter((b): b is Buff => !!b);
   const ev = obj(d.event);
   s.event = EVENT_BY_ID[str(ev.id)] ? { id: str(ev.id), remaining: num(ev.remaining, 0, 600), seed: Math.floor(num(ev.seed, 0, 1e9)) } : null;
+  s.chain = arr(d.chain).slice(0, 6).flatMap(x => { const c = obj(x); return str(c.event) in EVENT_BY_ID ? [{ event: str(c.event), remaining: num(c.remaining, 0, 1e6) }] : []; });
+  s.flags = [...new Set(arr(d.flags).filter((x): x is string => typeof x === 'string' && x.length <= 40))].slice(0, 60);
   if (typeof d.eventTimer === 'number' && Number.isFinite(d.eventTimer)) s.eventTimer = Math.min(1e6, Math.max(-1e6, d.eventTimer));
 
+  const ch = obj(d.challenges);
+  s.challenges.done = [...new Set(arr(ch.done).filter((x): x is string => typeof x === 'string' && x in CHALLENGE_BY_ID))];
+  s.challenges.active = typeof ch.active === 'string' && ch.active in CHALLENGE_BY_ID && !s.challenges.done.includes(ch.active) ? ch.active : null;
   const asc = obj(d.ascension), perks = obj(asc.perks);
   s.ascension.points = Math.floor(num(asc.points, 0, 1e12));
   s.ascension.total = Math.floor(num(asc.total, 0, 1e12));
@@ -228,6 +239,7 @@ export function parseSave(raw: string): GameState | null {
   s.stats.highSales = Math.floor(num(stats.highSales, 0, 1e9));
   s.stats.reputation = num(stats.reputation, 0, 1e9);
   s.stats.questsDone = Math.floor(num(stats.questsDone, 0, 1e9));
+  s.stats.chains = Math.floor(num(stats.chains, 0, 1e9));
   for (const r of RES_IDS) if (produced[r] !== undefined) s.stats.produced[r] = num(produced[r]);
   s.settings.reduceMotion = settings.reduceMotion === true;
   s.settings.sound = settings.sound !== false;
@@ -237,7 +249,7 @@ export function parseSave(raw: string): GameState | null {
   // Quem já jogava antes dos objetivos não precisa do tutorial: marca como feitos os que a partida já cumpre.
   if (d.version < 7) s.goals = [...new Set([...s.goals, ...GOALS.filter(g => { const p = g.progress(s); return p.cur >= p.target; }).map(g => g.id)])];
   // Quem já jogava antes do diário não recebe a história inteira de uma vez: o que a partida já cumpre vira "lido".
-  if (d.version < 8) s.story = [...new Set([...s.story, ...STORY.filter(e => e.when(s)).map(e => e.id)])];
+  if (d.version < 14) s.story = [...new Set([...s.story, ...STORY.filter(e => e.when(s)).map(e => e.id)])];
   s.savedAt = num(d.savedAt, 0, 8.64e15) || Date.now();
   return s;
 }

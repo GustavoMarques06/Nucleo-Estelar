@@ -1,4 +1,4 @@
-import type { BuildingId, GameState, Priority } from '../types';
+import type { BuildingId, Category, GameState, Priority } from '../types';
 import { BUILDING_BY_ID } from '../data/buildings';
 import { BALANCE } from '../data/balance';
 import { cloneState } from './state';
@@ -18,11 +18,31 @@ export function overclockPhase(s: GameState, id: BuildingId): OverclockPhase {
 export const canOverclock = (s: GameState, id: BuildingId) =>
   !!BUILDING_BY_ID[id]?.overclock && s.buildings[id] > 0 && overclockPhase(s, id).kind === 'ready';
 
-/** Liga a sobrecarga: energia ×2 por um tempo; depois o reator esfria antes de poder repetir. */
-export function overclockReactor(prev: GameState, id: BuildingId): GameState | null {
+/** Chance de pane ao ligar a sobrecarga: a fissão é a mais segura; a fusão e a antimatéria arriscam mais. */
+export const faultChance = (id: BuildingId): number => BALANCE.overclockFault * (id === 'antimatter' ? 2 : id === 'fusion' ? 1.5 : 1);
+
+/**
+ * Liga a sobrecarga: energia ×2 por um tempo; depois o reator esfria antes de poder repetir. Com chance `faultChance`
+ * dá pane: não há sobrecarga, o reator gera menos e esfria mais tempo (nada é destruído). Veja `overclock[id].fault`.
+ */
+export function overclockReactor(prev: GameState, id: BuildingId, random: () => number = Math.random): GameState | null {
   if (!canOverclock(prev, id)) return null;
   const s = cloneState(prev);
-  s.overclock[id] = { left: BALANCE.overclockTime, cool: 0 };
+  s.overclock[id] = random() < faultChance(id)
+    ? { left: 0, cool: BALANCE.overclockCooldown * BALANCE.overclockFaultCool, fault: true }
+    : { left: BALANCE.overclockTime, cool: 0 };
+  return s;
+}
+
+// ---------- Racionamento ----------
+/** Categorias que podem ser protegidas: as que têm estruturas que consomem energia (e as colônias ligadas, em Expansão). */
+export const PROTECTABLE: readonly Category[] = ['mining', 'industry', 'science', 'civilization', 'logistics', 'commerce', 'expansion'];
+
+/** Liga ou desliga a proteção de uma categoria: com falta de energia, as protegidas são atendidas primeiro. */
+export function toggleProtect(prev: GameState, cat: Category): GameState | null {
+  if (!PROTECTABLE.includes(cat)) return null;
+  const s = cloneState(prev);
+  s.protect = s.protect.includes(cat) ? s.protect.filter(c => c !== cat) : [...s.protect, cat];
   return s;
 }
 

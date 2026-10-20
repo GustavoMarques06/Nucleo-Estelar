@@ -30,7 +30,7 @@ export function applyOffline(s: GameState, now = Date.now(), steps = 400): { sta
   const crisesCleared = s.crises.length;
   let state = s.crises.length || s.contracts.some(c => c.risk) ? { ...s, crises: [], contracts: s.contracts.filter(c => !c.risk) } : s;
   let discoveries = 0, terraforms = 0;
-  const dt = seconds / steps;
+  const dt = (seconds * BALANCE.offlineRate) / steps;      // fechado, o jogo avança bem mais devagar que aberto
   for (let i = 0; i < steps; i++) {
     const r = simulate(state, dt);
     state = r.state;
