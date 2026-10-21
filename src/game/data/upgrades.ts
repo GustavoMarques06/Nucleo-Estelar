@@ -45,7 +45,7 @@ export const UPGRADES: UpgradeDef[] = [
   { id: 'robots', phase: 3, name: 'Robôs industriais', icon: 'nav-industry',
     desc: 'Fábricas produzem +100%.', cost: { credits: 4000, components: 25 },
     effects: [{ kind: 'output', building: 'factory', mult: 2 }], unlock: s => s.buildings.factory >= 1 },
-  { id: 'iceMining', phase: 3, name: 'Extração de gelo', icon: 'node-cyan', requires: ['lab'],
+  { id: 'iceMining', phase: 3, name: 'Extração de gelo', icon: 'icon-water', requires: ['lab'],
     desc: 'Libera o Extrator de gelo (água).', cost: { science: 25 }, effects: [] },
   { id: 'metallurgy', phase: 3, name: 'Metalurgia avançada', icon: 'building-foundry', requires: ['lab'],
     desc: 'Libera a Fundição de ligas e o Britador de asteroide.', cost: { science: 60, credits: 2000 }, effects: [] },

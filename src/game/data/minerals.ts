@@ -20,7 +20,7 @@ export const MINERALS: MineralDef[] = [
   m('green-crystal', 'Cristal verde', 'Biotecnologia', 'raro', 'node-green'),
   m('red-crystal', 'Cristal rubro', 'Propulsão', 'exótico', 'node-red'),
   m('silver-node', 'Nódulo prateado', 'Condutores avançados', 'exótico', 'node-silver'),
-  m('silver', 'Prata', 'Condutores', 'raro', 'raw-silver-ingot'),
+  m('silver', 'Prata', 'Condutores', 'raro', 'ore-silver'),
 ];
 
 export const MINERAL_BY_ID = Object.fromEntries(MINERALS.map(x => [x.id, x]));

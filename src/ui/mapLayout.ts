@@ -1,33 +1,61 @@
-import { t } from '../i18n';
-// Posição dos locais no mapa: cada setor mostra até 18 locais em três órbitas ao redor da base (4, 6 e 8 lugares).
-// Depois de postos nas órbitas, os locais se afastam uns dos outros (e da base) até ficarem a uma distância mínima,
-// medida em pixels de um mapa típico (largo e baixo), para nenhum planeta ou nome ficar em cima de outro.
-// A posição depende só do índice, então nunca muda quando novos locais são descobertos.
-const RINGS = [
-  { slots: 4, rx: 19, ry: 24, offset: Math.PI / 4 },
-  { slots: 6, rx: 32, ry: 34, offset: Math.PI / 6 },
-  { slots: 8, rx: 44, ry: 34, offset: 0 },
-];
-export const SECTOR_SIZE = RINGS.reduce((a, r) => a + r.slots, 0);
+// Posição dos locais no mapa estelar: um único sistema solar, com a estrela em (0, 0) e a base numa órbita
+// curta, com Aurora (o mundo dos colonos) ao lado dela. Os locais ocupam órbitas elípticas cada vez mais largas (vistas de lado, por isso achatadas), cada uma
+// com tantos lugares quantos cabem a uma distância mínima. Depois os lugares se afastam uns dos outros, e da
+// estrela, da base, de Aurora e dos megaprojetos, até ninguém ficar em cima de ninguém (planeta mais o nome embaixo).
+// Coordenadas em pixels do mapa com zoom 1. A posição depende só do índice: nunca muda quando novos locais
+// são descobertos.
 
-export const sectorOf = (index: number) => Math.floor(index / SECTOR_SIZE);
-export const sectorCount = (n: number) => Math.max(1, Math.ceil(n / SECTOR_SIZE));
+export const FLATTEN = 0.62;             // altura/largura das órbitas
+const FIRST_ORBIT = 250, ORBIT_STEP = 135;
+const MIN_GAP = 120;                     // entre dois locais
+const MIN_SUN = 170;                     // entre um local e a estrela
+const MIN_BASE = 120;                    // entre um local e a base
+const MIN_AURORA = 135;                  // entre um local e Aurora (sobra espaço para o anel orbital em volta dela)
+const MIN_MEGA = 100;                    // entre um local e o lugar de um megaprojeto
+const RELAXED = 160;                     // quantos lugares passam pelo afastamento (o resto segue só as órbitas)
 
-// Mapa típico em pixels (a cena tem ~940 × 430) e as distâncias mínimas.
-const W = 940, H = 430;
-const MIN_GAP = 122;        // entre dois locais (planeta + nome embaixo)
-const MIN_BASE = 135;       // entre um local e a base no centro
-const MARGIN_X = 6, MARGIN_TOP = 22, MARGIN_BOTTOM = 80;   // em %, longe das bordas, do seletor de setor e da legenda
+/** A base: na órbita mais curta, embaixo à esquerda da estrela. */
+export const BASE_POS = { x: -118, y: 118 * FLATTEN * 0.9 };
+/** Aurora, o mundo dos colonos: ao lado da base, do lado de fora. */
+export const AURORA_POS = { x: BASE_POS.x - 125, y: BASE_POS.y };
+/** Megaprojetos com lugar próprio no mapa. Só os grandiosos aparecem: o Dyson envolve a estrela, o anel fica em
+ *  Aurora, o Núcleo Estelar (a estrela artificial) fica acima do sol e a Singularidade, à direita. Os outros
+ *  (portal, estaleiro, propulsor) não entram no mapa. */
+export const MEGA_POS: Record<string, { x: number; y: number }> = { core: { x: 0, y: -122 }, singularity: { x: 128, y: 72 } };
 
-function layoutSector(sector: number): { x: number; y: number }[] {
-  // 1) Órbitas (cada setor gira um pouco, para os setores não parecerem cópias)
+/** Onde fica, no mapa, cada megaprojeto que aparece nele. */
+export const megaMapPos = (id: string) => (id === 'dyson' ? { x: 0, y: 0 } : id === 'ring' ? AURORA_POS : MEGA_POS[id] ?? null);
+export const SUN_RADIUS = 70;
+
+// Perímetro de uma elipse (Ramanujan).
+const perimeter = (a: number, b: number) => Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
+
+export interface Orbit { rx: number; ry: number }
+const orbits: Orbit[] = [];
+
+/** Lugares em órbita, sem o afastamento; desliza meia vaga a cada órbita para os vizinhos não se alinharem. */
+function orbitSlots(count: number): { x: number; y: number }[] {
   const pts: { x: number; y: number }[] = [];
-  for (const r of RINGS) for (let j = 0; j < r.slots; j++) {
-    const a = r.offset + (j / r.slots) * 2 * Math.PI + sector * 0.5;
-    pts.push({ x: (50 + Math.cos(a) * r.rx) / 100 * W, y: (50 + Math.sin(a) * r.ry) / 100 * H });
+  for (let k = 0; pts.length < count; k++) {
+    const rx = FIRST_ORBIT + k * ORBIT_STEP, ry = rx * FLATTEN;
+    if (!orbits[k]) orbits[k] = { rx, ry };
+    const n = Math.max(4, Math.floor(perimeter(rx, ry) / (MIN_GAP * 1.15)));
+    const offset = (k % 2 ? 0.5 : 0) * (2 * Math.PI / n) + k * 0.37;
+    for (let j = 0; j < n && pts.length < count; j++) {
+      const a = offset + (j / n) * 2 * Math.PI;
+      pts.push({ x: Math.cos(a) * rx, y: Math.sin(a) * ry });
+    }
   }
-  // 2) Afasta quem está perto demais (relaxamento determinístico)
-  const cx = W / 2, cy = H / 2;
+  return pts;
+}
+
+function relax(pts: { x: number; y: number }[]) {
+  const keepAway = (p: { x: number; y: number }, c: { x: number; y: number }, min: number) => {
+    const dx = p.x - c.x, dy = p.y - c.y, d = Math.hypot(dx, dy) || 0.01;
+    if (d >= min) return false;
+    p.x = c.x + (dx / d) * min; p.y = c.y + (dy / d) * min;
+    return true;
+  };
   for (let it = 0; it < 300; it++) {
     let moved = false;
     for (let i = 0; i < pts.length; i++) {
@@ -40,36 +68,41 @@ function layoutSector(sector: number): { x: number; y: number }[] {
           moved = true;
         }
       }
-      const bx = pts[i].x - cx, by = pts[i].y - cy, bd = Math.hypot(bx, by) || 0.01;
-      if (bd < MIN_BASE) { pts[i].x = cx + (bx / bd) * MIN_BASE; pts[i].y = cy + (by / bd) * MIN_BASE; moved = true; }
-      pts[i].x = Math.min(W * (1 - MARGIN_X / 100), Math.max(W * MARGIN_X / 100, pts[i].x));
-      pts[i].y = Math.min(H * MARGIN_BOTTOM / 100, Math.max(H * MARGIN_TOP / 100, pts[i].y));
+      if (keepAway(pts[i], { x: 0, y: 0 }, MIN_SUN)) moved = true;
+      if (keepAway(pts[i], BASE_POS, MIN_BASE)) moved = true;
+      if (keepAway(pts[i], AURORA_POS, MIN_AURORA)) moved = true;
+      for (const m of Object.values(MEGA_POS)) if (keepAway(pts[i], m, MIN_MEGA)) moved = true;
     }
     if (!moved) break;
   }
-  return pts.map(p => ({ x: (p.x / W) * 100, y: (p.y / H) * 100 }));
+  return pts;
 }
 
-const cache = new Map<number, { x: number; y: number }[]>();
+let cache: { x: number; y: number }[] | null = null;
 
-/** Coordenadas em % (0–100) dentro do mapa; (50, 50) é a base. */
+/** Posição do local de índice `index` (em px do mapa, estrela na origem). */
 export function nodePosition(index: number): { x: number; y: number } {
-  const sector = sectorOf(index);
-  let pts = cache.get(sector);
-  if (!pts) { pts = layoutSector(sector); cache.set(sector, pts); }
-  return pts[index % SECTOR_SIZE];
+  cache ??= relax(orbitSlots(RELAXED));
+  if (index >= cache.length) cache = [...cache, ...orbitSlots(index + 1).slice(cache.length)];
+  return cache[index];
 }
 
-/** Menor distância (em pixels do mapa típico) entre dois locais de um setor: usada pelo teste de espaçamento. */
-export function minSpacing(sector: number): number {
-  const pts = layoutSector(sector).map(p => ({ x: p.x / 100 * W, y: p.y / 100 * H }));
+/** Órbitas a desenhar para mostrar `count` locais (pelo menos uma). */
+export function orbitsFor(count: number): Orbit[] {
+  orbitSlots(Math.max(1, count));
+  const far = Math.max(...Array.from({ length: Math.max(1, count) }, (_, i) => {
+    const p = nodePosition(i);
+    return Math.hypot(p.x, p.y / FLATTEN);
+  }));
+  return orbits.filter(o => o.rx <= far + ORBIT_STEP / 2);
+}
+
+/** Menor distância entre os `count` primeiros locais: usada pelo teste de espaçamento. */
+export function minSpacing(count: number): number {
   let min = Infinity;
-  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) min = Math.min(min, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y));
+  for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) {
+    const a = nodePosition(i), b = nodePosition(j);
+    min = Math.min(min, Math.hypot(a.x - b.x, a.y - b.y));
+  }
   return min;
 }
-
-// Cada setor usa um fundo diferente: o sistema natal, um sistema vizinho e depois a galáxia.
-const SECTOR_BACKGROUNDS = ['scene-system-map', 'scene-system-map-b', 'scene-galaxy-map'];
-export const sectorBackground = (sector: number) => SECTOR_BACKGROUNDS[Math.min(sector, SECTOR_BACKGROUNDS.length - 1)];
-export const sectorName = (sector: number) =>
-  sector === 0 ? t('Sistema natal') : sector === 1 ? t('Sistemas vizinhos') : t('Espaço profundo {n}', { n: sector - 1 });

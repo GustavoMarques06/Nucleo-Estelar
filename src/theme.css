@@ -320,7 +320,6 @@ body.reduce-motion .card.mega.endless .card-art { animation: none; }
 .map-node.pending { cursor: default; animation: pulse 1.6s ease-in-out infinite; }
 .map-q { width: 38px; height: 38px; display: grid; place-items: center; font-family: var(--font-title); font-size: 16px; color: var(--c-accent); border: 2px dashed var(--c-accent); border-radius: 50%; background: rgba(0, 20, 40, .6); }
 @keyframes spin { to { transform: rotate(360deg); } }
-.map-pager { position: absolute; left: 10px; top: 10px; z-index: 4; display: flex; align-items: center; gap: 6px; background: rgba(4, 8, 22, .85); padding: 3px 8px; border: 1px solid var(--hud-line); font-size: 17px; }
 .map-legend { position: absolute; left: 10px; bottom: 10px; z-index: 4; display: flex; flex-wrap: wrap; gap: 10px; background: rgba(4, 8, 22, .85); padding: 3px 8px; border: 1px solid var(--hud-line); font-size: 15px; }
 .map-legend .lg { display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 50%; }
 .lg.colony { background: var(--c-accent); box-shadow: 0 0 6px var(--c-accent); }
@@ -369,8 +368,6 @@ body.reduce-motion .card.mega.endless .card-art { animation: none; }
 .card.faction, .card.mega { grid-template-columns: auto minmax(0, 1fr); }
 .card.faction .buy { grid-column: 1 / -1; width: auto; max-width: none; min-height: 52px; }
 .card.faction .buy .cost { flex-direction: row; }
-.map-pager .btn { font-size: 16px; padding: 0 8px; min-height: 0; }
-.map-pager .btn.small { padding: 0 4px; }
 
 /* =====================================================================
    Crises, rotas comerciais, mercado dinâmico
@@ -498,8 +495,6 @@ body.reduce-motion .btn.nudge, body.reduce-motion .card.nudge { animation: none;
 .guide .guide-text p { margin: 0 0 6px; }
 
 /* Rotas que saem do setor visível no mapa */
-.route-stub { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: 0 6px; background: rgba(40, 30, 4, .85); border: 1px solid var(--c-gold); color: var(--c-gold); font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; }
-.route-stub:hover { background: rgba(80, 60, 8, .95); }
 
 /* =====================================================================
    Economia: demanda, reputação, decretos, finanças
@@ -1157,3 +1152,144 @@ body.reduce-motion .coach-target { animation: none; }
 .civ-hud .bar { height: 6px; margin-top: 2px; }
 .civ-hud .bar > div { height: 100%; background: var(--c-accent); }
 @media (max-width: 860px) { .civ-hud { font-size: 15px; } .scene-switch .btn { min-height: 36px; } }
+
+/* ---------- Árvore de pesquisa (ResearchTree.tsx) ---------- */
+.rtree {
+  position: relative; flex: none; overflow: auto; max-height: min(62vh, 660px); cursor: grab; user-select: none;
+  border: 1px solid var(--hud-line); --cut: 10px; clip-path: var(--chamfer);
+  background:
+    linear-gradient(rgba(0, 229, 255, .05) 1px, transparent 1px) 0 0 / 100% 31px,
+    linear-gradient(90deg, rgba(0, 229, 255, .05) 1px, transparent 1px) 0 0 / 39px 100%,
+    rgba(4, 8, 22, .8);
+}
+.rtree.dragging { cursor: grabbing; }
+.rtree-canvas { position: relative; }
+.rtree-edges { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.rtree-edges path { fill: none; stroke: rgba(160, 174, 192, .22); stroke-width: 2; transition: stroke .2s; }
+.rtree-edges path.done { stroke: rgba(76, 175, 80, .55); }
+.rtree-edges path.next { stroke: rgba(0, 229, 255, .6); stroke-dasharray: 6 5; animation: rtree-flow 1.2s linear infinite; }
+.rtree-edges path.lit { stroke: var(--c-gold); stroke-width: 3; }
+@keyframes rtree-flow { to { stroke-dashoffset: -11; } }
+
+.rtree-node {
+  position: absolute; display: flex; align-items: center; gap: 6px; padding: 0 8px 0 6px;
+  font: inherit; font-size: 15px; line-height: 1; text-align: left; color: var(--c-text); cursor: pointer;
+  background: rgba(14, 24, 50, .95); border: 1px solid var(--c-line); --cut: 7px; clip-path: var(--chamfer);
+  transition: filter .15s, box-shadow .15s;
+}
+.rtree-node span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rtree-node:hover { filter: brightness(1.25); }
+.rtree-node.done { background: rgba(20, 48, 31, .95); border-color: rgba(76, 175, 80, .7); color: #c4ecc8; }
+.rtree-node.ready { border-color: var(--c-ok); box-shadow: inset 0 0 12px rgba(76, 175, 80, .45); animation: rtree-ready 2.2s ease-in-out infinite; }
+.rtree-node.open { border-color: var(--hud-line-strong); }
+.rtree-node.cond { opacity: .75; border-style: dashed; }
+.rtree-node.near { opacity: .55; }
+.rtree-node.unknown { opacity: .4; color: var(--c-neutral); }
+.rtree-node.sel { opacity: 1; box-shadow: inset 0 0 0 2px var(--c-gold), 0 0 14px rgba(255, 212, 71, .35); }
+.rtree-node.spot { animation: spot 1s ease-in-out infinite; box-shadow: inset 0 0 0 2px var(--c-gold); }
+@keyframes rtree-ready { 50% { box-shadow: inset 0 0 18px rgba(76, 175, 80, .75); } }
+img.silhouette { filter: brightness(0) drop-shadow(0 0 1px rgba(160, 174, 192, .7)); }
+body.reduce-motion .rtree-node, body.reduce-motion .rtree-edges path { animation: none; }
+
+.rtree-frontier, .rtree-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rtree-links { margin-top: 6px; }
+.rtree-links b { font-weight: 400; color: var(--c-neutral); margin-right: 2px; }
+.rtree-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 5px; font: inherit; font-size: 16px; color: var(--c-text);
+  cursor: pointer; background: rgba(14, 24, 50, .9); border: 1px solid var(--c-line); --cut: 5px; clip-path: var(--chamfer);
+}
+.rtree-chip:hover { filter: brightness(1.25); }
+.rtree-chip.ready { border-color: var(--c-ok); color: #c4ecc8; }
+.rtree-chip.open { border-color: var(--hud-line-strong); }
+.rtree-chip.done { border-color: rgba(76, 175, 80, .55); color: #9fd4a5; }
+.rtree-chip.near, .rtree-chip.unknown, .rtree-chip.cond { opacity: .6; }
+.rtree-chip.on { box-shadow: inset 0 0 0 2px var(--c-gold); }
+
+.rtree-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 15px; color: var(--c-neutral); }
+.rtree-legend span::before { content: ''; display: inline-block; width: 12px; height: 12px; margin-right: 5px; vertical-align: -1px; border: 1px solid; }
+.rtree-legend .lg-done::before { background: rgba(20, 48, 31, .95); border-color: rgba(76, 175, 80, .7); }
+.rtree-legend .lg-ready::before { background: rgba(14, 24, 50, .95); border-color: var(--c-ok); box-shadow: inset 0 0 5px rgba(76, 175, 80, .7); }
+.rtree-legend .lg-open::before { background: rgba(14, 24, 50, .95); border-color: var(--hud-line-strong); }
+.rtree-legend .lg-cond::before { background: rgba(14, 24, 50, .95); border-color: var(--c-line); border-style: dashed; }
+.rtree-detail .hint { margin: 2px 0 0; }
+@media (max-width: 860px) {
+  .rtree { max-height: 56vh; }
+  .rtree-frontier { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .rtree-frontier .rtree-chip { flex: none; white-space: nowrap; }
+}
+
+/* ---------- Janelas flutuantes: Pesquisa e Mapa (FloatWindow.tsx) ---------- */
+.fwin-backdrop { background: rgba(3, 5, 14, .62); backdrop-filter: blur(2px); }
+.fwin {
+  display: flex; flex-direction: column; width: min(1320px, calc(100vw - 32px)); height: min(900px, calc(100vh - 32px));
+  border: 1px solid transparent; --cut: 14px; clip-path: var(--chamfer); outline: none;
+  background:
+    linear-gradient(var(--hud-bg-strong), var(--hud-bg-strong)) padding-box,
+    linear-gradient(135deg, var(--hud-line-strong), var(--hud-line) 35%, rgba(182, 140, 255, .3) 70%, var(--hud-line-strong)) border-box;
+  box-shadow: var(--hud-glow);
+}
+.fwin-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px 0 0; border-bottom: 1px solid var(--hud-line); }
+.fwin-head .panel-title { margin: 0; border: none; flex: 1; }
+.fwin .research-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 14px; overflow: hidden; padding: 10px 12px 12px; }
+.fwin .research-main { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; }
+.fwin .research-main .rtree { flex: 1 1 auto; min-height: 240px; max-height: none; }
+.fwin .research-side { display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow-y: auto; padding-right: 4px; }
+.fwin .research-side > .section:first-child, .fwin .research-main > .section:first-child { margin-top: 0; }
+@media (max-width: 860px) {
+  .fwin-backdrop { padding: 0; }
+  .fwin { width: 100vw; height: 100dvh; --cut: 0px; }
+  .fwin .research-body { display: block; overflow-y: auto; }
+  .fwin .research-main .rtree { height: 56vh; flex: none; }
+  .fwin .research-side { overflow: visible; margin-top: 10px; }
+}
+.map-win-body { position: relative; flex: 1; min-height: 0; margin: 10px 12px 12px; }
+.map-open { width: 100%; justify-content: center; }
+@media (max-width: 860px) { .map-win-body { margin: 0; } }
+
+/* ---------- Mapa estelar: um sistema solar que se arrasta e aproxima (MapView.tsx) ---------- */
+.map-view { cursor: grab; touch-action: none; user-select: none; }
+.map-view.dragging { cursor: grabbing; }
+.map-view .map-bg { background-size: 900px auto; background-repeat: repeat; opacity: .55; }
+.map-view .map-lines line { stroke-width: 1.5; stroke-dasharray: 5 4; }
+.map-view .map-lines.routes line { stroke-width: 2.5; stroke-dasharray: 7 4; }
+.map-orbit { fill: none; stroke: rgba(0, 229, 255, .13); stroke-width: 1; }
+.map-sun { position: absolute; z-index: 1; transform: translate(-50%, -50%); pointer-events: none; }
+.map-sun img { filter: drop-shadow(0 0 24px rgba(255, 196, 80, .85)) drop-shadow(0 0 60px rgba(255, 160, 40, .45)); }
+.map-view .map-home { transform: translate(-50%, -50%); }
+.map-zoom { position: absolute; right: 10px; top: 10px; z-index: 4; display: flex; flex-direction: column; gap: 4px; }
+.map-zoom .btn { min-width: 40px; font-size: 18px; }
+.map-view.no-labels .map-label { display: none; }
+.map-view.no-labels .map-node.sel .map-label, .map-view.no-labels .map-node:hover .map-label { display: block; }
+body.reduce-motion .map-view .map-lines line { animation: none; }
+.map-node.map-aurora img { filter: drop-shadow(0 0 10px rgba(120, 255, 200, .75)); }
+.map-node.map-aurora .map-label { color: #c8ffe6; }
+.map-node.map-mega img { filter: drop-shadow(0 0 8px rgba(182, 140, 255, .75)); }
+.map-node.map-mega .map-label { color: #e2d4ff; }
+.map-node.map-dyson { z-index: 1; padding: 0; }
+.map-node.map-dyson img { filter: drop-shadow(0 0 22px rgba(255, 196, 80, .75)); }
+.map-node.map-dyson:hover img { transform: scale(1.06); }
+.map-node.map-mega .map-label { display: none; }
+.map-node.map-mega:hover .map-label, .map-node.map-mega:focus-visible .map-label { display: block; position: absolute; top: 100%; }
+.map-icon { position: relative; display: inline-block; line-height: 0; }
+.map-icon .map-badge { top: -6px; right: -12px; line-height: 18px; }
+.map-icon .map-alert { top: -6px; left: -10px; line-height: 18px; }
+.map-icon .map-site { bottom: -4px; right: -8px; line-height: 1; }
+/* O círculo de reivindicação acompanha o tamanho do ícone (o mapa tem zoom). */
+.map-view .map-node.disputed::before, .map-view .map-node[style*="--faction"]:not(.colony)::before { content: none; }
+.map-view .map-node.disputed .map-icon::before, .map-view .map-node[style*="--faction"]:not(.colony) .map-icon::before {
+  content: ''; position: absolute; inset: -5px; border: 2px dashed var(--faction, transparent); border-radius: 50%; animation: spin 14s linear infinite; pointer-events: none;
+}
+body.reduce-motion .map-view .map-icon::before { animation: none; }
+/* Mapa bem afastado: sem nomes, números de nível e sítios (o alerta de crise fica). */
+.map-view.no-labels .map-badge, .map-view.no-labels .map-site, .map-view.no-labels .map-home span { display: none; }
+/* Anel orbital em duas camadas, cortadas na linha do meio do buraco (45,6% da altura da arte): a de trás fica atrás
+   de Aurora e é o botão do megaprojeto; a da frente passa por cima dela e deixa o clique atravessar. */
+.map-view .map-ring { position: absolute; transform: translate(-50%, -45.6%); line-height: 0; background: none; border: 0; padding: 0; }
+.map-view .map-ring img { display: block; }
+.map-view .map-ring-back { z-index: 1; cursor: pointer; }
+.map-view .map-ring-front { z-index: 3; pointer-events: none; }
+.map-view .map-ring-back:hover ~ .map-ring-front img, .map-view .map-ring-back:hover img { filter: brightness(1.15); }
+.map-view .map-ring-back:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+.map-view .map-aurora.ringed .map-label { display: none; }
+.map-view .map-aurora-label { position: absolute; z-index: 4; transform: translateX(-50%); pointer-events: none; }
+.map-view.no-labels .map-aurora-label { display: none; }

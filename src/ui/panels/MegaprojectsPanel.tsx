@@ -18,7 +18,7 @@ function MegaCard({ mp }: { mp: MegaprojectDef }) {
   const available = megaAvailable(game, mp.id);
   const canGive = available && Object.entries(left).some(([r]) => game.resources[r as ResId] >= 1);
   const total = mp.endless ? '∞' : mp.stages.length;
-  const sprite = next?.sprite ?? mp.stages[mp.stages.length - 1]?.sprite ?? 'star-yellow';
+  const sprite = next?.sprite ?? mp.stages[mp.stages.length - 1]?.sprite ?? 'mega-core-1';
 
   return (
     <article className={`card mega ${done === 0 ? 'not-built' : ''} ${mp.endless ? 'endless' : ''} ${!next && !mp.endless ? 'complete' : ''}`}>
@@ -63,8 +63,20 @@ function MegaCard({ mp }: { mp: MegaprojectDef }) {
 
 export function MegaprojectsPanel() {
   const game = useGame(s => s.game);
+  const selected = useGame(s => s.selectedMega);
+  const select = useGame(s => s.selectMega);
   if (!megaprojectsUnlocked(game)) {
     return <div className="panel-body"><p className="hint"><Tx k="Pesquise <b>Engenharia de megaestruturas</b> para liberar os megaprojetos." /></p></div>;
+  }
+  // Escolhido no mapa: só ele (como um planeta), com o caminho de volta para a lista.
+  const one = selected ? MEGAPROJECTS.find(mp => mp.id === selected) : undefined;
+  if (one) {
+    return (
+      <div className="panel-body">
+        <button className="btn small" onClick={() => select(null)}>← {t('Ver todos os megaprojetos')}</button>
+        <MegaCard mp={one} />
+      </div>
+    );
   }
   return (
     <div className="panel-body">

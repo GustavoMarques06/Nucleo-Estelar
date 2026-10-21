@@ -271,7 +271,7 @@ export const BUILDINGS: BuildingDef[] = [
     unlock: s => s.buildings.storage >= 5 || s.buildings.silo > 0,
   },
   {
-    id: 'tank', name: 'Tanque de fluidos', category: 'logistics', sprite: 'deco-valve',
+    id: 'tank', name: 'Tanque de fluidos', category: 'logistics', sprite: 'building-tank',
     desc: 'Guarda só água e combustível, com o dobro da capacidade de um Armazém.',
     cost: { credits: 400, alloys: 25 }, growth: 1.2, storage: 300, storageGrowth: 1.12, storageGroup: 'fluid',
     requires: 'iceMining',

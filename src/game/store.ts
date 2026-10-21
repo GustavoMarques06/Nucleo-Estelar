@@ -45,7 +45,7 @@ import { delayRival } from './engine/race';
 import { recordTimeline } from './engine/timeline';
 
 export type BuyAmount = 1 | 10 | 'max';
-export type SceneView = 'base' | 'civ';
+export type SceneView = 'base' | 'civ' | 'loc' | 'mega';   // loc: o planeta escolhido no mapa; mega: o megaprojeto
 export type History = Partial<Record<ResId, number[]>>;
 export const HISTORY_STEP = 10;         // segundos de jogo entre amostras
 export const HISTORY_MAX = 180;         // 30 min de histórico
@@ -75,6 +75,7 @@ interface Store {
   buyAmount: BuyAmount;
   ending: boolean;                // mostra a tela de desfecho
   selectedLoc: string | null;     // local selecionado no mapa (interface; não salvo)
+  selectedMega: string | null;    // megaprojeto escolhido no mapa: a aba Megaprojetos mostra só ele (interface; não salvo)
   saveError: boolean;             // o navegador recusou o último salvamento
   storyQueue: string[];           // registros do diário esperando para serem mostrados (interface; não salvo)
   sceneView: SceneView;           // o que a cena mostra: o asteroide (mineração) ou o planeta dos colonos (interface; não salvo)
@@ -107,6 +108,7 @@ interface Store {
   transcend(): void;
   dismissEnding(): void;
   selectLoc(id: string | null): void;
+  selectMega(id: string | null): void;
   giveGift(factionId: string): void;
   lobby(factionId: string): void;
   prospect(): void;
@@ -182,6 +184,7 @@ export const useGame = create<Store>()((set, get) => {
     buyAmount: 1,
     ending: false,
     selectedLoc: null,
+    selectedMega: null,
     saveError: false,
     storyQueue: [],
     sceneView: 'base',
@@ -469,6 +472,7 @@ export const useGame = create<Store>()((set, get) => {
     },
     dismissEnding() { set({ ending: false }); },
     selectLoc(id) { set({ selectedLoc: id }); },
+    selectMega(id) { set({ selectedMega: id }); },
 
     ascend(next = null) {
       const prev = get().game;

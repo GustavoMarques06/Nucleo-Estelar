@@ -47,7 +47,7 @@ export const TIPS: TipDef[] = [
   { id: 'drones', icon: 'drone-transport', title: 'Drones de logística',
     text: 'O Hangar monta drones. Na aba Logística, designe cada um a uma função: o primeiro drone liga a automação e os demais dão bônus com retornos decrescentes.',
     when: s => !!s.upgrades.droneLogistics },
-  { id: 'singularity', icon: 'star-neutron', title: 'A Singularidade',
+  { id: 'singularity', icon: 'mega-sing-5', title: 'A Singularidade',
     text: 'Depois do estágio 5 do Núcleo Estelar, a Singularidade encerra a história e libera a Transcendência: um segundo recomeço, com melhorias ainda mais fortes.',
     when: s => (s.megaprojects.core ?? 0) >= 5 },
   { id: 'crisis', icon: 'icon-warning', title: 'Crises de colônia',

@@ -143,6 +143,28 @@ async function extractItem(item) {
   }
   const r = render(sh.data, sh.w, label, comps, ids, item.keepSize ? [rect[0], rect[1], rect[2] - 1, rect[3] - 1] : null);
   if (item.silhouette) for (let k = 0; k < r.out.length; k += 4) if (r.out[k + 3]) { r.out[k] = r.out[k + 1] = r.out[k + 2] = 255; }
+  // circle: o objeto é redondo; apaga o que sobrar fora do círculo inscrito (fundo que a IA pintou em vez do magenta).
+  if (item.circle) {
+    const rad = Math.min(r.w, r.h) / 2 + 1, cx = r.w / 2, cy = r.h / 2;
+    for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) > rad) r.out[(y * r.w + x) * 4 + 3] = 0;
+  }
+  // fadeRight / fadeBottom: fração da largura (ou altura) que some aos poucos naquela borda (para o que a IA cortou
+  // na borda da prancha, como um jato ou a superfície de uma estrela).
+  const fade = item.fadeRight ?? item.fadeRightByName?.[[item.name].flat()[0]];
+  if (fade) {
+    const x0 = r.w * (1 - fade);
+    for (let y = 0; y < r.h; y++) for (let x = Math.floor(x0); x < r.w; x++) {
+      const k = (y * r.w + x) * 4 + 3;
+      r.out[k] = Math.round(r.out[k] * Math.min(1, Math.max(0, 1 - (x - x0) / (r.w - x0))));   // min 1: a primeira coluna passava de 255 e estourava
+    }
+  }
+  if (item.fadeBottom) {
+    const y0 = r.h * (1 - item.fadeBottom);
+    for (let y = Math.floor(y0); y < r.h; y++) for (let x = 0; x < r.w; x++) {
+      const k = (y * r.w + x) * 4 + 3;
+      r.out[k] = Math.round(r.out[k] * Math.min(1, Math.max(0, 1 - (y - y0) / (r.h - y0))));
+    }
+  }
   return save(item.name, r, item);
 }
 

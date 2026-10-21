@@ -31,7 +31,7 @@ export const MEGAPROJECTS: MegaprojectDef[] = [
   {
     id: 'ring', name: 'Anel orbital', desc: 'Uma cidade em anel ao redor do planeta natal.',
     stages: [
-      { sprite: 'mega-orbital-ring', desc: 'Moradia ×2 e impostos ×1,5.',
+      { sprite: 'mega-ring-empty', desc: 'Moradia ×2 e impostos ×1,5.',
         cost: { credits: 5e6, alloys: 50000, components: 10000, exotic: 150, modules: 80 },
         effects: [{ kind: 'popCap', mult: 2 }, { kind: 'tax', mult: 1.5 }] },
     ],
@@ -70,7 +70,7 @@ MEGAPROJECTS.push({
   endless: n => {
     const k = Math.pow(2.4, n);
     return {
-      sprite: n < 3 ? 'star-orange' : n < 8 ? 'star-yellow' : n < 15 ? 'star-blue-giant' : 'star-white-dwarf',
+      sprite: n < 3 ? 'mega-core-1' : n < 8 ? 'mega-core-2' : n < 15 ? 'mega-core-3' : 'mega-core-4',
       desc: t('Estágio {n}: toda a produção ×1,2 e energia ×1,2.', { n: n + 1 }),
       cost: Object.fromEntries(Object.entries({ credits: 2e9, alloys: 2e6, components: 4e5, exotic: 5000, science: 5e7, modules: 2e4 }).map(([r, v]) => [r, Math.round(v * k)])),
       effects: [{ kind: 'outputAll', mult: 1.2 }, { kind: 'energyOut', mult: 1.2 }],
@@ -96,12 +96,19 @@ MEGAPROJECTS.push({
   requires: s => (s.megaprojects.core ?? 0) >= 5,
   requiresText: 'Requer 5 estágios do Núcleo Estelar.',
   stages: [
-    singStage(0, 'mega-gate', 'Anel de contenção: energia ×1,5.', [{ kind: 'energyOut', mult: 1.5 }]),
-    singStage(1, 'mega-engine', 'Motor de curvatura: toda a produção ×1,3.', [{ kind: 'outputAll', mult: 1.3 }]),
-    singStage(2, 'mega-orbital-ring', 'Cidade-anel: moradia ×2 e impostos ×2.', [{ kind: 'popCap', mult: 2 }, { kind: 'tax', mult: 2 }]),
-    singStage(3, 'star-neutron', 'Núcleo de nêutrons: energia ×2 e toda a produção ×1,3.', [{ kind: 'energyOut', mult: 2 }, { kind: 'outputAll', mult: 1.3 }]),
-    singStage(4, 'mega-dyson-4', 'Singularidade estável: toda a produção ×2. Encerra a história.', [{ kind: 'outputAll', mult: 2 }]),
+    singStage(0, 'mega-sing-1', 'Anel de contenção: energia ×1,5.', [{ kind: 'energyOut', mult: 1.5 }]),
+    singStage(1, 'mega-sing-2', 'Motor de curvatura: toda a produção ×1,3.', [{ kind: 'outputAll', mult: 1.3 }]),
+    singStage(2, 'mega-sing-3', 'Cidade-anel: moradia ×2 e impostos ×2.', [{ kind: 'popCap', mult: 2 }, { kind: 'tax', mult: 2 }]),
+    singStage(3, 'mega-sing-4', 'Núcleo de nêutrons: energia ×2 e toda a produção ×1,3.', [{ kind: 'energyOut', mult: 2 }, { kind: 'outputAll', mult: 1.3 }]),
+    singStage(4, 'mega-sing-5', 'Singularidade estável: toda a produção ×2. Encerra a história.', [{ kind: 'outputAll', mult: 2 }]),
   ],
 });
 
 export const MEGA_BY_ID = Object.fromEntries(MEGAPROJECTS.map(m => [m.id, m]));
+
+/** Arte do estágio mais recente já construído (null se nenhum estágio foi concluído). */
+export function builtMegaSprite(s: Pick<GameState, 'megaprojects'>, id: string): string | null {
+  const def = MEGA_BY_ID[id], n = s.megaprojects[id] ?? 0;
+  if (!def || n <= 0) return null;
+  return def.endless ? def.endless(n - 1).sprite : def.stages[Math.min(n, def.stages.length) - 1].sprite;
+}

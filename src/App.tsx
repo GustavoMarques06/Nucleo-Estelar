@@ -46,6 +46,7 @@ import { Compass } from './ui/Compass';
 import { EventResult } from './ui/EventResult';
 import { Tutorial, tutorialEarly } from './ui/Tutorial';
 import { SceneSwitch } from './ui/SceneSwitch';
+import { FloatWindow } from './ui/FloatWindow';
 
 type Tab = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
   | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
@@ -81,7 +82,7 @@ const GROUPS: { label: string; tabs: TabDef[] }[] = [
   ] },
 ];
 
-function Panel({ tab, onHelp }: { tab: Tab; onHelp: () => void }) {
+function Panel({ tab, onHelp, onOpenMap }: { tab: Tab; onHelp: () => void; onOpenMap: () => void }) {
   switch (tab) {
     case 'mining': return <div className="panel-body"><DepositSection /><BuildingsPanel category="mining" intro={t('Extração de matéria-prima: minério e água.')} /></div>;
     case 'industry': return <><BuildingsPanel category="industry" intro={t('Transforma matéria-prima em produtos de maior valor.')} /><div className="panel-body planner-wrap"><PlannerSection /></div></>;
@@ -92,7 +93,7 @@ function Panel({ tab, onHelp }: { tab: Tab; onHelp: () => void }) {
     case 'commerce': return <MarketPanel />;
     case 'finance': return <FinancePanel />;
     case 'expansion': return <ExpansionPanel />;
-    case 'map': return <MapPanel />;
+    case 'map': return <MapPanel onOpenMap={onOpenMap} />;
     case 'diplomacy': return <DiplomacyPanel />;
     case 'transcendence': return <TranscendencePanel />;
     case 'megaprojects': return <MegaprojectsPanel />;
@@ -104,6 +105,17 @@ function Panel({ tab, onHelp }: { tab: Tab; onHelp: () => void }) {
 
 export function App() {
   const [tab, setTab] = useState<Tab>('mining');
+  // Pesquisa e Mapa abrem em janela flutuante por cima do jogo. A Pesquisa deixa o painel lateral na aba em que
+  // estava; o Mapa leva o painel para a aba Mapa, onde aparecem os detalhes do planeta escolhido na janela.
+  const [win, setWin] = useState<'research' | 'map' | null>(null);
+  const go = (id: Tab) => {
+    if (id !== 'research') setTab(id);
+    setWin(id === 'research' || id === 'map' ? id : null);
+    if (id === 'megaprojects') selectMega(null);   // pelo menu, a aba mostra todos
+  };
+  // Megaprojeto escolhido no mapa: a aba mostra só ele e a cena, a obra.
+  const selectMega = useGame(s => s.selectMega);
+  const pickMega = (id: string) => { setWin(null); selectMega(id); setTab('megaprojects'); setSceneView('mega'); };
   const [sceneReady, setSceneReady] = useState(false);
   const [help, setHelp] = useState(false);
   const lang = usePrefs(p => p.language);       // trocar de idioma redesenha a interface inteira
@@ -133,7 +145,7 @@ export function App() {
   // Título da aba mostra quantos alertas pedem atenção (útil com o jogo em segundo plano).
   const alerts = game.crises.length + (game.event ? 1 : 0) + game.contracts.filter(c => game.resources[c.res] >= c.amount).length + (researchReady ? 1 : 0) + (behind ? 1 : 0) + game.quests.filter(q => game.resources[q.res] >= q.amount).length;
   useEffect(() => { document.title = alerts > 0 ? `(${alerts}) ${t('Núcleo Estelar')}` : t('Núcleo Estelar'); }, [alerts, lang]);
-  useShortcuts(i => { if (tabs[i]) setTab(tabs[i].id); }, () => setHelp(h => !h));
+  useShortcuts(i => { if (tabs[i]) go(tabs[i].id); }, () => setHelp(h => !h));
 
   return (
     <div className={`app ${focus ? 'focus' : ''} ${tutorialEarly(game) ? 'tutorial-early' : ''}`}>
@@ -144,7 +156,7 @@ export function App() {
           <div key={g.label} className="nav-group">
             <span className="nav-group-label">{t(g.label)}</span>
             {g.tabs.map(tb => (
-              <button key={tb.id} className={`nav-item ${current.id === tb.id ? 'active' : ''}`} onClick={() => { if (tb.id !== current.id) events.emit({ type: 'nav' }); setTab(tb.id); }} aria-current={current.id === tb.id ? 'page' : undefined}>
+              <button key={tb.id} className={`nav-item ${(tb.id === 'research' ? win === 'research' : current.id === tb.id) ? 'active' : ''}`} onClick={() => { if (tb.id !== current.id) events.emit({ type: 'nav' }); go(tb.id); }} aria-current={current.id === tb.id ? 'page' : undefined}>
                 <Icon name={tb.icon} size={28} /> <span>{t(tb.label)}</span>
                 {tb.id === 'research' && researchReady && <i className="dot" role="img" aria-label={t('pesquisa disponível')} />}
                 {tb.id === 'diplomacy' && questReady && <i className="dot" role="img" aria-label={t('pedido de facção pronto para entregar')} />}
@@ -155,27 +167,32 @@ export function App() {
         ))}
       </nav>
       <main className="stage">
-        <Compass goTo={setTab} available={tabs.map(x => x.id)} />
+        <Compass goTo={go} available={tabs.map(x => x.id)} />
         {focus && <Tips />}
         <div className="scene-wrap">
           {/* Modo foco: sem a cena Pixi (libera a GPU); o painel de alertas ocupa o lugar dela. */}
           {!focus && <SceneView onReady={() => setSceneReady(true)} />}
-          {current.id === 'map' && <MapView />}
-          {focus && current.id !== 'map' && <FocusBoard goTo={setTab} />}
-          {!focus && current.id !== 'map' && <SceneSwitch />}
+          {focus && <FocusBoard goTo={go} />}
+          {!focus && <SceneSwitch />}
           {!focus && <Buffs />}
           {!focus && <EventCard />}
           {!focus && <Tips />}
           <EventResult />
         </div>
         <ActionBar />
-        <Advisor goTo={setTab} />
+        <Advisor goTo={go} />
       </main>
       <section className="panel" id="painel" tabIndex={-1} aria-label={t(current.label)}>
         <h2 className="panel-title"><Icon name={current.icon} size={28} />{t(current.label)}</h2>
-        <Panel tab={current.id} onHelp={() => setHelp(true)} />
+        <Panel tab={current.id} onHelp={() => setHelp(true)} onOpenMap={() => setWin('map')} />
       </section>
-      <Tutorial goTo={setTab} tab={current.id} />
+      {win === 'research' && <FloatWindow title={t('Pesquisa')} icon="nav-research" onClose={() => setWin(null)}><UpgradesPanel /></FloatWindow>}
+      {win === 'map' && (
+        <FloatWindow title={t('Mapa')} icon="nav-map" className="map-win" onClose={() => setWin(null)}>
+          <div className="map-win-body"><MapView onPick={() => { setWin(null); setSceneView('loc'); }} onAurora={() => go('civilization')} onMega={pickMega} /></div>
+        </FloatWindow>
+      )}
+      <Tutorial goTo={go} tab={win === 'research' ? 'research' : current.id} />
       <Toasts />
       <Splash ready={sceneReady || focus} />
       <OfflineModal />

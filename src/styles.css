@@ -255,10 +255,11 @@ img.px.smooth { image-rendering: auto; }
   .card { border-width: 8px; border-image-width: 8px; }
 }
 
-/* ---------- Botões com a arte nova (sem texto na imagem; o texto é do HTML) ---------- */
+/* ---------- Botões: 9-slice em pixel art (scripts/make-buttons.mjs), fatia de 5 px desenhada em 2× ---------- */
 .btn {
   border: 10px solid transparent;
-  border-image: url(/assets/sprites/ui-btn-normal.png) 10 fill / 10px stretch;
+  border-image: url(/assets/sprites/ui-btn-normal.png) 5 fill / 10px stretch;
+  image-rendering: pixelated;
   background: none; box-shadow: none; padding: 2px 8px;
   text-shadow: 0 1px 0 rgba(0, 0, 0, .55);
 }
@@ -270,7 +271,8 @@ img.px.smooth { image-rendering: auto; }
 .btn.primary:hover:not(:disabled) { border-image-source: url(/assets/sprites/ui-btn-hover.png); }
 .btn.big { padding: 8px 14px; }
 .btn.small { padding: 0 6px; }
-.btn.danger { border-image-source: url(/assets/sprites/ui-btn-active.png); color: #ff9c9c; }
+.btn.danger { border-image-source: url(/assets/sprites/ui-btn-danger.png); color: #fff1ee; }
+.btn.danger:hover:not(:disabled) { border-image-source: url(/assets/sprites/ui-btn-danger-hover.png); }
 .card .buy, .card .buy:not(:disabled) { border-width: 10px; border-image-source: url(/assets/sprites/ui-btn-buy.png); }
 .card .buy:hover:not(:disabled) { border-image-source: url(/assets/sprites/ui-btn-buy-hover.png); }
 .card .buy:disabled { border-image-source: url(/assets/sprites/ui-btn-disabled.png); }

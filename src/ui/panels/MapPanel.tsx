@@ -10,8 +10,8 @@ import { fmtDuration } from '../../game/engine/format';
 import { LocationCard, Yields } from './LocationCard';
 import { t, tp } from '../../i18n';
 
-/** Detalhes do local selecionado no mapa e lista de todos os locais. */
-export function MapPanel() {
+/** Detalhes do local selecionado no mapa e lista de todos os locais. O mapa em si abre numa janela flutuante. */
+export function MapPanel({ onOpenMap }: { onOpenMap: () => void }) {
   const game = useGame(s => s.game);
   const selected = useGame(s => s.selectedLoc);
   const select = useGame(s => s.selectLoc);
@@ -21,8 +21,13 @@ export function MapPanel() {
   const total: Amounts = {};
   for (const l of colonies) for (const [r, v] of Object.entries(outpostYield(l, m, game))) total[r as ResId] = (total[r as ResId] ?? 0) + (v ?? 0);
 
+  const openMap = <button className="btn primary big map-open" onClick={onOpenMap}><Icon name="nav-map" size={24} /> {t('Abrir mapa estelar')}</button>;
+  // Planeta escolhido no mapa: o painel mostra só ele. A visão geral e a lista voltam quando nada está selecionado.
+  if (loc) return <div className="panel-body">{openMap}<LocationCard loc={loc} /></div>;
+
   return (
     <div className="panel-body">
+      {openMap}
       <p className="hint">
         {t('{a} locais · {b} colônias · {c} reivindicados · {d}.', { a: game.locations.length, b: colonies.length, c: game.locations.filter(l => l.claimedBy && !l.outpost).length, d: tp(game.routes.length, '{n} rota', '{n} rotas') })}
         {' '}{t('Escolha um local no mapa para fundar, ampliar ou terraformar.')}
@@ -41,7 +46,7 @@ export function MapPanel() {
         </div>
       )}
       {colonies.length > 0 && <p className="hint">{t('Produção das colônias:')} <Yields y={total} /></p>}
-      {loc ? <LocationCard loc={loc} /> : game.locations.length > 0 && <p className="hint">{t('Nenhum local selecionado.')}</p>}
+      {game.locations.length > 0 && <p className="hint">{t('Nenhum local selecionado.')}</p>}
       {game.locations.length > 0 && (
         <>
           <h4 className="section">{t('Todos os locais')}</h4>

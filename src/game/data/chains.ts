@@ -51,7 +51,7 @@ export const CHAIN_EVENTS: EventDef[] = [
 
   // ---------- A greve ----------
   {
-    id: 'strike', name: 'Greve na base', sprite: 'event-meteor-shower', part: [1, 3],
+    id: 'strike', name: 'Greve na base', sprite: 'event-strike', part: [1, 3],
     text: 'Os trabalhadores cruzam os braços no pátio: querem melhores condições e mais tempo de descanso.',
     minPhase: s => s.resources.population >= 30 && !s.flags.includes(once('strike')),
     choices: [
@@ -62,7 +62,7 @@ export const CHAIN_EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'strikeRiot', name: 'A greve virou tumulto', sprite: 'event-meteor-shower', followUp: true, part: [2, 3],
+    id: 'strikeRiot', name: 'A greve virou tumulto', sprite: 'event-strike', followUp: true, part: [2, 3],
     text: 'A segurança chegou, e a multidão não gostou. Há máquinas paradas e portas arrombadas.',
     minPhase: () => false,
     choices: [

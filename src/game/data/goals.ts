@@ -79,7 +79,7 @@ export const GOALS: GoalDef[] = [
     progress: s => have(s.ascension.count, 1) },
   { id: 'challenge1', title: 'Conclua um desafio de Ascensão', hint: 'Ao ascender, escolha uma regra especial para a jornada seguinte; chegue à Ascensão com ela valendo.', icon: 'icon-trophy',
     progress: s => have(s.challenges.done.length, 1) },
-  { id: 'singularity', title: 'Complete a Singularidade', hint: 'O desfecho da história: depois do Núcleo Estelar estágio 5.', icon: 'star-neutron',
+  { id: 'singularity', title: 'Complete a Singularidade', hint: 'O desfecho da história: depois do Núcleo Estelar estágio 5.', icon: 'mega-sing-5',
     progress: s => have(s.megaprojects.singularity ?? 0, 5) },
 ];
 

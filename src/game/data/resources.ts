@@ -8,7 +8,7 @@ export const RESOURCES: Record<ResId, ResourceDef> = {
   gold: { id: 'gold', name: 'Ouro', icon: 'ore-gold', sellPrice: 25, stored: true, mineral: 'gold', group: 'ore' },
   alloys: { id: 'alloys', name: 'Ligas', icon: 'item-alloy', sellPrice: 5, stored: true, group: 'goods' },
   components: { id: 'components', name: 'Componentes', icon: 'item-advanced-component', sellPrice: 30, stored: true, group: 'goods' },
-  water: { id: 'water', name: 'Água', icon: 'node-cyan', sellPrice: 1, stored: true, group: 'fluid' },
+  water: { id: 'water', name: 'Água', icon: 'icon-water', sellPrice: 1, stored: true, group: 'fluid' },
   food: { id: 'food', name: 'Alimentos', icon: 'icon-food', sellPrice: 3, stored: true, group: 'goods' },
   fuel: { id: 'fuel', name: 'Combustível', icon: 'icon-fuel', sellPrice: 6, stored: true, group: 'fluid' },
   science: { id: 'science', name: 'Ciência', icon: 'icon-science', stored: false },
@@ -20,7 +20,7 @@ export const RESOURCES: Record<ResId, ResourceDef> = {
   titanium: { id: 'titanium', name: 'Titânio', icon: 'ingot-titanium', sellPrice: 18, stored: true, mineral: 'titanium', group: 'ore' },
   crystals: { id: 'crystals', name: 'Cristais', icon: 'crystal-cyan', sellPrice: 90, stored: true, mineral: 'cyan-crystal', group: 'ore' },
   modules: { id: 'modules', name: 'Módulos avançados', icon: 'item-module', sellPrice: 260, stored: true, group: 'goods' },
-  slag: { id: 'slag', name: 'Escória', icon: 'raw-brown-chunk', sellPrice: 0.4, stored: true, group: 'ore' },
+  slag: { id: 'slag', name: 'Escória', icon: 'icon-slag', sellPrice: 0.4, stored: true, group: 'ore' },
 };
 
 export const RES_IDS = Object.keys(RESOURCES) as ResId[];

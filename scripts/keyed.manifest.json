@@ -55,7 +55,15 @@
     "aurora-distritos": "planeta-distritos.jpg",
     "asteroide-camadas": "asteroide-camadas.jpg",
     "asteroide-infra": "asteroide-infra.jpg",
-    "asteroide-efeitos": "asteroide-efeitos.jpg"
+    "asteroide-efeitos": "asteroide-efeitos.jpg",
+    "mega-dyson": "mega-dyson.jpg",
+    "mega-core": "mega-core.jpg",
+    "mega-ring": "mega-ring.jpg",
+    "mega-singularity": "mega-singularity.jpg",
+    "mega-extras": "mega-extras.jpg",
+    "revisao-recursos": "revisao-recursos.jpg",
+    "revisao-cenas": "revisao-cenas.jpg",
+    "revisao-greve": "revisao-greve.jpg"
   },
   "items": [
     {
@@ -136,38 +144,6 @@
       }
     },
     {
-      "name": "logo-stacked",
-      "sheet": "logo-stacked",
-      "maxSize": 512,
-      "minFrac": 0.01,
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      }
-    },
-    {
-      "name": "app-icon",
-      "sheet": "app-icon",
-      "maxSize": 256,
-      "minFrac": 0.002,
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      }
-    },
-    {
-      "name": "favicon-star",
-      "sheet": "favicon-a",
-      "maxSize": 64,
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      }
-    },
-    {
       "name": "favicon-core",
       "sheet": "favicon-b",
       "maxSize": 64
@@ -206,62 +182,6 @@
       "at": [
         488,
         384
-      ],
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      },
-      "maxSize": 256
-    },
-    {
-      "name": "ui-progress-frame",
-      "sheet": "ui2",
-      "at": [
-        531,
-        180
-      ],
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      },
-      "maxSize": 256
-    },
-    {
-      "name": "ui-progress-cyan",
-      "sheet": "ui2",
-      "at": [
-        530,
-        218
-      ],
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      },
-      "maxSize": 256
-    },
-    {
-      "name": "ui-progress-green",
-      "sheet": "ui2",
-      "at": [
-        530,
-        249
-      ],
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      },
-      "maxSize": 256
-    },
-    {
-      "name": "ui-progress-orange",
-      "sheet": "ui2",
-      "at": [
-        530,
-        280
       ],
       "key": {
         "bgFactor": 0.62,
@@ -319,37 +239,6 @@
         724,
         236
       ]
-    },
-    {
-      "name": "bg-stars-near",
-      "sheet": "fundos",
-      "rect": [
-        487,
-        2,
-        481,
-        236
-      ],
-      "keepSize": true,
-      "minFrac": 0.0001,
-      "maxSize": 481
-    },
-    {
-      "name": "bg-dust",
-      "sheet": "fundos",
-      "rect": [
-        730,
-        482,
-        724,
-        236
-      ],
-      "keepSize": true,
-      "minFrac": 0.0001,
-      "key": {
-        "bgFactor": 0.7,
-        "fringeFactor": 0.9,
-        "fringePasses": 1
-      },
-      "maxSize": 724
     },
     {
       "name": "terrain-rocky",
@@ -468,20 +357,6 @@
         "fringePasses": 3
       },
       "maxSize": 150
-    },
-    {
-      "name": "ui-tooltip",
-      "sheet": "ui-frames",
-      "at": [
-        1160,
-        200
-      ],
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      },
-      "maxSize": 190
     },
     {
       "name": "ui-frame-wide",
@@ -1049,15 +924,6 @@
       "maxSize": 192
     },
     {
-      "name": "era-stellar",
-      "sheet": "civ-eras",
-      "at": [
-        1220,
-        551
-      ],
-      "maxSize": 192
-    },
-    {
       "name": "colonist-miner",
       "sheet": "civ-pessoas",
       "at": [
@@ -1474,36 +1340,6 @@
       "maxSize": 192
     },
     {
-      "name": "base-conveyor-end",
-      "sheet": "asteroide-infra",
-      "rect": [
-        445,
-        0,
-        300,
-        260
-      ],
-      "at": [
-        595,
-        95
-      ],
-      "maxSize": 192
-    },
-    {
-      "name": "base-conveyor-t",
-      "sheet": "asteroide-infra",
-      "rect": [
-        711,
-        0,
-        300,
-        260
-      ],
-      "at": [
-        861,
-        93
-      ],
-      "maxSize": 192
-    },
-    {
       "name": "base-stairs",
       "sheet": "asteroide-infra",
       "rect": [
@@ -1822,18 +1658,6 @@
       "maxSize": 160
     },
     {
-      "name": "fx-laser",
-      "sheet": "asteroide-efeitos",
-      "rect": [
-        494,
-        511,
-        140,
-        220
-      ],
-      "minFrac": 0.02,
-      "maxSize": 128
-    },
-    {
       "name": "fx-dust",
       "sheet": "asteroide-efeitos",
       "rect": [
@@ -1868,6 +1692,87 @@
       ],
       "minFrac": 0.02,
       "maxSize": 128
+    },
+    {
+      "name": "era-stellar",
+      "sheet": "revisao-cenas",
+      "rect": [
+        30,
+        30,
+        525,
+        535
+      ],
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002
+    },
+    {
+      "name": "building-tank",
+      "sheet": "revisao-cenas",
+      "rect": [
+        610,
+        40,
+        385,
+        345
+      ],
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "event-meteor-shower",
+      "sheet": "revisao-cenas",
+      "rect": [
+        1060,
+        55,
+        340,
+        310
+      ],
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "event-solar-flare",
+      "sheet": "revisao-cenas",
+      "rect": [
+        1065,
+        425,
+        295,
+        343
+      ],
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01,
+      "fadeRight": 0.18,
+      "fadeBottom": 0.18
+    },
+    {
+      "name": "event-strike",
+      "sheet": "revisao-greve",
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002
     }
   ],
   "grids": [
@@ -1879,9 +1784,9 @@
       "inset": 0,
       "names": [
         "asteroid-main-big",
-        "asteroid-main-damaged-1",
-        "asteroid-main-damaged-2",
-        "asteroid-main-damaged-3",
+        null,
+        null,
+        null,
         "asteroid-ice",
         "asteroid-metallic",
         "asteroid-crystal-large",
@@ -1897,13 +1802,13 @@
       "names": [
         "ship-cargo",
         "ship-mining",
-        "ship-research",
+        null,
         "ship-colony",
         "ship-industrial",
         "ship-explorer",
         "ship-freighter",
         "ship-fighter",
-        "ship-capital"
+        null
       ]
     },
     {
@@ -1916,9 +1821,9 @@
         "drone-drill",
         "drone-mining",
         "drone-transport",
-        "drone-drill-b",
+        null,
         "drone-transport-b",
-        "drone-maintenance"
+        null
       ]
     },
     {
@@ -1929,15 +1834,15 @@
       "maxSize": 128,
       "names": [
         "char-colonist",
-        "char-engineer",
-        "char-scientist",
-        "char-technician",
-        "char-pilot",
-        "char-colonist-idle",
+        null,
+        null,
+        null,
+        null,
+        null,
         "char-colonist-walk-1",
         "char-colonist-walk-2",
         "char-colonist-wave",
-        "char-pilot-cheer"
+        null
       ]
     },
     {
@@ -1966,47 +1871,47 @@
         "nav-civilization",
         "icon-jet",
         "nav-expansion",
-        "icon-lock-gold",
-        "icon-lock",
+        null,
+        null,
         "icon-star",
         "icon-arrow-up",
         "icon-check",
         "icon-warning",
-        "icon-error",
-        "icon-info",
+        null,
+        null,
         "icon-sell",
-        "icon-buy",
+        null,
         "icon-clock",
         "icon-exotic",
         "icon-fuel",
         "icon-astronaut",
-        "icon-radar-dish",
-        "icon-radar-dish-2",
+        null,
+        null,
         "nav-industry",
         "icon-crate",
-        "icon-no-power",
-        "icon-pause",
-        "icon-play",
+        null,
+        null,
+        null,
         "nav-overview",
         "icon-radar",
         "icon-power-plug",
         "icon-food",
         "icon-sprout",
-        "icon-sprout-2",
-        "icon-control-panel",
+        null,
+        null,
         "icon-chip",
         "icon-tool",
         "icon-happiness",
-        "icon-device",
+        null,
         "icon-battery",
-        "icon-antenna",
-        "icon-button-red",
+        null,
+        null,
         "nav-catalog",
         "icon-trophy",
         "nav-map",
         "nav-lab",
-        "icon-tool-2",
-        "icon-happiness-2"
+        null,
+        null
       ]
     },
     {
@@ -2021,7 +1926,7 @@
         "building-shipyard",
         "building-industrial-complex",
         "building-battery",
-        "building-battery-b",
+        null,
         "building-orbital-collector",
         "building-power-grid",
         "building-hospital",
@@ -2029,7 +1934,7 @@
         "building-research-dome",
         "building-market",
         "building-comms",
-        "building-comms-b",
+        null,
         "building-maintenance"
       ]
     },
@@ -2087,22 +1992,22 @@
       "insetB": 30,
       "maxSize": 192,
       "names": [
-        "conveyor-sw-ne-a",
-        "conveyor-sw-ne-b",
+        null,
+        null,
         "conveyor-nw-se-a",
-        "conveyor-nw-se-b",
-        "pipe-energy-sw-ne-a",
-        "pipe-energy-sw-ne-b",
-        "pipe-energy-nw-se-a",
-        "pipe-energy-nw-se-b",
-        "pipe-energy-corner",
-        "deco-antenna-off",
-        "deco-antenna-on",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         "deco-crates",
-        "deco-lamp",
-        "deco-flag",
-        "deco-valve",
-        "deco-rocks"
+        null,
+        null,
+        null,
+        null
       ],
       "rowY": [
         [
@@ -2133,16 +2038,16 @@
         "fringePasses": 3
       },
       "names": [
-        "ingot-iron",
-        "ingot-copper",
-        "ingot-gold",
-        "ingot-aluminum",
+        null,
+        null,
+        null,
+        null,
         "ingot-titanium",
-        "ingot-steel",
-        "item-alloy",
-        "item-circuit",
-        "item-battery",
-        "item-motor",
+        null,
+        null,
+        null,
+        null,
+        null,
         "item-robot-part",
         "item-advanced-component",
         "node-cyan",
@@ -2178,21 +2083,21 @@
         "fringePasses": 3
       },
       "names": [
-        "planet-atmosphere-blue",
-        "planet-atmosphere-orange",
-        "planet-atmosphere-green",
-        "planet-atmosphere-violet",
-        "planet-atmosphere-red",
-        "planet-clouds-1",
-        "planet-clouds-2",
-        "planet-clouds-3",
-        "planet-clouds-4",
-        "planet-clouds-5",
-        "planet-ring-thin",
-        "planet-ring-wide",
-        "planet-ring-double",
-        "planet-ring-belt",
-        "planet-ring-ice"
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
       ],
       "keyByName": {
         "planet-atmosphere-violet": {
@@ -2220,11 +2125,11 @@
         "fringePasses": 3
       },
       "names": [
-        "star-red-dwarf",
-        "star-yellow",
+        null,
+        null,
         "star-blue-giant",
         "star-white-dwarf",
-        "star-neutron",
+        null,
         "star-orange"
       ],
       "minFrac": 0.2
@@ -2242,10 +2147,10 @@
       "inset": 8,
       "maxSize": 64,
       "names": [
-        "region-asteroid",
-        "region-planet",
-        "region-station",
-        "region-nebula",
+        null,
+        null,
+        null,
+        null,
         "region-belt",
         "region-system"
       ],
@@ -2274,14 +2179,14 @@
         "fringePasses": 3
       },
       "names": [
-        "mega-dyson-1",
-        "mega-dyson-2",
-        "mega-dyson-3",
-        "mega-dyson-4",
-        "mega-gate",
-        "mega-orbital-ring",
-        "mega-shipyard",
-        "mega-engine"
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
       ],
       "minFrac": 0.0004
     },
@@ -2300,30 +2205,10 @@
       "maxSize": 192,
       "names": [
         "event-comet",
-        "event-meteor-shower",
-        "event-solar-flare",
+        null,
+        null,
         "event-derelict-ship",
         "event-trader"
-      ]
-    },
-    {
-      "sheet": "ui-buttons",
-      "cols": 2,
-      "rows": 3,
-      "inset": 6,
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      },
-      "maxSize": 220,
-      "names": [
-        "ui-btn-normal",
-        "ui-btn-hover",
-        "ui-btn-active",
-        "ui-btn-disabled",
-        "ui-btn-buy",
-        "ui-btn-buy-hover"
       ]
     },
     {
@@ -2395,6 +2280,137 @@
         "asteroid-layer-4",
         "asteroid-layer-5",
         "asteroid-layer-6"
+      ]
+    },
+    {
+      "sheet": "mega-dyson",
+      "cols": 4,
+      "rows": 2,
+      "inset": 6,
+      "maxSize": 320,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002,
+      "names": [
+        "mega-dyson-1",
+        "mega-dyson-2",
+        "mega-dyson-3",
+        "mega-dyson-4",
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "sheet": "mega-core",
+      "cols": 4,
+      "rows": 2,
+      "inset": 6,
+      "maxSize": 320,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002,
+      "names": [
+        "mega-core-1",
+        "mega-core-2",
+        "mega-core-3",
+        "mega-core-4",
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "sheet": "mega-ring",
+      "cols": 1,
+      "rows": 1,
+      "inset": 4,
+      "maxSize": 512,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002,
+      "names": [
+        "mega-ring-empty"
+      ]
+    },
+    {
+      "sheet": "mega-singularity",
+      "cols": 5,
+      "rows": 1,
+      "inset": 4,
+      "maxSize": 320,
+      "key": {
+        "bgFactor": 0.3,
+        "fringeFactor": 0.5,
+        "fringePasses": 2
+      },
+      "minFrac": 0.002,
+      "names": [
+        "mega-sing-1",
+        "mega-sing-2",
+        "mega-sing-3",
+        "mega-sing-4",
+        "mega-sing-5"
+      ],
+      "circle": true
+    },
+    {
+      "sheet": "mega-extras",
+      "cols": 3,
+      "rows": 1,
+      "inset": 4,
+      "maxSize": 320,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.05,
+      "names": [
+        "mega-gate",
+        "mega-shipyard",
+        "mega-engine"
+      ],
+      "fadeRightByName": {
+        "mega-engine": 0.22
+      }
+    },
+    {
+      "sheet": "revisao-recursos",
+      "area": [
+        0,
+        170,
+        1408,
+        360
+      ],
+      "cols": 6,
+      "rows": 1,
+      "inset": 4,
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01,
+      "names": [
+        "icon-water",
+        "ore-iron",
+        "ore-copper",
+        "item-alloy",
+        "ore-silver",
+        "icon-slag"
       ]
     }
   ],
@@ -2498,25 +2514,6 @@
     },
     {
       "sheet": "anim",
-      "prefix": "anim-solar",
-      "y": [
-        312,
-        412
-      ],
-      "xCenters": [
-        554,
-        640,
-        725,
-        810,
-        896,
-        981
-      ],
-      "cellW": 84,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
       "prefix": "anim-reactor",
       "y": [
         334,
@@ -2567,25 +2564,6 @@
         810,
         896,
         981
-      ],
-      "cellW": 84,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
-      "prefix": "anim-rockchipb",
-      "y": [
-        506,
-        572
-      ],
-      "xCenters": [
-        42,
-        128,
-        213,
-        298,
-        383,
-        469
       ],
       "cellW": 84,
       "minFrac": 0.01,

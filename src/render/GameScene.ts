@@ -1,4 +1,4 @@
-import { AnimatedSprite, Application, Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
+import { AnimatedSprite, Application, Assets, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import type { BuildingId, ResId } from '../game/types';
 import { useGame } from '../game/store';
 import { usePrefs } from '../prefs';
@@ -17,9 +17,33 @@ import { eraIndex } from '../game/engine/civilization';
 import { LAYERS } from '../game/data/layers';
 import { BALANCE } from '../game/data/balance';
 import { activeVein, layerIndex } from '../game/engine/deposit';
+import { locationSprite } from '../game/engine/expansion';
+import { AURORA_POS, megaMapPos, nodePosition } from '../ui/mapLayout';
+import { builtMegaSprite } from '../game/data/megaprojects';
 import { t } from '../i18n';
 
 const CRACK_SPRITE = 'crystal-cyan';
+
+// Lugares do céu nas vistas de planeta (fração da cena): longe do planeta do meio, do asteroide no canto de
+// cima à esquerda, dos botões de vista (em cima à direita) e do resumo (embaixo à esquerda).
+// Arte do anel orbital: o centro do buraco fica a 45,6% da altura.
+const RING_SPRITE = 'mega-ring-empty', RING_HOLE_Y = 0.456;
+// Linha do meio da faixa do anel em volta de Aurora (anel com 2,6× o planeta), em unidades do diâmetro do planeta:
+// entre o buraco (meia-largura 26,8%, meia-altura 19,1% da arte) e a borda de fora (50% e 45,6%).
+const RING_TRACK_X = 1.0, RING_TRACK_Y = 0.44;
+
+const SKY_SLOTS: [number, number][] = [[0.86, 0.27], [0.9, 0.72], [0.1, 0.5], [0.6, 0.1], [0.73, 0.9]];
+
+/** Sprites pequenos (planetas, minérios) ficam nítidos; os grandes, reduzidos dos originais, ficam suaves. */
+function prepTexture(t: Texture) {
+  if (t.width >= 192) {
+    // Sprites grandes são reduzidos na cena: mipmaps evitam o serrilhado/borrão da redução direta.
+    t.source.scaleMode = 'linear';
+    t.source.autoGenerateMipmaps = true;
+    t.source.mipmapFilter = 'linear';
+  } else t.source.scaleMode = 'nearest';
+  return t;
+}
 
 interface Floater { node: Container; vy: number; life: number }
 interface Ship { node: Sprite; vx: number; vy?: number }
@@ -78,7 +102,14 @@ export class GameScene {
   private sparks!: Sprite;
   private puffs: { node: Sprite; life: number; total: number }[] = [];
   // Planeta dos colonos: uma segunda vista da cena, com a civilização separada da base de mineração.
-  private view: 'base' | 'civ' = 'base';
+  private view: 'base' | 'civ' | 'loc' | 'mega' = 'base';
+  // Megaprojeto escolhido no mapa: a obra no meio da cena (o anel orbital vem com Aurora dentro dele).
+  private megaView = new Container();
+  private megaMain!: Sprite;
+  private megaPlanet!: Sprite;
+  private megaFront!: Sprite;     // anel orbital: a metade da frente, por cima de Aurora
+  private megaKey = '';
+  private megaWidth = 300;
   private civ = new Container();
   private civPlanet!: Sprite;
   private civPlanetName = CIV_PLANETS[0];
@@ -87,7 +118,30 @@ export class GameScene {
   private orbitals: Sprite[] = [];
   private civShips: Sprite[] = [];
   private skyAsteroid!: Sprite;
+  // Anel orbital construído: gigante em volta de Aurora (metade de trás atrás de tudo, a da frente sobre o planeta).
+  private civRingBack!: Sprite;
+  private civRingFront!: Sprite;
+  private ringHalvesCache: { src: Texture; back: Texture; front: Texture } | null = null;
+  // O mesmo anel em volta de Aurora no céu da base.
+  // Retrato da base (asteroide com tudo o que foi construído), tirado ao sair da vista da base: é o asteroide que
+  // aparece no céu das vistas de planeta, em vez da rocha sem construções.
+  private baseSnap: Texture | null = null;
+  private skyRingBack!: Sprite;
+  private skyRingFront!: Sprite;
   private planetWidth = 300;
+  // Planeta escolhido no mapa: terceira vista, só o planeta (e as naves da colônia, se houver uma).
+  private locView = new Container();
+  private locPlanet!: Sprite;
+  private locSprite = '';
+  private locShips: Sprite[] = [];
+  private locSky!: Sprite;
+  private locWidth = 300;
+  private loading = new Set<string>();
+  // Céu das vistas de planeta: o sol e os vizinhos mais próximos no mapa, cada um do lado em que fica.
+  private sky = new Container();
+  private skySprites: Sprite[] = [];
+  private skyKey = '';
+  private skyBodies: { name: string; slot: number; size: number; sun: boolean }[] = [];
 
   async init(host: HTMLElement) {
     await this.app.init({
@@ -102,17 +156,7 @@ export class GameScene {
 
     const loaded = await Assets.load([...SPRITES.map(spriteUrl), artUrl(BACKDROP)]);
     if (this.disposed) { this.app.destroy(true); return; }
-    for (const name of SPRITES) {
-      const t = loaded[spriteUrl(name)] as Texture;
-      // Sprites pequenos (planetas, minérios) ficam nítidos; os grandes, reduzidos dos originais, ficam suaves.
-      if (t.width >= 192) {
-        // Sprites grandes são reduzidos na cena: mipmaps evitam o serrilhado/borrão da redução direta.
-        t.source.scaleMode = 'linear';
-        t.source.autoGenerateMipmaps = true;
-        t.source.mipmapFilter = 'linear';
-      } else t.source.scaleMode = 'nearest';
-      this.tex[name] = t;
-    }
+    for (const name of SPRITES) this.tex[name] = prepTexture(loaded[spriteUrl(name)] as Texture);
     this.tex[BACKDROP] = loaded[artUrl(BACKDROP)] as Texture;
     await Promise.all([document.fonts?.load('22px "VT323"'), document.fonts?.load('22px "Mul"', '×')]).catch(() => undefined);
     if (this.disposed) { this.app.destroy(true); return; }
@@ -155,8 +199,22 @@ export class GameScene {
     this.dyson = new Sprite(this.tex['mega-dyson-1']);
     this.dyson.anchor.set(0.5);
     this.dyson.visible = false;
-    stage.addChild(this.dyson, this.planet2, this.planet, this.moon, this.world, this.civ);
+    stage.addChild(this.dyson, this.planet2, this.planet, this.moon, this.world, this.sky, this.civ, this.locView, this.megaView);
+    // Anel orbital em volta de Aurora no céu: a metade de trás logo atrás do planeta, a da frente logo à frente dele
+    // (e ainda atrás do asteroide). Não recebem clique: o toque no planeta continua levando a Aurora.
+    this.skyRingBack = new Sprite(Texture.EMPTY);
+    this.skyRingFront = new Sprite(Texture.EMPTY);
+    this.skyRingBack.anchor.set(0.5, 1);
+    this.skyRingFront.anchor.set(0.5, 0);
+    this.skyRingBack.tint = 0x8f98b0;
+    this.skyRingFront.tint = 0xbcc4d6;
+    for (const r of [this.skyRingBack, this.skyRingFront]) { r.eventMode = 'none'; r.visible = false; }
+    stage.addChildAt(this.skyRingBack, stage.getChildIndex(this.planet));
+    stage.addChildAt(this.skyRingFront, stage.getChildIndex(this.planet) + 1);
     this.buildCiv();
+    this.buildLoc();
+    this.buildSky();
+    this.buildMega();
 
     this.asteroid = new Sprite(this.tex[LAYERS[0].sprite]);
     this.asteroid.anchor.set(0.5);
@@ -290,8 +348,12 @@ export class GameScene {
     for (const d of this.drones) d.scale.set((A * 0.12) / d.texture.width);
     for (const c of this.colonists) c.scale.set((A * 0.062) / c.texture.height);     // todos da mesma altura
     this.layoutCiv();
-    this.dyson.position.set(W * 0.13, H * 0.66);
-    this.dyson.scale.set((pSize * 0.42) / this.dyson.texture.width);
+    this.layoutLoc();
+    this.megaKey = '';   // refaz o tamanho da obra na próxima atualização
+    // O Enxame de Dyson envolve a estrela do sistema: maior que Aurora, meio para fora da borda esquerda (o outro lado
+    // do céu) e atrás de tudo, como algo enorme e distante.
+    this.dyson.position.set(W * 0.03, H * 0.42);
+    this.dyson.scale.set((pSize * 1.15) / this.dyson.texture.width);
     for (const s of this.smokes) {
       const { at: [u, v], size } = this.slot(s.id);
       s.sprite.position.set(this.asteroid.x + (u + 0.02) * A, this.asteroid.y + (v - size * 0.72) * A);
@@ -351,16 +413,35 @@ export class GameScene {
     // Vista: o asteroide (mineração) ou o planeta dos colonos.
     const view = useGame.getState().sceneView;
     if (view !== this.view) {
+      if (this.view === 'base') this.snapBase();
       this.view = view;
       const base = view === 'base';
       this.world.visible = this.planet.visible = this.planet2.visible = this.moon.visible = base;
-      this.civ.visible = !base;
+      this.skyRingBack.visible = this.skyRingFront.visible = false;   // a vista da base volta a mostrá-lo abaixo
+      this.civ.visible = view === 'civ';
+      this.sky.visible = !base;
+      this.locView.visible = view === 'loc';
+      this.megaView.visible = view === 'mega';
       this.hold = null;
     }
-    if (this.view === 'civ') { this.dyson.visible = false; this.updateCiv(); return; }
+    if (this.view === 'civ') { this.dyson.visible = false; this.updateCiv(); this.updateSky(AURORA_POS, null, this.planetWidth); return; }
+    if (this.view === 'loc') { this.dyson.visible = false; this.updateLoc(); return; }
+    if (this.view === 'mega') { this.dyson.visible = false; this.updateMega(); return; }
     // O planeta do céu acompanha o crescimento da civilização.
     const skyTex = this.tex[CIV_PLANETS[Math.max(0, eraIndex(game) - 1)]];
     if (this.planet.texture !== skyTex) { this.planet.texture = skyTex; this.layout(); }
+    // Anel orbital construído: em volta do planeta do céu, 1,9× o globo (menor que na vista de Aurora, para não
+    // invadir o asteroide).
+    const skyRing = (game.megaprojects.ring ?? 0) > 0 ? this.tex[RING_SPRITE] : undefined;
+    if ((game.megaprojects.ring ?? 0) > 0 && !skyRing) this.loadTexture(RING_SPRITE);
+    this.skyRingBack.visible = this.skyRingFront.visible = !!skyRing;
+    if (skyRing) {
+      const { back, front } = this.ringHalves(skyRing);
+      if (this.skyRingBack.texture !== back) { this.skyRingBack.texture = back; this.skyRingFront.texture = front; }
+      const globe = this.planet.width * (PLANET_GLOBE[CIV_PLANETS[Math.max(0, eraIndex(game) - 1)]] ?? 1);
+      const s = (globe * 1.9) / skyRing.width;
+      for (const r of [this.skyRingBack, this.skyRingFront]) { r.scale.set(s); r.position.set(this.planet.x, this.planet.y); }
+    }
 
     if (this.hold) {
       this.hold.t -= dt;
@@ -422,6 +503,8 @@ export class GameScene {
     // Megaprojeto no céu: o Enxame de Dyson aparece conforme os estágios.
     const dysonStage = game.megaprojects.dyson ?? 0;
     this.dyson.visible = dysonStage > 0;
+    // O Dyson ocupa aquele lado do céu: o planeta gasoso decorativo sai para não ficar na frente dele.
+    this.planet2.visible = dysonStage === 0;
     if (dysonStage > 0) {
       const tex = this.tex[`mega-dyson-${Math.min(4, dysonStage)}`];
       if (this.dyson.texture !== tex) { this.dyson.texture = tex; this.layout(); }
@@ -562,6 +645,19 @@ export class GameScene {
     this.civPlanet = new Sprite(this.tex[CIV_PLANETS[0]]);
     this.civPlanet.anchor.set(0.5);
     this.civPlanet.zIndex = 0;
+    // Anel: a metade de trás fica atrás até dos distritos de trás; a da frente, sobre o planeta mas abaixo das
+    // construções (zIndex 1 + v), que continuam à vista.
+    this.civRingBack = new Sprite(Texture.EMPTY);
+    this.civRingFront = new Sprite(Texture.EMPTY);
+    this.civRingBack.anchor.set(0.5, 1);
+    this.civRingFront.anchor.set(0.5, 0);
+    this.civRingBack.zIndex = -30;
+    this.civRingFront.zIndex = 0.4;
+    for (const r of [this.civRingBack, this.civRingFront]) { r.eventMode = 'none'; r.visible = false; }
+    // Mais escuro atrás (longe) e um pouco menos na frente: o anel é fundo, os distritos e construções ficam em destaque.
+    this.civRingBack.tint = 0x8f98b0;
+    this.civRingFront.tint = 0xbcc4d6;
+    this.civ.addChild(this.civRingBack, this.civRingFront);
     this.civ.addChild(this.civPlanet);
     for (const id of Object.keys(CIV_SLOTS) as BuildingId[]) {
       CIV_SLOTS[id]!.at.forEach((_, idx) => {
@@ -617,7 +713,7 @@ export class GameScene {
     // O diâmetro do globo fica igual em todas as fases (as com anel têm imagem mais larga).
     this.civPlanet.scale.set(P / (this.civPlanet.texture.width * (PLANET_GLOBE[this.civPlanetName] ?? 1)));
     this.skyAsteroid.position.set(W * 0.1, H * 0.16);
-    this.skyAsteroid.scale.set((P * 0.2) / this.skyAsteroid.texture.width);
+    this.skyAsteroid.scale.set((P * 0.28) / this.skyAsteroid.texture.width);
   }
 
   private updateCiv() {
@@ -630,8 +726,23 @@ export class GameScene {
     if (planetName !== this.civPlanetName) { this.civPlanetName = planetName; this.civPlanet.texture = this.tex[planetName]; this.layoutCiv(); }
     const cx = this.civPlanet.x, cy = this.civPlanet.y + (reduce ? 0 : Math.sin(t * 0.6) * P * 0.006);
     if (!reduce) this.skyAsteroid.rotation = Math.sin(t * 0.3) * 0.08;
-    const rockTex = this.tex[LAYERS[layerIndex(game)].sprite];
+    if (!this.baseSnap) this.snapBase();   // a vista pode abrir sem passar pela base (ex.: direto pelo mapa)
+    const rockTex = this.baseSnap ?? this.tex[LAYERS[layerIndex(game)].sprite];
     if (this.skyAsteroid.texture !== rockTex) { this.skyAsteroid.texture = rockTex; this.layoutCiv(); }
+
+    // Anel orbital: 2,6× o diâmetro do planeta, para parecer uma obra gigantesca (passa das bordas da cena).
+    const ringTex = (game.megaprojects.ring ?? 0) > 0 ? this.tex[RING_SPRITE] : undefined;
+    if ((game.megaprojects.ring ?? 0) > 0 && !ringTex) this.loadTexture(RING_SPRITE);
+    this.civRingBack.visible = this.civRingFront.visible = !!ringTex;
+    if (ringTex) {
+      const { back, front } = this.ringHalves(ringTex);
+      if (this.civRingBack.texture !== back) { this.civRingBack.texture = back; this.civRingFront.texture = front; }
+      const s = (P * 2.6) / ringTex.width;
+      this.civRingBack.scale.set(s);
+      this.civRingFront.scale.set(s);
+      this.civRingBack.position.set(this.civPlanet.x, this.civPlanet.y);
+      this.civRingFront.position.set(this.civPlanet.x, this.civPlanet.y);
+    }
 
     // Estruturas da civilização sobre o planeta, com as versões maiores conforme a quantidade.
     for (const n of this.civNodes) {
@@ -659,9 +770,20 @@ export class GameScene {
       const want = this.tex[i % 2 && DISTRICT_ALT[name] ? DISTRICT_ALT[name] : name];
       if (d.texture !== want) d.texture = want;
       const ring = i % 3;
+      const bob = reduce ? 0 : Math.sin(t * 0.8 + i) * P * 0.01;
+      if (this.civRingBack.visible) {
+        // Com o anel orbital, os distritos andam SOBRE ele (é uma cidade-anel), pela linha do meio da faixa, em vez de
+        // cruzar a estrutura. Todos na mesma velocidade, para manterem a distância entre si. A metade de trás fica
+        // atrás do planeta, mas por cima da faixa de trás.
+        const ang = i * 2.399 + (reduce ? 0 : t * 0.03);
+        d.position.set(cx + Math.cos(ang) * P * RING_TRACK_X, this.civPlanet.y + Math.sin(ang) * P * RING_TRACK_Y + bob);
+        d.scale.set((P * 0.17) / d.texture.width);
+        d.zIndex = Math.sin(ang) > 0 ? 10 : -20;
+        return;
+      }
       const ang = i * 2.399 + (reduce ? 0 : t * 0.035 * (1 + ring * 0.25));
       const rx = P * (0.74 + ring * 0.08), ry = P * (0.2 + ring * 0.05);
-      d.position.set(cx + Math.cos(ang) * rx, cy + Math.sin(ang) * ry + (reduce ? 0 : Math.sin(t * 0.8 + i) * P * 0.01));
+      d.position.set(cx + Math.cos(ang) * rx, cy + Math.sin(ang) * ry + bob);
       d.scale.set((P * (0.2 + 0.02 * (2 - ring))) / d.texture.width);
       d.zIndex = Math.sin(ang) > 0 ? 10 : -10;           // atrás do planeta na metade de cima da órbita
     });
@@ -686,6 +808,243 @@ export class GameScene {
       const size = (P * 0.07) / sh.texture.width;
       sh.scale.set(-Math.sin(ang) >= 0 ? size : -size, size);
       sh.zIndex = Math.sin(ang) > 0 ? 11 : -11;
+    });
+  }
+
+  // ---------- Planeta escolhido no mapa ----------
+  private buildLoc() {
+    this.locView.visible = false;
+    this.locView.sortableChildren = true;
+    this.locPlanet = new Sprite(Texture.EMPTY);
+    this.locPlanet.anchor.set(0.5);
+    this.locPlanet.eventMode = 'none';
+    this.locView.addChild(this.locPlanet);
+    for (let i = 0; i < 4; i++) {
+      const sh = new Sprite(this.tex[CIV_SHIP]);
+      sh.anchor.set(0.5);
+      sh.visible = false;
+      sh.eventMode = 'none';
+      this.locShips.push(sh);
+      this.locView.addChild(sh);
+    }
+    // Como na vista dos colonos, o asteroide no céu volta para a base.
+    this.locSky = new Sprite(this.tex['asteroid-main-big']);
+    this.locSky.anchor.set(0.5);
+    this.locSky.eventMode = 'static';
+    this.locSky.cursor = 'pointer';
+    this.locSky.zIndex = 20;
+    this.locSky.on('pointertap', () => useGame.getState().setSceneView('base'));
+    this.locView.addChild(this.locSky);
+  }
+
+  private layoutLoc() {
+    const { width: W, height: H } = this.app.screen;
+    const P = Math.min(W * 0.46, H * 0.66);
+    const tex = this.locPlanet.texture;
+    // Os sprites de planeta são pequenos: ampliar por um fator inteiro mantém os pixels iguais.
+    const s = tex === Texture.EMPTY ? 1 : tex.width < 192 ? Math.max(1, Math.floor(P / tex.width)) : P / tex.width;
+    this.locPlanet.scale.set(s);
+    this.locPlanet.position.set(Math.round(W * 0.5), Math.round(H * 0.52));
+    this.locWidth = tex === Texture.EMPTY ? P : tex.width * s;
+    this.locSky.position.set(W * 0.1, H * 0.16);
+    this.locSky.scale.set((P * 0.28) / this.locSky.texture.width);
+  }
+
+  /** Sprite que não está na carga inicial (os planetas do mapa são muitos): carrega na primeira vez que aparece. */
+  private loadTexture(name: string) {
+    if (this.loading.has(name)) return;
+    this.loading.add(name);
+    Assets.load(spriteUrl(name))
+      .then((t: Texture) => { if (!this.disposed) this.tex[name] = prepTexture(t); })
+      .catch(err => console.error('Falha ao carregar', name, err));
+  }
+
+  private updateLoc() {
+    const { game, selectedLoc } = useGame.getState();
+    const loc = game.locations.find(l => l.id === selectedLoc);
+    if (!loc) { useGame.getState().setSceneView('base'); return; }
+    const reduce = game.settings.reduceMotion;
+    const t = this.time;
+    const name = locationSprite(loc);
+    if (name !== this.locSprite) {
+      const tex = this.tex[name];
+      if (tex) { this.locSprite = name; this.locPlanet.texture = tex; this.locPlanet.visible = true; this.layoutLoc(); }
+      else { this.locPlanet.visible = false; this.loadTexture(name); }
+    }
+    const cx = this.locPlanet.x, cy = Math.round(this.app.screen.height * 0.52 + (reduce ? 0 : Math.sin(t * 0.6) * this.locWidth * 0.01));
+    this.locPlanet.y = cy;
+    if (!reduce) this.locSky.rotation = Math.sin(t * 0.3) * 0.08;
+    // O asteroide do céu é a base: mostra a camada já escavada, como na vista dos colonos e no mapa.
+    if (!this.baseSnap) this.snapBase();   // a vista pode abrir sem passar pela base (ex.: direto pelo mapa)
+    const rockTex = this.baseSnap ?? this.tex[LAYERS[layerIndex(game)].sprite];
+    if (this.locSky.texture !== rockTex) { this.locSky.texture = rockTex; this.layoutLoc(); }
+
+    // Colônia: naves em órbita, uma a mais a cada dois níveis.
+    const P = this.locWidth;
+    const index = game.locations.indexOf(loc);
+    this.updateSky(nodePosition(index), loc.id, P);
+    const ships = reduce || !loc.outpost ? 0 : Math.min(this.locShips.length, 1 + Math.floor(loc.outpost.level / 2));
+    this.locShips.forEach((sh, i) => {
+      sh.visible = i < ships;
+      if (!sh.visible) return;
+      const ang = t * (0.22 + i * 0.04) + i * 1.9;
+      sh.position.set(cx + Math.cos(ang) * P * 0.66, cy + Math.sin(ang) * P * 0.14 - P * 0.04);
+      const size = (P * 0.08) / sh.texture.width;
+      sh.scale.set(-Math.sin(ang) >= 0 ? size : -size, size);
+      sh.zIndex = Math.sin(ang) > 0 ? 11 : -11;
+    });
+  }
+
+  /** Fotografa a base como está agora (o contêiner do asteroide, com prédios e decoração) numa textura reduzida. */
+  private snapBase() {
+    const was = this.world.visible;
+    this.world.visible = true;
+    const tex = this.app.renderer.generateTexture({ target: this.world, resolution: 0.6 });
+    this.world.visible = was;
+    this.baseSnap?.destroy(true);   // os sprites que usavam o retrato antigo trocam de textura antes do próximo desenho
+    this.baseSnap = tex;
+  }
+
+  // ---------- Megaprojeto escolhido no mapa ----------
+  private buildMega() {
+    this.megaView.visible = false;
+    this.megaView.sortableChildren = true;
+    this.megaMain = new Sprite(Texture.EMPTY);
+    this.megaMain.eventMode = 'none';
+    this.megaPlanet = new Sprite(Texture.EMPTY);
+    this.megaPlanet.anchor.set(0.5);
+    this.megaPlanet.eventMode = 'none';
+    this.megaPlanet.zIndex = 1;
+    this.megaFront = new Sprite(Texture.EMPTY);
+    this.megaFront.eventMode = 'none';
+    this.megaFront.zIndex = 2;
+    this.megaView.addChild(this.megaMain, this.megaPlanet, this.megaFront);
+  }
+
+  /** O anel orbital cortado na linha do meio do buraco: a metade de trás e a da frente (usadas na vista do megaprojeto
+   *  e em volta de Aurora). As sub-texturas são criadas uma vez só. */
+  private ringHalves(tex: Texture) {
+    if (this.ringHalvesCache?.src !== tex) {
+      const hy = Math.round(tex.height * RING_HOLE_Y);
+      this.ringHalvesCache = {
+        src: tex,
+        back: new Texture({ source: tex.source, frame: new Rectangle(0, 0, tex.width, hy) }),
+        front: new Texture({ source: tex.source, frame: new Rectangle(0, hy, tex.width, tex.height - hy) }),
+      };
+    }
+    return this.ringHalvesCache;
+  }
+
+  /** Tamanho na tela: sprites pequenos crescem por um fator inteiro (pixels iguais), os grandes, no tamanho pedido. */
+  private fitScale(tex: Texture, target: number) {
+    return tex.width < 192 ? Math.max(1, Math.round(target / tex.width)) : target / tex.width;
+  }
+
+  private updateMega() {
+    const { game, selectedMega } = useGame.getState();
+    const name = selectedMega ? builtMegaSprite(game, selectedMega) : null;
+    const pos = selectedMega ? megaMapPos(selectedMega) : null;
+    if (!name || !pos) { useGame.getState().setSceneView('base'); return; }
+    const ring = selectedMega === 'ring';
+    const planetName = CIV_PLANETS[Math.max(0, eraIndex(game) - 1)];
+    const tex = this.tex[name];
+    if (!tex) { this.loadTexture(name); this.megaMain.visible = this.megaPlanet.visible = this.megaFront.visible = false; return; }
+    const { width: W, height: H } = this.app.screen;
+    const key = `${selectedMega}|${name}|${planetName}|${W}x${H}`;
+    if (key !== this.megaKey) {
+      this.megaKey = key;
+      const P = Math.min(W * 0.5, H * 0.7);
+      if (ring) {
+        // O anel é cortado na linha do meio do buraco (45,6% da altura): a metade de trás fica atrás de Aurora e a da
+        // frente passa por cima. Aurora ocupa 30% da largura, um pouco mais alta que o buraco (como no mapa).
+        const { back, front } = this.ringHalves(tex);
+        this.megaMain.texture = back;
+        this.megaFront.texture = front;
+        const s = this.fitScale(tex, P * 1.3);
+        this.megaMain.scale.set(s);
+        this.megaFront.scale.set(s);
+        this.megaMain.anchor.set(0.5, 1);
+        this.megaFront.anchor.set(0.5, 0);
+        this.megaPlanet.texture = this.tex[planetName];
+        this.megaPlanet.scale.set((tex.width * s * 0.3) / (this.megaPlanet.texture.width * (PLANET_GLOBE[planetName] ?? 1)));
+        this.megaWidth = tex.width * s;
+      } else {
+        this.megaMain.texture = tex;
+        this.megaMain.anchor.set(0.5);
+        this.megaMain.scale.set(this.fitScale(tex, P));
+        this.megaWidth = tex.width * this.megaMain.scale.x;
+      }
+    }
+    this.megaMain.visible = true;
+    this.megaPlanet.visible = this.megaFront.visible = ring;
+    const reduce = game.settings.reduceMotion;
+    const cx = Math.round(W * 0.5), cy = Math.round(H * 0.52 + (reduce ? 0 : Math.sin(this.time * 0.5) * this.megaWidth * 0.008));
+    this.megaMain.position.set(cx, cy);
+    this.megaPlanet.position.set(cx, cy);
+    this.megaFront.position.set(cx, cy);
+    // O Dyson envolve a própria estrela e o Núcleo fica colado nela: sem sol no fundo.
+    this.updateSky(pos, null, this.megaWidth * 0.8, selectedMega !== 'dyson' && selectedMega !== 'core');
+  }
+
+  // ---------- Céu das vistas de planeta ----------
+  private buildSky() {
+    this.sky.visible = false;
+    for (let i = 0; i < 4; i++) {
+      const sp = new Sprite(Texture.EMPTY);
+      sp.anchor.set(0.5);
+      sp.eventMode = 'none';
+      sp.visible = false;
+      this.skySprites.push(sp);
+      this.sky.addChild(sp);
+    }
+  }
+
+  /** Sol e os três vizinhos mais próximos de `from` (posição no mapa), cada um no lugar da tela que mais
+   *  combina com a direção em que fica; os mais perto aparecem maiores. */
+  private updateSky(from: { x: number; y: number }, selfId: string | null, P: number, withSun = true) {
+    const { game } = useGame.getState();
+    const auroraName = CIV_PLANETS[Math.max(0, eraIndex(game) - 1)];
+    // O sol do fundo é o Enxame de Dyson quando ele já existe (a estrela está dentro dele).
+    const sunName = builtMegaSprite(game, 'dyson') ?? 'star-orange';
+    const key = `${selfId}|${game.locations.length}|${auroraName}|${withSun}|${from.x},${from.y}|${sunName}`;
+    if (key !== this.skyKey) {
+      this.skyKey = key;
+      const civ = !!game.upgrades.habitats || game.resources.population >= 1;
+      const dist = (p: { x: number; y: number }) => Math.hypot(p.x - from.x, p.y - from.y);
+      const cands = game.locations.map((l, i) => ({ name: locationSprite(l), pos: nodePosition(i), id: l.id })).filter(c => c.id !== selfId);
+      if (selfId !== null && civ) cands.push({ name: auroraName, pos: AURORA_POS, id: 'aurora' });
+      const near = cands.sort((a, b) => dist(a.pos) - dist(b.pos)).slice(0, 3);
+      const bodies = [...(withSun ? [{ name: sunName, pos: { x: 0, y: 0 }, sun: true }] : []), ...near.map(c => ({ name: c.name, pos: c.pos, sun: false }))];
+      const free = SKY_SLOTS.map((_, i) => i);
+      this.skyBodies = bodies.map(b => {
+        const ang = Math.atan2(b.pos.y - from.y, b.pos.x - from.x);
+        let slot = free[0], best = Infinity;
+        for (const s of free) {
+          const a = Math.atan2(SKY_SLOTS[s][1] - 0.52, SKY_SLOTS[s][0] - 0.5);
+          const d = Math.abs(Math.atan2(Math.sin(a - ang), Math.cos(a - ang)));
+          if (d < best) { best = d; slot = s; }
+        }
+        free.splice(free.indexOf(slot), 1);
+        const size = b.sun ? (sunName === 'star-orange' ? 0.22 : 0.3) : 0.14 - 0.07 * Math.min(1, Math.max(0, (dist(b.pos) - 120) / 600));
+        return { name: b.name, slot, size, sun: b.sun };
+      });
+    }
+
+    const { width: W, height: H } = this.app.screen;
+    const reduce = game.settings.reduceMotion, t = this.time;
+    this.skySprites.forEach((sp, i) => {
+      const b = this.skyBodies[i];
+      const tex = b ? this.tex[b.name] : undefined;
+      if (b && !tex) this.loadTexture(b.name);
+      sp.visible = !!tex;
+      if (!b || !tex) return;
+      if (sp.texture !== tex) sp.texture = tex;
+      const [u, v] = SKY_SLOTS[b.slot];
+      sp.position.set(u * W, v * H + (reduce ? 0 : Math.sin(t * 0.4 + i * 1.7) * P * 0.01));
+      sp.scale.set((b.size * P) / tex.width);
+      // Os planetas de fundo ficam um pouco apagados, para o da frente continuar o centro das atenções.
+      sp.alpha = b.sun ? 0.95 : 0.8;
+      sp.tint = b.sun ? 0xffffff : 0xc4cadd;
     });
   }
 

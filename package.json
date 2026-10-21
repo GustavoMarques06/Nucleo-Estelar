@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "sprites": "node scripts/extract-sprites.mjs && node scripts/extract-keyed.mjs && node scripts/make-placeholders.mjs",
+    "sprites": "node scripts/extract-sprites.mjs && node scripts/extract-keyed.mjs && node scripts/make-buttons.mjs && node scripts/make-placeholders.mjs",
     "sprites:preview": "node scripts/extract-sprites.mjs --preview sprites-preview.png",
     "check": "tsc --noEmit && vitest run",
     "audit": "node scripts/audit.cjs",
