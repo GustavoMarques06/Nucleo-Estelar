@@ -31,6 +31,15 @@ import { enactDecree } from './decrees';
 import { giveGift, lobbyFaction } from './factions';
 import { resolveCrisis, spawnCrisis } from './crises';
 import { assignDrones } from './drones';
+import { chooseDoctrine } from './doctrines';
+import { DOCTRINE_AXES } from '../data/doctrines';
+import { DIRECTIVE_FRACS, addDirective, removeDirective, sellableByDirective, throttleTargets, updateDirective, watchable } from './directives';
+import { toggleCrew } from './crew';
+import { CREW } from '../data/crew';
+import { startDig } from './digs';
+import { delayRival } from './race';
+import { recordTimeline } from './timeline';
+import { fissureFinale, fissureStrike } from './economy';
 import { buildMegaStage, buyRepeatable, checkAchievements, checkGoals, checkStory, chooseEvent, dismissEvent, nextMegaStage, spawnEvent } from './progression';
 
 // Teste de resistência: joga a campanha inteira com o jogador automático (várias Ascensões e, no modo completo,
@@ -245,7 +254,21 @@ function monkey(start: GameState, seed: number, actions: number) {
     ['venda automática', () => ({ ...s, autosell: { ...s.autosell, [pick(tradedResources())]: r() < 0.7 }, keep: { ...s.keep, [pick(tradedResources())]: pick([0, 0.1, 0.25, 0.5, 0.75]) }, autosellFloor: pick([0, 0.5, 1, 1.3]) })],
     ['receita', () => { const b = pick(BUILDINGS.filter(x => x.alt)); const recipes = { ...s.recipes }; if (r() < 0.5) recipes[b.id] = true; else delete recipes[b.id]; return { ...s, recipes }; }],
     ['simular', () => simulate(s, pick([1, 5, 30, 120, 600])).state],
-    ['conquistas e objetivos', () => checkStory(checkGoals(checkAchievements(s).state).state).state],
+    ['conquistas e objetivos', () => recordTimeline(checkStory(checkGoals(checkAchievements(s).state).state).state)],
+    ['doutrina', () => { const a = pick(DOCTRINE_AXES); return chooseDoctrine(s, a.id, pick(a.options).id); }],
+    ['diretiva nova', () => addDirective(s)],
+    ['diretiva', () => {
+      if (!s.directives.length) return null;
+      const d = pick(s.directives);
+      if (r() < 0.15) return removeDirective(s, d.id);
+      const when = pick([{ kind: 'above', res: pick(watchable()), frac: pick(DIRECTIVE_FRACS) }, { kind: 'below', res: pick(watchable()), frac: pick(DIRECTIVE_FRACS) }, { kind: 'energyShort' }, { kind: 'energySpare' }] as const);
+      const then = r() < 0.5 ? { kind: 'sell' as const, res: pick(sellableByDirective()) } : { kind: 'throttle' as const, building: pick(throttleTargets()), value: pick(THROTTLE_STEPS) };
+      return updateDirective(s, d.id, { when, then, on: r() < 0.85 });
+    }],
+    ['conselho', () => { const c = pick(CREW); return toggleCrew({ ...s, story: s.story.includes(c.joins) ? s.story : [...s.story, c.joins] }, c.id); }],
+    ['escavação', () => (s.locations.length ? startDig(s, pick(s.locations).id) : null)],
+    ['atrasar rival', () => delayRival(s)],
+    ['fissura', () => (r() < 0.25 ? fissureFinale(s).state : fissureStrike(s, Math.floor(r() * 3)).state)],
   ];
   const trail: string[] = [];
   let before = '';

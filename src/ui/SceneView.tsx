@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import type { GameScene } from '../render/GameScene';
 import { t } from '../i18n';
+import { useGame } from '../game/store';
 
 export function SceneView({ onReady }: { onReady?: () => void }) {
   const host = useRef<HTMLDivElement>(null);
   const ready = useRef(onReady);
+  const view = useGame(s => s.sceneView);
   ready.current = onReady;
 
   useEffect(() => {
@@ -20,5 +22,5 @@ export function SceneView({ onReady }: { onReady?: () => void }) {
     });
     return () => { disposed = true; scene?.destroy(); };
   }, []);
-  return <div ref={host} className="scene" aria-label={t('Asteroide — clique para extrair minério')} />;
+  return <div ref={host} className="scene" aria-label={view === 'civ' ? t('Aurora, o mundo dos colonos') : t('Asteroide — clique para extrair minério')} />;
 }

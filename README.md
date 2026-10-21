@@ -12,7 +12,7 @@ Comece com uma broca num asteroide frio. Termine com uma estrela artificial no c
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-5-433e38)
 ![Vitest](https://img.shields.io/badge/Vitest-5-6E9F18?logo=vitest&logoColor=white)
-![Testes](https://img.shields.io/badge/testes-160%2B-4caf50)
+![Testes](https://img.shields.io/badge/testes-300%2B-4caf50)
 ![Sem servidor](https://img.shields.io/badge/backend-nenhum-00e5ff)
 
 Português · [English](README.en.md)
@@ -95,7 +95,21 @@ Mercado com preços que oscilam **e uma demanda que satura** quando você vende 
 <td valign="top">
 
 ### ♾️ Fim de jogo que recomeça
-Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da história), **Ascensão** e **Transcendência**: duas camadas de recomeço com melhorias permanentes, conquistas que nunca se perdem e um catálogo de minerais. Na Ascensão você pode escolher um **desafio** (sem comércio, sem colônias, energia racionada…) e ganhar uma melhoria permanente ao vencê-lo.
+Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da história), **Ascensão** e **Transcendência**: duas camadas de recomeço com melhorias permanentes, conquistas que nunca se perdem e um catálogo de minerais. Na Ascensão você pode escolher um **desafio** (sem comércio, sem colônias, energia racionada…) ou o **desafio da semana**, que muda toda segunda-feira e guarda o seu melhor tempo.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🧭 Rumo e automação
+Três **doutrinas** por jornada, cada uma com um ganho e um preço, que não se trocam antes da Ascensão. **Diretivas** "se … então …" vendem o excedente e ajustam o ritmo das máquinas sozinhas, até offline, e o **planejador de cadeia** diz quantas estruturas cada elo precisa.
+
+</td>
+<td valign="top">
+
+### 🏺 Conselho, relíquias e rivais
+As vozes do Arquivo viram um **conselho** que sobe de nível e nunca o perde. **Sítios de anomalia** escondem 12 **relíquias** permanentes, a facção rival disputa com você uma **corrida pelo Portal** estelar e a aba **Jornadas** compara cada marco com as jornadas anteriores.
 
 </td>
 </tr>
@@ -126,7 +140,11 @@ Enxame de Dyson, Núcleo Estelar infinito, **Singularidade** (o desfecho da hist
 | Conquistas | 51 (+2% de produção cada, permanentes) |
 | Objetivos guiados | 33 |
 | Registros do diário | 28 (16 da jornada, em cinco atos, + 12 das facções), mais 19 do Arquivo (11 fragmentos e 8 transmissões) |
-| Desafios de Ascensão | 8, cada um com uma regra especial e uma melhoria permanente |
+| Desafios de Ascensão | 8, cada um com uma regra especial e uma melhoria permanente, mais o desafio da semana |
+| Doutrinas | 3 eixos com 3 rumos cada |
+| Conselho | 4 conselheiros, até o nível 25 |
+| Relíquias | 12, permanentes |
+| Diretivas | até 6 regras de automação |
 | Idiomas | Português e inglês (automático pelo navegador, ou escolha nas Opções) |
 | Sprites | cerca de 380, recortados das pranchas de arte originais |
 
@@ -203,9 +221,9 @@ Tempo até a primeira Ascensão, medido com o jogador automático (uma pessoa le
 
 | Perfil | Quanto joga | Primeira Ascensão |
 |---|---|---|
-| Ideal | atento o tempo todo | ~21 h |
-| Casual | algumas visitas por hora | ~34 h |
-| Ocioso | uma visita por hora | ~60 h |
+| Ideal | atento o tempo todo | ~20 h |
+| Casual | algumas visitas por hora | ~25 h |
+| Ocioso | uma visita por hora | ~62 h |
 
 As jornadas seguintes, com melhorias permanentes, são bem mais rápidas.
 

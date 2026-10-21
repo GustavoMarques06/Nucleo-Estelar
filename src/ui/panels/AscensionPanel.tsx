@@ -5,10 +5,15 @@ import { CHALLENGES } from '../../game/data/challenges';
 import { canAscend, pendingAscension } from '../../game/engine/progression';
 import { activeChallenge, challengeMet, challengesUnlocked, deadlineLeft } from '../../game/engine/challenges';
 import { fmt, fmtDuration } from '../../game/engine/format';
-import { t } from '../../i18n';
+import { locale, t } from '../../i18n';
+import { weekOf, weekStart, weeklyRule } from '../../game/engine/weekly';
+import { WEEKLY_BONUS } from '../../game/data/weekly';
 import { Tx } from '../../i18n/Tx';
 import { Icon } from '../Icon';
 import { useDialog } from '../useDialog';
+
+/** Segunda-feira da semana, no formato curto do idioma (dd/mm ou mm/dd). */
+const weekLabel = (week: number) => weekStart(week).toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
 function ConfirmAscend({ gain, onCancel, onGo }: { gain: number; onCancel: () => void; onGo: (next: string | null) => void }) {
   const game = useGame(s => s.game);
@@ -28,22 +33,64 @@ function ConfirmAscend({ gain, onCancel, onGo }: { gain: number; onCancel: () =>
             {challengeMet(game) ? t('Desafio “{nome}” cumprido: a recompensa permanente é sua ao ascender.', { nome: t(active.name) }) : t('O desafio “{nome}” não foi cumprido a tempo: ele termina sem recompensa.', { nome: t(active.name) })}
           </p>
         )}
-        {challengesUnlocked(game) && options.length > 0 && (
+        {challengesUnlocked(game) && (
           <label className="field">
             <span>{t('Próxima jornada')}</span>
             <select value={next ?? ''} onChange={e => setNext(e.target.value || null)}>
               <option value="">{t('Normal (sem desafio)')}</option>
+              <option value="weekly">{t('Desafio da semana: {a} e {b}', { a: t(weeklyRule(weekOf(Date.now())).boon.name), b: t(weeklyRule(weekOf(Date.now())).bane.name) })}</option>
               {options.map(c => <option key={c.id} value={c.id}>{t('Desafio: {nome}', { nome: t(c.name) })}</option>)}
             </select>
           </label>
         )}
-        {next && <p className="hint">{t(CHALLENGES.find(c => c.id === next)!.desc)} <b>{t(CHALLENGES.find(c => c.id === next)!.rewardText)}</b></p>}
+        {next && next !== 'weekly' && <p className="hint">{t(CHALLENGES.find(c => c.id === next)!.desc)} <b>{t(CHALLENGES.find(c => c.id === next)!.rewardText)}</b></p>}
+        {next === 'weekly' && <WeeklyRule week={weekOf(Date.now())} />}
         <div className="row">
           <button className="btn" onClick={onCancel}>{t('Cancelar')}</button>
           <button className="btn primary" onClick={() => onGo(next)}>{t('Ascender')}</button>
         </div>
       </div>
     </div>
+  );
+}
+
+function WeeklyRule({ week }: { week: number }) {
+  const { boon, bane } = weeklyRule(week);
+  return (
+    <p className="desc">
+      <b className="sev-ok">{t(boon.name)}</b>: {t(boon.desc)} · <b className="sev-bad">{t(bane.name)}</b>: {t(bane.desc)}
+      {' '}<b>{t('Recompensa: +{n}% de Dados de Ascensão.', { n: Math.round((WEEKLY_BONUS - 1) * 100) })}</b>
+    </p>
+  );
+}
+
+/** Desafio da semana: a regra desta semana, a jornada em andamento e os melhores tempos. */
+function Weekly() {
+  const game = useGame(s => s.game);
+  const abandon = useGame(s => s.abandonWeekly);
+  if (!challengesUnlocked(game)) return null;
+  const week = weekOf(Date.now());
+  const active = game.weekly.active;
+  return (
+    <>
+      <h4 className="section">{t('Desafio da semana')}</h4>
+      <p className="hint">{t('Toda segunda-feira a semana sorteia uma vantagem e um revés, iguais para todo mundo. Escolha a jornada da semana ao ascender: chegando de novo à Ascensão, ela rende mais Dados e o seu tempo fica guardado.')}</p>
+      <article className={`card challenge ${active !== null ? 'on' : ''}`}>
+        <Icon name="icon-clock" size={48} className="card-art" />
+        <div className="card-main">
+          <h3>{t('Semana de {data}', { data: weekLabel(week) })} {active === week && <span className="count warn">{t('ativo')}</span>}</h3>
+          <WeeklyRule week={week} />
+          {active !== null && active !== week && <p className="status sev-warn">{t('Sua jornada segue a regra da semana de {data}.', { data: weekLabel(active) })}</p>}
+          {active !== null && <p className="desc">{t('Tempo nesta jornada: {tempo}.', { tempo: fmtDuration(game.stats.playTime) })}</p>}
+        </div>
+        {active !== null && <button className="btn buy" onClick={abandon}>{t('Abandonar')}</button>}
+      </article>
+      {game.weekly.records.length > 0 && (
+        <table className="stats-table">
+          <tbody>{[...game.weekly.records].reverse().map(r => <tr key={r.week}><th>{t('Semana de {data}', { data: weekLabel(r.week) })}</th><td>{fmtDuration(r.time)}</td></tr>)}</tbody>
+        </table>
+      )}
+    </>
   );
 }
 
@@ -106,6 +153,7 @@ export function AscensionPanel() {
       )}
 
       <Challenges />
+      <Weekly />
 
       <h4 className="section">{t('Melhorias permanentes')}</h4>
       {PERKS.map(p => {

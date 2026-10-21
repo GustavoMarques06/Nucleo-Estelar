@@ -6,6 +6,7 @@ import { getModifiers } from '../game/engine/modifiers';
 import { fmtDuration } from '../game/engine/format';
 import { crisisOf } from '../game/engine/crises';
 import { routeInfo } from '../game/engine/routes';
+import { digOf, digsUnlocked, hasAnomaly } from '../game/engine/digs';
 import { artUrl } from '../assets';
 import { SECTOR_SIZE, nodePosition, sectorBackground, sectorCount, sectorName, sectorOf } from './mapLayout';
 import { Icon } from './Icon';
@@ -80,6 +81,9 @@ export function MapView() {
             <span className="map-label">{l.name}</span>
             {l.outpost && <span className="map-badge">{l.outpost.level}</span>}
             {crisis && <span className="map-alert" aria-label={t('crise ativa')}>!</span>}
+            {digsUnlocked(game) && hasAnomaly(l) && !game.dug.includes(l.id) && (
+              <span className={`map-site ${(digOf(game, l.id)?.remaining ?? 0) > 0 ? 'working' : ''}`} title={t('Sítio de anomalia')} aria-label={t('Sítio de anomalia')}>✦</span>
+            )}
           </button>
         );
       })}
@@ -106,6 +110,7 @@ export function MapView() {
         <span><i className="lg garden" />{t('Terraformado')}</span>
         <span><i className="lg route" />{t('Rota')}</span>
         <span><i className="lg alert" />{t('Crise')}</span>
+        {digsUnlocked(game) && <span><i className="lg site">✦</i>{t('Sítio de anomalia')}</span>}
       </div>
       {total === 0 && <p className="map-empty">{t('Nenhum local descoberto ainda. Lance uma expedição na aba Expansão.')}</p>}
       <small className="map-cap">{t('{n} locais por setor', { n: SECTOR_SIZE })}</small>

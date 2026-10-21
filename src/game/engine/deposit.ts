@@ -97,10 +97,10 @@ function drawKind(s: GameState, r: () => number): VeinKind {
 }
 
 /** Descobre um veio novo (muda o estado recebido). Paga o custo, registra os minérios no catálogo e, se não há veio em foco, o escolhe. */
-function prospectInto(s: GameState): Vein | null {
-  if (!canProspect(s).ok) return null;
+function prospectInto(s: GameState, free = false): Vein | null {
+  if (free ? !prospectingUnlocked(s) || veinsLeft(s).length >= BALANCE.veinMaxActive : !canProspect(s).ok) return null;
   const m = getModifiers(s);
-  payCost(s, prospectCost(s, m));
+  if (!free) payCost(s, prospectCost(s, m));
   const seed = s.nextSeed++;
   const r = rng(seed * 977 + 5);
   const kind = drawKind(s, r);
@@ -120,6 +120,12 @@ export function prospect(prev: GameState): GameState | null {
   if (!canProspect(prev).ok) return null;
   const s = cloneState(prev);
   return prospectInto(s) ? s : null;
+}
+
+/** Veio de presente (fissura completa no asteroide): sem custo, se houver vaga para mais um. */
+export function freeVein(prev: GameState): GameState | null {
+  const s = cloneState(prev);
+  return prospectInto(s, true) ? s : null;
 }
 
 export function setFocus(prev: GameState, id: string): GameState | null {

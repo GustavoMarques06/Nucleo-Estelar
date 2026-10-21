@@ -9,7 +9,7 @@ export const CIV_EN: Record<string, string> = {
   "Ruas, escolas, mercado. A base deixa de ser um posto e vira um lugar com nome.": "Streets, schools, a market. The base stops being an outpost and becomes a place with a name.",
   "Metrópole": "Metropolis",
   "Torres, rotas e turnos que nunca terminam. A cidade não dorme mais.": "Towers, routes and shifts that never end. The city no longer sleeps.",
-  "Cidades-torre que se bastam. Gerações inteiras nascem sem ver o chão do asteroide.": "Tower-cities that sustain themselves. Whole generations are born without seeing the asteroid's ground.",
+  "Cidades-torre que se bastam. Gerações inteiras nascem sem ver o chão de Aurora.": "Tower-cities that sustain themselves. Whole generations are born without ever seeing Aurora's ground.",
   "Ecumenópole": "Ecumenopolis",
   "Um mundo inteiro é uma única cidade, com bairros do tamanho de países.": "An entire world is a single city, with districts the size of countries.",
   "Civilização Estelar": "Stellar Civilization",

@@ -1,15 +1,15 @@
 import { create } from 'zustand';
-import type { Amounts, BuildingId, Category, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
+import type { Amounts, BuildingId, Category, DirectiveDo, DirectiveWhen, DroneRole, Flows, FlowSource, GameState, Priority, ResId, Settings, Specialization, TickReport } from './types';
 import { RES_IDS } from './data/resources';
 import { BALANCE } from './data/balance';
 import { BUILDING_BY_ID } from './data/buildings';
 import { newGame } from './engine/state';
-import { buyBuilding, buyUpgrade, goldenStrike, mineClick, sell, simulate } from './engine/economy';
+import { buyBuilding, buyUpgrade, fissureFinale, fissureStrike, goldenStrike, mineClick, sell, simulate } from './engine/economy';
 import { overclockReactor, setPriority, setThrottle, toggleProtect } from './engine/energy';
 import { layerIndex } from './engine/deposit';
 import { LAYERS } from './data/layers';
 import { MILESTONE_SPECIALS, SPECIAL_AT, hasMilestones, milestoneLevel } from './data/milestones';
-import { fmt, fmtNum } from './engine/format';
+import { fmt, fmtDuration, fmtNum } from './engine/format';
 import { clearSave, loadBackup, loadGame, parseSave, saveGame, saveSignature, serialize } from './engine/save';
 import { applyOffline, type OfflineSummary } from './engine/offline';
 import { energyBalance, getModifiers } from './engine/modifiers';
@@ -35,8 +35,17 @@ import { events } from './events';
 import { activeChallenge, challengeMet } from './engine/challenges';
 import { CHALLENGE_BY_ID } from './data/challenges';
 import { t, tName, tStatic } from '../i18n';
+import { chooseDoctrine } from './engine/doctrines';
+import { DOCTRINE_BY_ID } from './data/doctrines';
+import { addDirective, removeDirective, updateDirective } from './engine/directives';
+import { toggleCrew } from './engine/crew';
+import { startDig } from './engine/digs';
+import { RELIC_BY_ID } from './data/relics';
+import { delayRival } from './engine/race';
+import { recordTimeline } from './engine/timeline';
 
 export type BuyAmount = 1 | 10 | 'max';
+export type SceneView = 'base' | 'civ';
 export type History = Partial<Record<ResId, number[]>>;
 export const HISTORY_STEP = 10;         // segundos de jogo entre amostras
 export const HISTORY_MAX = 180;         // 30 min de histórico
@@ -68,6 +77,8 @@ interface Store {
   selectedLoc: string | null;     // local selecionado no mapa (interface; não salvo)
   saveError: boolean;             // o navegador recusou o último salvamento
   storyQueue: string[];           // registros do diário esperando para serem mostrados (interface; não salvo)
+  sceneView: SceneView;           // o que a cena mostra: o asteroide (mineração) ou o planeta dos colonos (interface; não salvo)
+  setSceneView(v: SceneView): void;
 
   boot(): void;
   advance(dt: number): void;
@@ -121,6 +132,17 @@ interface Store {
   eventResult: EventResult | null;
   dismissEventResult(): void;
   setAutosell(res: ResId, on: boolean): void;
+  chooseDoctrine(axis: string, option: string): void;
+  addDirective(): void;
+  updateDirective(id: string, patch: { when?: DirectiveWhen; then?: DirectiveDo; on?: boolean }): void;
+  removeDirective(id: string): void;
+  toggleCrew(id: string): void;
+  startDig(locId: string): void;
+  delayRival(): void;
+  abandonWeekly(): void;
+  /** Rachadura `step` (0–2) de uma fissura: devolve false se o armazém estava cheio. */
+  fissure(step: number, x?: number, y?: number): boolean;
+  fissureFinale(x?: number, y?: number): void;
   setSetting<K extends keyof Settings>(k: K, v: Settings[K]): void;
   setBuyAmount(a: BuyAmount): void;
   dismissOffline(): void;
@@ -162,6 +184,8 @@ export const useGame = create<Store>()((set, get) => {
     selectedLoc: null,
     saveError: false,
     storyQueue: [],
+    sceneView: 'base',
+    setSceneView(v) { if (get().sceneView !== v) set({ sceneView: v }); },
     eventResult: null,
     onlyAffordable: false,
     setOnlyAffordable(v) { set({ onlyAffordable: v }); },
@@ -192,6 +216,8 @@ export const useGame = create<Store>()((set, get) => {
       let report: TickReport | null = null;
       let found = 0;
       const terraformed: string[] = [];
+      const relics: string[] = [];
+      let race: 'won' | 'lost' | null = null;
       const layerBefore = layerIndex(game);
       const before = { ...game.resources };
       const veinsBefore = game.deposit.veins.filter(v => v.reserve > 0).length;
@@ -203,6 +229,8 @@ export const useGame = create<Store>()((set, get) => {
         ({ state: game, report } = simulate(game, step, { flows: step >= remaining - 1e-9 }));
         found += report.finishedExpeditions.length;
         terraformed.push(...report.finishedTerraforms);
+        relics.push(...report.relics);
+        race = report.race ?? race;
         remaining -= step;
       }
       if (longGap) game = { ...game, crisisTimer: Math.max(game.crisisTimer, 240), claimTimer: Math.max(game.claimTimer, 300) };
@@ -242,6 +270,7 @@ export const useGame = create<Store>()((set, get) => {
       game = goals.state;
       const story = checkStory(game);
       game = story.state;
+      game = recordTimeline(game);
       const rates = { ...get().rates };
       const a = Math.min(1, dt / 1.5);
       for (const r of RES_IDS) rates[r] += ((game.resources[r] - before[r]) / dt - rates[r]) * a;
@@ -290,6 +319,15 @@ export const useGame = create<Store>()((set, get) => {
       for (const id of terraformed) {
         events.emit({ type: 'terraformed' });
         get().toast(t('Terraformação concluída em {local}!', { local: game.locations.find(l => l.id === id)?.name ?? t('uma colônia') }));
+      }
+      for (const id of relics) {
+        events.emit({ type: 'achievement', id });
+        get().toast(t('Relíquia encontrada: {nome}. {efeito}', { nome: t(RELIC_BY_ID[id].name), efeito: t(RELIC_BY_ID[id].desc) }));
+      }
+      if (race) {
+        const fname = t(FACTION_BY_ID[game.race!.faction].name);
+        events.emit({ type: race === 'won' ? 'goal' : 'territory' });
+        get().toast(race === 'won' ? t('Seu Portal estelar abriu antes do portal de {faccao}! Bônus até a Ascensão.', { faccao: fname }) : t('{faccao} terminou o portal primeiro: expedições pagam pedágio até a Ascensão.', { faccao: fname }), race === 'won' ? 'info' : 'warn');
       }
       if (found > 0) {
         events.emit({ type: 'discovered', count: found });
@@ -435,11 +473,14 @@ export const useGame = create<Store>()((set, get) => {
     ascend(next = null) {
       const prev = get().game;
       const cleared = activeChallenge(prev) && challengeMet(prev) ? activeChallenge(prev) : null;
+      const weekly = prev.weekly.active !== null ? prev.stats.playTime : null;
       commit(ascend(prev, Date.now(), next), () => {
         set({ report: null, rates: zeroRates(), flows: null, history: {} });
         events.emit({ type: 'ascended' });
         get().toast(t('Projeto Ascensão concluído. Uma nova jornada começa.'));
         if (cleared) { events.emit({ type: 'challenge', done: true }); get().toast(t('Desafio concluído: {nome}! {recompensa}.', { nome: t(cleared.name), recompensa: t(cleared.rewardText) })); }
+        if (weekly !== null) { events.emit({ type: 'challenge', done: true }); get().toast(t('Desafio da semana concluído em {tempo}.', { tempo: fmtDuration(weekly) })); }
+        if (get().game.weekly.active !== null) { events.emit({ type: 'challenge', done: false }); get().toast(t('Desafio da semana ativo.'), 'warn'); }
         const now = get().game.challenges.active;
         if (now) { events.emit({ type: 'challenge', done: false }); get().toast(t('Desafio ativo: {nome}.', { nome: t(CHALLENGE_BY_ID[now].name) }), 'warn'); }
         get().save();
@@ -482,6 +523,38 @@ export const useGame = create<Store>()((set, get) => {
     dismissTip(id) {
       const g = get().game;
       if (!g.tips.includes(id)) set({ game: { ...g, tips: [...g.tips, id] } });
+    },
+
+    chooseDoctrine(axis, option) {
+      commit(chooseDoctrine(get().game, axis, option), () => { events.emit({ type: 'upgraded', id: option }); get().toast(t('Doutrina adotada: {nome}.', { nome: t(DOCTRINE_BY_ID[option].name) })); });
+    },
+    addDirective() { commit(addDirective(get().game)); },
+    updateDirective(id, patch) { commit(updateDirective(get().game, id, patch)); },
+    removeDirective(id) { commit(removeDirective(get().game, id)); },
+    toggleCrew(id) { commit(toggleCrew(get().game, id)); },
+    startDig(locId) { commit(startDig(get().game, locId), () => { events.emit({ type: 'prospect' }); get().toast(t('Escavação em andamento.')); }); },
+    delayRival() { commit(delayRival(get().game), () => { events.emit({ type: 'gift' }); get().toast(t('Campanha de atraso: o portal rival perdeu 10% do progresso.')); }); },
+    abandonWeekly() {
+      const g = get().game;
+      if (g.weekly.active === null) return;
+      set({ game: { ...g, weekly: { ...g.weekly, active: null } } });
+      get().toast(t('Desafio da semana abandonado. Nada foi perdido.'));
+    },
+    fissure(step, x, y) {
+      const { state, gained } = fissureStrike(get().game, step);
+      if (Object.keys(gained).length === 0) { get().toast('Armazém cheio — o ponto brilhante se perdeu.', 'warn'); return false; }
+      set({ game: state });
+      events.emit({ type: 'golden', x, y });
+      events.emit({ type: 'mined', gained, x, y });
+      return true;
+    },
+    fissureFinale(x, y) {
+      const r = fissureFinale(get().game);
+      if (!r.vein && Object.keys(r.gained).length === 0) return;
+      set({ game: r.state });
+      events.emit({ type: 'golden', x, y });
+      if (r.vein) { events.emit({ type: 'prospect' }); get().toast(t('Fissura completa: ela revelou um veio novo!')); }
+      else { events.emit({ type: 'mined', gained: r.gained, x, y }); get().toast(t('Fissura completa: uma leva extra de minério!')); }
     },
 
     setAutosell(res, on) {

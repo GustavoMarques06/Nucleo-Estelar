@@ -30,6 +30,9 @@ import { FinancePanel } from './ui/panels/FinancePanel';
 import { TranscendencePanel } from './ui/panels/TranscendencePanel';
 import { DronesSection } from './ui/panels/DronesSection';
 import { DepositSection } from './ui/panels/DepositSection';
+import { DirectivesSection } from './ui/panels/DirectivesSection';
+import { PlannerSection } from './ui/panels/PlannerSection';
+import { doctrinePending } from './game/engine/doctrines';
 import { MapView } from './ui/MapView';
 import { EndingModal } from './ui/EndingModal';
 import { OfflineModal, StoryModal, Toasts } from './ui/Overlays';
@@ -42,6 +45,7 @@ import { useFoldText } from './ui/useFoldText';
 import { Compass } from './ui/Compass';
 import { EventResult } from './ui/EventResult';
 import { Tutorial, tutorialEarly } from './ui/Tutorial';
+import { SceneSwitch } from './ui/SceneSwitch';
 
 type Tab = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
   | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
@@ -80,9 +84,9 @@ const GROUPS: { label: string; tabs: TabDef[] }[] = [
 function Panel({ tab, onHelp }: { tab: Tab; onHelp: () => void }) {
   switch (tab) {
     case 'mining': return <div className="panel-body"><DepositSection /><BuildingsPanel category="mining" intro={t('Extração de matéria-prima: minério e água.')} /></div>;
-    case 'industry': return <BuildingsPanel category="industry" intro={t('Transforma matéria-prima em produtos de maior valor.')} />;
+    case 'industry': return <><BuildingsPanel category="industry" intro={t('Transforma matéria-prima em produtos de maior valor.')} /><div className="panel-body planner-wrap"><PlannerSection /></div></>;
     case 'energy': return <BuildingsPanel category="energy" intro={t('Geração de energia para todas as máquinas.')} />;
-    case 'logistics': return <><BuildingsPanel category="logistics" intro={t('Armazenamento e produção de drones.')} /><div className="panel-body drones"><DronesSection /></div></>;
+    case 'logistics': return <><BuildingsPanel category="logistics" intro={t('Armazenamento e produção de drones.')} /><div className="panel-body drones"><DronesSection /><DirectivesSection /></div></>;
     case 'research': return <UpgradesPanel />;
     case 'civilization': return <CivilizationPanel />;
     case 'commerce': return <MarketPanel />;
@@ -109,6 +113,9 @@ export function App() {
 
   useEffect(() => startGameLoop(), []);
   useEffect(() => startAudio(), []);
+  // A aba Civilização mostra o planeta dos colonos; a Mineração volta para o asteroide.
+  const setSceneView = useGame(s => s.setSceneView);
+  useEffect(() => { if (tab === 'civilization') setSceneView('civ'); else if (tab === 'mining') setSceneView('base'); }, [tab, setSceneView]);
   useFoldText('painel');
   useFoldText('compass');
   // Cada aba abre no topo; o holofote (botão Ir) rola até o card depois disso.
@@ -120,7 +127,7 @@ export function App() {
   const groups = GROUPS.map(g => ({ ...g, tabs: g.tabs.filter(t => !t.visible || t.visible(game)) })).filter(g => g.tabs.length);
   const tabs = groups.flatMap(g => g.tabs);
   const current = tabs.find(t => t.id === tab) ?? tabs[0];
-  const researchReady = UPGRADES.some(u => isUpgradeVisible(u, game) && canAfford(game, u.cost));
+  const researchReady = UPGRADES.some(u => isUpgradeVisible(u, game) && canAfford(game, u.cost)) || doctrinePending(game);
   const contractReady = game.contracts.some(c => game.resources[c.res] >= c.amount);
   const questReady = game.quests.some(q => game.resources[q.res] >= q.amount);
   // Título da aba mostra quantos alertas pedem atenção (útil com o jogo em segundo plano).
@@ -155,6 +162,7 @@ export function App() {
           {!focus && <SceneView onReady={() => setSceneReady(true)} />}
           {current.id === 'map' && <MapView />}
           {focus && current.id !== 'map' && <FocusBoard goTo={setTab} />}
+          {!focus && current.id !== 'map' && <SceneSwitch />}
           {!focus && <Buffs />}
           {!focus && <EventCard />}
           {!focus && <Tips />}

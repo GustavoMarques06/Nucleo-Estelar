@@ -95,6 +95,8 @@ export const BALANCE = {
   strikeLife: 12,             // segundos que o ponto fica disponível
   strikeClicks: 20,           // um ponto brilhante vale pelo menos este número de cliques...
   strikeSeconds: 15,          // ...ou este tempo de extração automática, o que for maior
+  fissureChance: 0.4,         // chance de um ponto brilhante abrir uma fissura (três rachaduras seguidas)
+  fissureLife: 2.5,           // segundos que cada rachadura fica aberta
 
   // ----- Energia: dia e noite do asteroide, baterias, sobrecarga -----
   dayPeriod: 360,             // segundos de uma volta completa do asteroide (dia + noite)

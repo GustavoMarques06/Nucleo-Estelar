@@ -4,7 +4,7 @@ import { BALANCE } from '../data/balance';
 import { BUILDING_IDS } from '../data/buildings';
 import { FACTIONS } from '../data/factions';
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 /** Primeira versão com save assinado: saves mais antigos sem assinatura são aceitos sem marca. */
 export const SIGNED_SINCE = 15;
 
@@ -56,6 +56,15 @@ export function newGame(now = Date.now()): GameState {
     eventTimer: BALANCE.eventMinGap,
     ascension: { points: 0, total: 0, count: 0, perks: {} },
     challenges: { active: null, done: [] },
+    doctrines: {},
+    directives: [],
+    crew: { xp: {}, active: [] },
+    digs: [],
+    dug: [],
+    relics: [],
+    timeline: { marks: {}, samples: [], past: [] },
+    race: null,
+    weekly: { active: null, records: [] },
     stats: { totalMined: 0, produced: {}, earned: 0, lifetimeEarned: 0, playTime: 0, contractsDone: 0, eventsSeen: 0, crisesSolved: 0, highSales: 0, reputation: 0, questsDone: 0, chains: 0 },
     settings: { reduceMotion: false, sound: true, music: true, volume: 0.6, focus: false },
     savedAt: now,
@@ -103,6 +112,15 @@ export function cloneState(s: GameState): GameState {
     flags: [...s.flags],
     ascension: { ...s.ascension, perks: { ...s.ascension.perks } },
     challenges: { active: s.challenges.active, done: [...s.challenges.done] },
+    doctrines: { ...s.doctrines },
+    directives: s.directives.map(d => ({ ...d, when: { ...d.when }, then: { ...d.then } })),
+    crew: { xp: { ...s.crew.xp }, active: [...s.crew.active] },
+    digs: s.digs.map(d => ({ ...d })),
+    dug: [...s.dug],
+    relics: [...s.relics],
+    timeline: { marks: { ...s.timeline.marks }, samples: [...s.timeline.samples], past: s.timeline.past.map(j => ({ ...j, marks: { ...j.marks }, samples: [...j.samples] })) },
+    race: s.race && { ...s.race },
+    weekly: { active: s.weekly.active, records: s.weekly.records.map(r => ({ ...r })) },
     stats: { ...s.stats, produced: { ...s.stats.produced } },
     settings: { ...s.settings },
   };

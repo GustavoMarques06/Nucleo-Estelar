@@ -16,6 +16,11 @@ import { colonyCount } from '../selectors';
 import { dayFactor } from './daylight';
 import { linkDemand } from './grid';
 import { civBonus } from './civilization';
+import { doctrineEffects } from './doctrines';
+import { crewEffects } from './crew';
+import { weeklyEffects } from './weekly';
+import { RELIC_BY_ID } from '../data/relics';
+import { RACE_LOSE, RACE_WIN } from '../data/race';
 
 export interface Modifiers {
   click: number;
@@ -102,6 +107,12 @@ export function getModifiers(s: GameState): Modifiers {
   // Desafios: a regra do ativo vale agora; as recompensas dos concluídos valem para sempre.
   for (const id of s.challenges.done) CHALLENGE_BY_ID[id]?.reward.forEach(e => applyEffect(m, e));
   if (s.challenges.active) CHALLENGE_BY_ID[s.challenges.active]?.effects.forEach(e => applyEffect(m, e));
+  // Doutrinas e regra da semana (valem nesta jornada); conselho e relíquias (permanentes); resultado da corrida pelo Portal.
+  doctrineEffects(s).forEach(e => applyEffect(m, e));
+  weeklyEffects(s).forEach(e => applyEffect(m, e));
+  crewEffects(s).forEach(e => applyEffect(m, e));
+  for (const id of s.relics) RELIC_BY_ID[id]?.effects.forEach(e => applyEffect(m, e));
+  if (s.race?.result) (s.race.result === 'won' ? RACE_WIN : RACE_LOSE).forEach(e => applyEffect(m, e));
   for (const mp of MEGAPROJECTS) {
     const done = s.megaprojects[mp.id] ?? 0;
     for (let i = 0; i < done; i++) {

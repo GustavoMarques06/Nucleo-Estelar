@@ -6,21 +6,24 @@ import { fmt, fmtDuration } from '../../game/engine/format';
 import { GUIDE } from '../../game/data/guide';
 import { STORY, STORY_BY_ID } from '../../game/data/story';
 import { LORE } from '../../game/data/lore';
-import { SPEAKER_ART, SPEAKER_ICON } from '../portraits';
-import { EcoPortrait } from '../EcoPortrait';
+import { Portrait } from '../Portrait';
+import { Journeys } from './JourneysSection';
+import { Relics } from './DigBox';
 import { artUrl } from '../../assets';
 import { buildingCount, colonyCount } from '../../game/selectors';
 import { Icon } from '../Icon';
 import { Tx } from '../../i18n/Tx';
 import { t } from '../../i18n';
 
-type Section = 'guide' | 'diary' | 'archive' | 'achievements' | 'catalog' | 'stats';
+type Section = 'guide' | 'diary' | 'archive' | 'achievements' | 'relics' | 'catalog' | 'journeys' | 'stats';
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'guide', label: 'Guia' },
   { id: 'diary', label: 'Diário' },
   { id: 'archive', label: 'Arquivo' },
   { id: 'achievements', label: 'Conquistas' },
+  { id: 'relics', label: 'Relíquias' },
   { id: 'catalog', label: 'Minerais' },
+  { id: 'journeys', label: 'Jornadas' },
   { id: 'stats', label: 'Estatísticas' },
 ];
 
@@ -36,14 +39,6 @@ function Guide() {
       ))}
     </div>
   );
-}
-
-function Portrait({ speaker }: { speaker: string }) {
-  const art = SPEAKER_ART[speaker], icon = SPEAKER_ICON[speaker];
-  if (art) return <div className="portrait" role="img" aria-label={t(speaker)} style={{ backgroundImage: `url(${artUrl(art)})` }} />;
-  if (speaker === 'ECO') return <div className="portrait icon"><EcoPortrait size={96} /></div>;
-  if (icon) return <div className="portrait icon"><Icon name={icon} size={56} /></div>;
-  return null;
 }
 
 /** Arquivo: fragmentos dos Acendedores e transmissões das vozes recorrentes. */
@@ -167,7 +162,9 @@ export function RecordsPanel() {
       {sec === 'diary' && <Diary />}
       {sec === 'archive' && <Archive />}
       {sec === 'achievements' && <Achievements />}
+      {sec === 'relics' && <Relics />}
       {sec === 'catalog' && <Catalog />}
+      {sec === 'journeys' && <Journeys />}
       {sec === 'stats' && <Stats />}
     </div>
   );

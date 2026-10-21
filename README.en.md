@@ -53,7 +53,9 @@ Guided goals, the in-game guide and the logbook accompany every stage. If you ju
 - **🌌 Expansion.** Expeditions with ships and fuel, **procedural worlds** of 10 types, specialized colonies, 5-level **terraforming**, trade routes between colonies (with blockades and insurance), and crises that never destroy progress.
 - **🤝 Factions.** Three rival factions with **requests**, treaties, alliances and **brotherhood**. Allying with one cools relations with its rival. Embassy **influence** buys decrees and settles territory disputes. Borders shift over time, allies receive **honor missions**, and each faction has its own story in the Logbook.
 - **💰 Living economy.** Market prices fluctuate and **demand saturates** when you oversell. Upkeep, debt, inflation, **trade reputation**, urgent contracts, and a **Finance** tab with per-resource balance and history.
-- **♾️ An endgame that restarts.** Dyson swarm, infinite Stellar Core, the **Singularity** (the story's ending), **Ascension** and **Transcendence**: two restart layers with permanent upgrades, achievements that are never lost and a mineral catalog. On Ascension you can pick a **challenge** (no trade, no colonies, rationed power…) and earn a permanent upgrade for beating it.
+- **♾️ An endgame that restarts.** Dyson swarm, infinite Stellar Core, the **Singularity** (the story's ending), **Ascension** and **Transcendence**: two restart layers with permanent upgrades, achievements that are never lost and a mineral catalog. On Ascension you can pick a **challenge** (no trade, no colonies, rationed power…) and earn a permanent upgrade for beating it, or the **weekly challenge**, which changes every Monday and records your best time.
+- **🧭 Course and automation.** Three **doctrines** per run, each with a gain and a price, locked until the next Ascension. **Directives** ("if … then …") sell the surplus and adjust machine pace on their own, even offline, and the **chain planner** tells you how many structures each link needs.
+- **🏺 Council, relics and rivals.** The voices of the Archive become a **council** that levels up and never loses it. **Anomaly sites** hide 12 permanent **relics**, the rival faction races you to the **Star Gate**, and the **Runs** tab compares every milestone with your previous runs.
 
 <details>
 <summary><b>Game numbers</b></summary>
@@ -70,7 +72,11 @@ Guided goals, the in-game guide and the logbook accompany every stage. If you ju
 | Achievements | 51 (+2% production each, permanent) |
 | Guided goals | 33 |
 | Logbook entries | 28 (16 from the journey, in five acts, + 12 from the factions), plus 19 in the Archive (11 fragments and 8 transmissions) |
-| Ascension challenges | 8, each with a special rule and a permanent upgrade |
+| Ascension challenges | 8, each with a special rule and a permanent upgrade, plus the weekly challenge |
+| Doctrines | 3 axes with 3 courses each |
+| Council | 4 advisors, up to level 25 |
+| Relics | 12, permanent |
+| Directives | up to 6 automation rules |
 | Languages | Portuguese and English (automatic from the browser, or pick in Options) |
 | Sprites | about 380, cropped from the original art sheets |
 
@@ -141,9 +147,9 @@ Time to first Ascension, measured with the automatic player (a human takes longe
 
 | Profile | How much it plays | First Ascension |
 |---|---|---|
-| Ideal | attentive the whole time | ~21 h |
-| Casual | a few visits per hour | ~26 h |
-| Idle | one visit per hour | ~65 h |
+| Ideal | attentive the whole time | ~20 h |
+| Casual | a few visits per hour | ~25 h |
+| Idle | one visit per hour | ~62 h |
 
 Later runs, with permanent upgrades, are much faster.
 

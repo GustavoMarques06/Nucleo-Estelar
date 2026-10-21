@@ -48,7 +48,7 @@ function sourceKeys(): Map<string, string> {
 
 const TEXT_KEYS = new Set([
   'name', 'desc', 'text', 'title', 'label', 'hint', 'tagline', 'treatyText', 'allianceText', 'bondText', 'rewardText', 'requiresText',
-  'fixLabel', 'short', 'use', 'rarity', 'auto', 'bonus', 'sub', 'lines',
+  'fixLabel', 'short', 'use', 'rarity', 'auto', 'bonus', 'sub', 'lines', 'role', 'joinsText',
 ]);
 
 /** Textos dos dados do jogo (nomes, descrições, histórias…). Funções (descrições por nível) usam t() por dentro. */

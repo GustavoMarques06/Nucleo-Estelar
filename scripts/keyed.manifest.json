@@ -48,7 +48,14 @@
     "planetas-a": "planetas-a.jpg",
     "planetas-b": "planetas-b.jpg",
     "planetas-c": "planetas-c.jpg",
-    "planetas-d": "planetas-d.jpg"
+    "planetas-d": "planetas-d.jpg",
+    "aurora-fases": "planeta-fases.jpg",
+    "aurora-fases2": "planeta-fases2.jpg",
+    "aurora-orbita": "planeta-orbita.jpg",
+    "aurora-distritos": "planeta-distritos.jpg",
+    "asteroide-camadas": "asteroide-camadas.jpg",
+    "asteroide-infra": "asteroide-infra.jpg",
+    "asteroide-efeitos": "asteroide-efeitos.jpg"
   },
   "items": [
     {
@@ -1438,6 +1445,429 @@
         565
       ],
       "maxSize": 192
+    },
+    {
+      "name": "aurora-6",
+      "sheet": "aurora-fases2",
+      "rect": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "maxSize": 384,
+      "minFrac": 0.002
+    },
+    {
+      "name": "base-conveyor",
+      "sheet": "asteroide-infra",
+      "rect": [
+        0,
+        0,
+        300,
+        260
+      ],
+      "at": [
+        117,
+        96
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-conveyor-end",
+      "sheet": "asteroide-infra",
+      "rect": [
+        445,
+        0,
+        300,
+        260
+      ],
+      "at": [
+        595,
+        95
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-conveyor-t",
+      "sheet": "asteroide-infra",
+      "rect": [
+        711,
+        0,
+        300,
+        260
+      ],
+      "at": [
+        861,
+        93
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-stairs",
+      "sheet": "asteroide-infra",
+      "rect": [
+        0,
+        158,
+        300,
+        260
+      ],
+      "at": [
+        109,
+        288
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-lift",
+      "sheet": "asteroide-infra",
+      "rect": [
+        201,
+        160,
+        300,
+        260
+      ],
+      "at": [
+        351,
+        290
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-pipe",
+      "sheet": "asteroide-infra",
+      "rect": [
+        714,
+        162,
+        300,
+        260
+      ],
+      "at": [
+        864,
+        292
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-cables",
+      "sheet": "asteroide-infra",
+      "rect": [
+        936,
+        157,
+        300,
+        260
+      ],
+      "at": [
+        1086,
+        287
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-lamp",
+      "sheet": "asteroide-infra",
+      "rect": [
+        39,
+        387,
+        160,
+        190
+      ],
+      "minFrac": 0.02,
+      "maxSize": 160
+    },
+    {
+      "name": "base-tunnel",
+      "sheet": "asteroide-infra",
+      "rect": [
+        201,
+        350,
+        300,
+        260
+      ],
+      "at": [
+        351,
+        480
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-well",
+      "sheet": "asteroide-infra",
+      "rect": [
+        715,
+        349,
+        300,
+        260
+      ],
+      "at": [
+        865,
+        479
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-ore",
+      "sheet": "asteroide-infra",
+      "rect": [
+        939,
+        343,
+        300,
+        260
+      ],
+      "at": [
+        1089,
+        473
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "base-ore-gold",
+      "sheet": "asteroide-infra",
+      "rect": [
+        1151,
+        343,
+        300,
+        260
+      ],
+      "at": [
+        1301,
+        473
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "base-crates",
+      "sheet": "asteroide-infra",
+      "rect": [
+        0,
+        540,
+        300,
+        260
+      ],
+      "at": [
+        113,
+        670
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "base-flag",
+      "sheet": "asteroide-infra",
+      "rect": [
+        532,
+        576,
+        160,
+        190
+      ],
+      "minFrac": 0.02,
+      "maxSize": 160
+    },
+    {
+      "name": "base-landing",
+      "sheet": "asteroide-infra",
+      "rect": [
+        714,
+        542,
+        300,
+        260
+      ],
+      "at": [
+        864,
+        672
+      ],
+      "maxSize": 192
+    },
+    {
+      "name": "base-dish",
+      "sheet": "asteroide-infra",
+      "rect": [
+        1010,
+        577,
+        160,
+        190
+      ],
+      "minFrac": 0.02,
+      "maxSize": 160
+    },
+    {
+      "name": "base-beacon",
+      "sheet": "asteroide-infra",
+      "rect": [
+        1220,
+        585,
+        160,
+        190
+      ],
+      "minFrac": 0.02,
+      "maxSize": 160
+    },
+    {
+      "name": "fx-crack",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        44,
+        10,
+        300,
+        260
+      ],
+      "at": [
+        194,
+        140
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-vein-iron",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        392,
+        0,
+        300,
+        260
+      ],
+      "at": [
+        542,
+        129
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-vein-copper",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        733,
+        0,
+        300,
+        260
+      ],
+      "at": [
+        883,
+        129
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-vein-gold",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        1072,
+        0,
+        300,
+        260
+      ],
+      "at": [
+        1222,
+        129
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-crystal-cyan",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        402,
+        242,
+        300,
+        260
+      ],
+      "at": [
+        552,
+        372
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-crystal-violet",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        731,
+        242,
+        300,
+        260
+      ],
+      "at": [
+        881,
+        372
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-crater",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        1072,
+        267,
+        300,
+        260
+      ],
+      "at": [
+        1222,
+        397
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-vein-titanium",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        52,
+        250,
+        300,
+        260
+      ],
+      "at": [
+        202,
+        380
+      ],
+      "maxSize": 160
+    },
+    {
+      "name": "fx-laser",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        494,
+        511,
+        140,
+        220
+      ],
+      "minFrac": 0.02,
+      "maxSize": 128
+    },
+    {
+      "name": "fx-dust",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        88,
+        515,
+        300,
+        220
+      ],
+      "minFrac": 0.02,
+      "maxSize": 160
+    },
+    {
+      "name": "fx-sparks",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        772,
+        535,
+        280,
+        220
+      ],
+      "minFrac": 0.02,
+      "maxSize": 160
+    },
+    {
+      "name": "fx-sparkle",
+      "sheet": "asteroide-efeitos",
+      "rect": [
+        1163,
+        552,
+        160,
+        170
+      ],
+      "minFrac": 0.02,
+      "maxSize": 128
     }
   ],
   "grids": [
@@ -1894,6 +2324,77 @@
         "ui-btn-disabled",
         "ui-btn-buy",
         "ui-btn-buy-hover"
+      ]
+    },
+    {
+      "sheet": "aurora-fases",
+      "cols": 4,
+      "rows": 2,
+      "inset": 2,
+      "maxSize": 384,
+      "minFrac": 0.002,
+      "names": [
+        "aurora-1",
+        "aurora-2",
+        "aurora-3",
+        "aurora-4",
+        null,
+        "aurora-5",
+        null,
+        "aurora-7"
+      ]
+    },
+    {
+      "sheet": "aurora-orbita",
+      "cols": 5,
+      "rows": 2,
+      "inset": 2,
+      "maxSize": 256,
+      "minFrac": 0.01,
+      "names": [
+        "orbit-comms",
+        "orbit-port",
+        "orbit-shipyard",
+        "orbit-solar",
+        "orbit-embassy",
+        null,
+        "orbit-habitat",
+        "orbit-farm",
+        "orbit-elevator",
+        null
+      ]
+    },
+    {
+      "sheet": "aurora-distritos",
+      "cols": 4,
+      "rows": 2,
+      "inset": 2,
+      "maxSize": 320,
+      "minFrac": 0.01,
+      "names": [
+        "district-1",
+        "district-2",
+        "district-3",
+        "district-4",
+        "district-4b",
+        "district-5",
+        "district-6",
+        "district-7"
+      ]
+    },
+    {
+      "sheet": "asteroide-camadas",
+      "cols": 3,
+      "rows": 2,
+      "inset": 2,
+      "maxSize": 640,
+      "names": [
+        "asteroid-layer-1",
+        "asteroid-layer-2",
+        "asteroid-layer-3",
+        "asteroid-layer-4",
+        "asteroid-layer-5",
+        "asteroid-layer-6"
       ]
     }
   ],

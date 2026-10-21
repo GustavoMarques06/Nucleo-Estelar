@@ -25,3 +25,8 @@ export * from '../game/engine/civilization';
 export * from '../game/data/story';
 export * from '../game/data/tips';
 export * from '../game/data/upgrades';
+export * from '../game/data/doctrines';
+export * from '../game/data/crew';
+export * from '../game/data/relics';
+export * from '../game/data/timeline';
+export * from '../game/data/weekly';

@@ -9,6 +9,7 @@ import { useSpotlight } from '../spotlight';
 import { artUrl } from '../../assets';
 import { BuildingList, BuyAmountPicker } from './BuildingsPanel';
 import { t } from '../../i18n';
+import { CrewSection } from './CrewSection';
 
 const STATUS: Record<string, [string, string]> = {
   none: ['Sem colonos ainda', ''],
@@ -175,6 +176,7 @@ export function CivilizationPanel() {
           </article>
         </>
       )}
+      <CrewSection />
       <BuyAmountPicker />
       <BuildingList category="civilization" title={t('Moradia, alimento e saúde')} />
     </div>

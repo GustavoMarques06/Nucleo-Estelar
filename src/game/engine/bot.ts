@@ -17,13 +17,15 @@ import { canOpenRoute, openRoute, routeScore } from './routes';
 import { assignDrones, droneFree } from './drones';
 import { canProspect, prospect, prospectCost, prospectingUnlocked, setAutoDeposit, setFocus, veinScore, veinsLeft, veinUsable } from './deposit';
 import { FACTIONS, ALLIANCE_AT } from '../data/factions';
-import { ascend, buildMegaStage, buyPerk, buyRepeatable, buyStarPerk, canAscend, canTranscend, checkAchievements, transcend } from './progression';
+import { ascend, buildMegaStage, buyPerk, buyRepeatable, buyStarPerk, canAscend, canTranscend, checkAchievements, checkStory, transcend } from './progression';
 import { PERKS, perkCost } from '../data/ascension';
 import { STAR_PERKS, starPerkCost } from '../data/transcendence';
 import { REPEATABLES, repeatableCost } from '../data/repeatables';
 import { fulfillContract } from './contracts';
 import type { TickReport } from '../types';
 import { newGame } from './state';
+import { chooseDoctrine } from './doctrines';
+import { crewAvailable, toggleCrew } from './crew';
 
 export interface Milestone { id: string; at: number }
 
@@ -62,6 +64,11 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
   for (const u of UPGRADES) {
     if (isUpgradeVisible(u, s) && canAfford(s, u.cost)) s = buyUpgrade(s, u.id) ?? s;
   }
+
+  // Doutrinas: um rumo fixo (indústria, ciência e colônias); conselho: preenche as vagas na ordem de chegada.
+  for (const [axis, opt] of [['base', 'manufacture'], ['society', 'technocracy'], ['destiny', 'colonial']]) s = chooseDoctrine(s, axis, opt) ?? s;
+  s = checkStory(s).state;                                     // o Arquivo traz os conselheiros
+  for (const c of crewAvailable(s)) if (!s.crew.active.includes(c.id)) s = toggleCrew(s, c.id) ?? s;
 
   // Jazida: prospecta quando não sobra veio e fura o mais útil (titânio e cristais enquanto faltam para construir).
   // Quem aparece raramente não compensa: o veio dura ~15 min e a prospecção custaria parte das economias a cada visita.

@@ -307,10 +307,14 @@ body.reduce-motion .card.mega.endless .card-art { animation: none; }
 .map-node:hover img, .map-node.sel img { transform: scale(1.25); }
 .map-node.colony img { filter: drop-shadow(0 0 8px rgba(0, 229, 255, .95)); }
 .map-node.terra img { filter: drop-shadow(0 0 9px rgba(76, 175, 80, .95)); }
+/* Anéis só em volta do planeta (o botão inclui o nome e o selo, então um círculo no botão ficava oval e cobria o texto). */
 .map-node.disputed::before, .map-node[style*="--faction"]:not(.colony)::before {
-  content: ''; position: absolute; inset: 0; border: 2px dashed var(--faction, transparent); border-radius: 50%; animation: spin 14s linear infinite; pointer-events: none;
+  content: ''; position: absolute; top: 4px; left: calc(50% - 25px); width: 50px; height: 50px; border: 2px dashed var(--faction, transparent); border-radius: 50%; animation: spin 14s linear infinite; pointer-events: none;
 }
-.map-node.sel::after { content: ''; position: absolute; inset: -4px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 12px #fff; pointer-events: none; }
+.map-node.sel img { filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 10px rgba(255, 255, 255, .8)); }
+.map-node.sel .map-label { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.map-node:focus { outline: none; }
+.map-node:focus-visible .map-label { outline: 2px solid var(--c-gold); outline-offset: 2px; }
 .map-node.working .map-badge { background: var(--c-warm); animation: pulse 1.2s ease-in-out infinite; }
 .map-badge { position: absolute; top: 0; right: 0; min-width: 18px; padding: 0 4px; background: var(--c-accent); color: #00131a; font-size: 14px; border-radius: 9px; }
 .map-node.pending { cursor: default; animation: pulse 1.6s ease-in-out infinite; }
@@ -359,7 +363,7 @@ body.reduce-motion .card.mega.endless .card-art { animation: none; }
 .ending-text.dim { opacity: .75; font-size: 18px; }
 .ending-stats { margin: 12px auto; max-width: 420px; }
 .ending-actions { justify-content: center; }
-@media (max-width: 860px) { .map-legend { display: none; } .map-label { font-size: 13px; } .map-node img { width: 34px; height: 34px; } }
+@media (max-width: 860px) { .map-legend { display: none; } .map-label { font-size: 13px; } .map-node img { width: 34px; height: 34px; } .map-node.disputed::before, .map-node[style*="--faction"]:not(.colony)::before { width: 40px; height: 40px; left: calc(50% - 20px); } }
 
 /* Cartões largos: botão embaixo, texto com a largura toda */
 .card.faction, .card.mega { grid-template-columns: auto minmax(0, 1fr); }
@@ -1096,3 +1100,60 @@ body.reduce-motion .coach-target { animation: none; }
 
 /* Mapa: o fundo pintado (com sol e planetas desenhados) fica mais apagado para os locais de verdade se destacarem */
 .map-bg { opacity: .4; }
+
+/* ---------- Doutrinas, diretivas, conselho, escavações, jornadas, corrida e planejador ---------- */
+.card.doctrine.on { border-color: var(--c-ok); box-shadow: 0 0 12px rgba(76, 175, 80, .3); }
+.card.doctrine.spot { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+.doctrine-axis { display: flex; flex-direction: column; gap: 6px; }
+
+.card.directive { grid-template-columns: auto minmax(0, 1fr) auto; }
+.card.directive.off { opacity: .6; }
+.card.directive.live { box-shadow: 0 0 12px rgba(76, 175, 80, .35); }
+.directive-rule { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 18px; }
+.directive-rule .kw { color: var(--c-accent); font-family: var(--font-title); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.directive-rule select { font: inherit; font-size: 17px; background: rgba(4, 8, 22, .9); color: #e6fbff; border: 1px solid var(--hud-line-strong); padding: 2px 4px; max-width: 100%; }
+.directive-foot { flex-basis: 100%; font-size: 15px; }
+
+.card.crew { grid-template-columns: auto minmax(0, 1fr) auto; }
+.card.crew .portrait { float: none; margin: 0; width: 72px; height: 72px; }
+.card.crew.on { border-color: var(--c-ok); box-shadow: 0 0 12px rgba(76, 175, 80, .3); }
+.card.crew small { display: block; font-size: 15px; }
+
+.dig { padding: 0 6px 6px; display: flex; flex-direction: column; gap: 4px; }
+.dig .section.sub { display: flex; align-items: center; gap: 6px; }
+.map-site { position: absolute; bottom: 14px; right: -2px; color: var(--c-gold); font-size: 16px; text-shadow: 0 0 8px var(--c-gold); }
+.map-site.working { animation: pulse 1.2s ease-in-out infinite; }
+.lg.site { font-style: normal; color: var(--c-gold); background: none !important; border: 0 !important; width: auto !important; }
+
+.journeys-chart svg path.prev { stroke: rgba(255, 179, 71, .6); stroke-dasharray: 3 2; }
+.chart-legend { margin: 2px 0 0; font-size: 14px; color: #6f93aa; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.chart-legend .swatch { display: inline-block; width: 14px; height: 3px; background: var(--c-accent); }
+.chart-legend .swatch.prev { background: rgba(255, 179, 71, .8); }
+.stats-table.marks thead td, .stats-table.marks thead th { color: #6f93aa; font-size: 15px; }
+.stats-table.marks td { white-space: nowrap; }
+
+.card.race .race-bars { display: grid; grid-template-columns: auto minmax(0, 1fr) 42px; gap: 4px 8px; align-items: center; margin: 4px 0; font-size: 16px; }
+.card.race .race-bars small { text-align: right; }
+.card.race.won { border-color: var(--c-ok); }
+
+.planner { padding: 6px 8px; background: rgba(6, 12, 30, .45); border: 1px solid var(--hud-line); }
+.planner summary { cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 19px; color: #cfe9f7; }
+.planner[open] summary { margin-bottom: 6px; }
+.planner-table th { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.planner-table small { font-size: 14px; }
+.planner-wrap { padding-top: 0; }
+@media (max-width: 860px) {
+  .directive-rule select { min-height: 40px; font-size: 18px; }
+  .card.crew .portrait { width: 56px; height: 56px; }
+}
+.map-legend .lg.site { height: auto; margin-right: 2px; }
+
+/* Vista da cena: base de mineração ou planeta dos colonos */
+.scene-switch { position: absolute; top: 10px; right: 10px; z-index: 5; display: flex; gap: 4px; }
+.scene-switch .btn { display: inline-flex; align-items: center; gap: 4px; background: rgba(4, 8, 22, .85); }
+.civ-hud { position: absolute; left: 10px; bottom: 10px; z-index: 3; display: flex; flex-direction: column; gap: 2px; max-width: min(320px, calc(100% - 20px));
+  padding: 6px 10px; background: rgba(4, 8, 22, .82); border: 1px solid var(--hud-line); font-size: 17px; color: #dff6ff; pointer-events: none; }
+.civ-hud b { color: var(--c-accent); font-size: 18px; }
+.civ-hud .bar { height: 6px; margin-top: 2px; }
+.civ-hud .bar > div { height: 100%; background: var(--c-accent); }
+@media (max-width: 860px) { .civ-hud { font-size: 15px; } .scene-switch .btn { min-height: 36px; } }

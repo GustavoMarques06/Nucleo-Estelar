@@ -62,4 +62,13 @@ export const EXTRA_KEYS: string[] = [
   'Colônia fundada!', 'Terraformação iniciada.', 'Transcendência concluída. Uma nova era começa.',
   'Recursos insuficientes para essa escolha.', 'Não foi possível salvar neste navegador. Exporte o save em Opções.',
   'Rota segurada: imune a bloqueios.', 'Crise resolvida.', 'Rota comercial aberta.', 'Contrato cumprido!',
+  // Registro (abas novas), diretivas, corrida, sítios e motivos de ações negadas
+  'Relíquias', 'Jornadas',
+  'estoque acima de', 'estoque abaixo de', 'falta energia', 'sobra energia (20% ou mais)', 'vender o excedente de', 'mudar o ritmo de',
+  'Colônias +15% e preço de venda +5% até a Ascensão, e +250 de influência.',
+  'Pedágio no portal da rival: expedições 15% mais caras e lentas até a Ascensão.',
+  'Ruínas dos Acendedores', 'Câmara de cristal', 'Destroço antigo', 'Farol apagado',
+  'Este sítio já foi escavado.', 'Etapa em andamento.', 'Faltam créditos, combustível ou naves.',
+  'A rival já está atenta: não dá para atrasar mais.',
+  'O {faccao} também constrói um portal. Termine o seu Portal estelar primeiro.', 'A {faccao} também constrói um portal. Termine o seu Portal estelar primeiro.',
 ];

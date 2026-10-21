@@ -27,6 +27,11 @@ export const GUIDE: GuideEntry[] = [
     'Depois de pesquisar Geologia você pode prospectar veios: reservas finitas que rendem mais e trazem minérios novos. Um veio dura cerca de 15 minutos de extração; esgotado, a extração volta sozinha para a crosta.',
     'O Veio instável rende ×3 mas desmorona em ~3 minutos. O Veio profundo é enorme, mas só a Perfuratriz profunda o alcança (as outras máquinas e os cliques continuam na crosta).',
     'De vez em quando um ponto brilhante aparece no asteroide: clique antes que suma para ganhar uma boa quantidade de minério de uma vez.',
+    'Às vezes o ponto brilhante abre uma fissura: três rachaduras azuis, uma depois da outra, cada uma por poucos segundos e rendendo mais que a anterior. Acertando as três, com Geologia, a fissura revela um veio de graça.',
+  ] },
+  { id: 'planner', title: 'Planejador de cadeia', icon: 'icon-tool', text: [
+    'Na aba Indústria, o Planejador diz quantas estruturas de cada elo sustentam uma quantidade de qualquer máquina, do minério ao produto, com os bônus e as receitas de agora.',
+    'Ele não conta o que as outras estruturas já consomem: serve para planejar uma linha nova do zero.',
   ] },
   { id: 'chain', title: 'Cadeias de produção', icon: 'building-refinery', text: [
     'Minério vira liga (refinaria/fundição), liga + cobre vira componente (fábrica). Quanto mais processado, mais vale.',
@@ -37,6 +42,14 @@ export const GUIDE: GuideEntry[] = [
   { id: 'research', title: 'Pesquisa e ciência', icon: 'nav-research', text: [
     'As primeiras pesquisas custam créditos. Depois entra a ciência, produzida por Observatórios, Universidades e colônias.',
     'A aba Pesquisa pisca quando há algo para pesquisar. As pesquisas contínuas não têm nível máximo.',
+  ] },
+  { id: 'doctrines', title: 'Doutrinas', icon: 'nav-industry', text: [
+    'Em três pontos da jornada (Metalurgia avançada, Habitats pressurizados e Exploração estelar) a aba Pesquisa oferece três rumos. Cada um tem um ganho e um preço.',
+    'A escolha vale até a próxima Ascensão e não pode ser trocada antes. Jornadas diferentes podem seguir rumos diferentes.',
+  ] },
+  { id: 'directives', title: 'Diretivas', icon: 'icon-chip', text: [
+    'Com a IA operacional, a aba Logística aceita até seis regras “se … então …”: se o estoque passar de um limite, se faltar ou sobrar energia, então vender o excedente ou mudar o ritmo de uma estrutura.',
+    'A base cumpre as regras sozinha a cada segundo, também com o jogo fechado. Elas ficam entre as jornadas.',
   ] },
   { id: 'people', title: 'População e trabalhadores', icon: 'nav-civilization', text: [
     'Colonos precisam de moradia e comida. Pagam impostos e ocupam as vagas das estruturas grandes: sem gente, elas rendem menos.',
@@ -72,6 +85,18 @@ export const GUIDE: GuideEntry[] = [
     'Aliados em diante recebem, a cada 3 pedidos, uma missão de honra: três vezes maior e mais longa, mas com recompensa quádrupla e um prêmio que só aquela facção tem (exóticos, módulos, titânio).',
     'De tempos em tempos as facções movem as fronteiras: as de relação baixa reivindicam locais livres (e fundar neles custa mais); aliadas às vezes liberam o que já reivindicavam. Cada facção também tem a sua história no Diário, em quatro capítulos.',
   ] },
+  { id: 'crew', title: 'Conselho', icon: 'icon-radar', text: [
+    'As vozes do Arquivo (ECO, Mira Vael, Brokk Tarn e a Almirante Sera Oss) viram conselheiros quando a transmissão delas chega. Na aba Civilização, convoque-os para as vagas do conselho: duas, e três depois da primeira Ascensão.',
+    'Só quem está na ativa dá bônus e ganha experiência (também offline). O nível nunca se perde, nem na Ascensão.',
+  ] },
+  { id: 'digs', title: 'Sítios de anomalia e relíquias', icon: 'crystal-cyan', text: [
+    'Cerca de um em cada cinco locais descobertos guarda um sítio de anomalia (✦ no Mapa). Escavar leva três etapas pagas com créditos, combustível e uma nave.',
+    'A última etapa entrega uma relíquia dos Acendedores: um bônus pequeno e permanente, que fica mesmo depois da Ascensão e da Transcendência. São doze; com todas achadas, os sítios rendem material raro.',
+  ] },
+  { id: 'race', title: 'Corrida pelo Portal', icon: 'mega-gate', text: [
+    'Quando os megaprojetos são liberados, a facção com a relação mais fria começa o próprio portal. Terminar o seu Portal estelar antes dá um bônus até a Ascensão; perder só encarece as expedições.',
+    'A influência compra campanhas de atraso, mas a facção rival percebe e a relação cai.',
+  ] },
   { id: 'events', title: 'Eventos e histórias', icon: 'event-comet', text: [
     'Eventos espaciais surgem de tempos em tempos com escolhas rápidas. Alguns começam histórias de dois ou três capítulos: o que você escolhe decide se e quando a continuação aparece, alguns minutos depois (o jogo avisa quando ela chega).',
     'As escolhas ficam lembradas durante a jornada: uma pessoa que você ajudou antes pode retribuir depois. Cada história só começa uma vez por jornada.',
@@ -83,6 +108,10 @@ export const GUIDE: GuideEntry[] = [
   { id: 'challenges', title: 'Desafios de Ascensão', icon: 'icon-trophy', text: [
     'Depois da primeira Ascensão, você pode começar a jornada seguinte com uma regra especial: sem comércio, sem colônias, energia racionada… Chegue de novo à Ascensão com a regra valendo e ganhe uma melhoria permanente (uma vez por desafio).',
     'Abandonar um desafio não custa nada. Cada desafio fica marcado como concluído na aba Ascensão.',
+  ] },
+  { id: 'weekly', title: 'Desafio da semana e jornadas', icon: 'icon-clock', text: [
+    'Toda segunda-feira a semana sorteia uma vantagem e um revés, iguais para todo mundo. Ao ascender, escolha a jornada da semana: chegando de novo à Ascensão, ela rende 25% a mais de Dados e o tempo fica guardado.',
+    'Em Registro → Jornadas, a linha do tempo mostra quando cada marco chegou nesta jornada e nas anteriores, com a curva de créditos para comparar.',
   ] },
   { id: 'legacy', title: 'Ascensão e Transcendência', icon: 'icon-star', text: [
     'A Ascensão recomeça a jornada em troca de Dados de Ascensão, que compram melhorias permanentes. Cada jornada fica mais rápida.',

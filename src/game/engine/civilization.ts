@@ -25,7 +25,7 @@ export const ERAS: EraDef[] = [
   { id: 'metropolis', name: 'Metrópole', at: 2500, sprite: 'era-metropolis',
     desc: 'Torres, rotas e turnos que nunca terminam. A cidade não dorme mais.' },
   { id: 'arcology', name: 'Arcologia', at: 25000, sprite: 'era-arcology',
-    desc: 'Cidades-torre que se bastam. Gerações inteiras nascem sem ver o chão do asteroide.' },
+    desc: 'Cidades-torre que se bastam. Gerações inteiras nascem sem ver o chão de Aurora.' },
   { id: 'ecumene', name: 'Ecumenópole', at: 250000, sprite: 'era-ecumene',
     desc: 'Um mundo inteiro é uma única cidade, com bairros do tamanho de países.' },
   { id: 'stellar', name: 'Civilização Estelar', at: 500000, sprite: 'era-stellar', extra: s => s.transcendence.count >= 1,

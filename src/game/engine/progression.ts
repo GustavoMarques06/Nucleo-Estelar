@@ -19,6 +19,9 @@ import { LORE } from '../data/lore';
 import { eraIndex } from './civilization';
 import { challengeBlocks, challengeMet } from './challenges';
 import { CHALLENGE_BY_ID } from '../data/challenges';
+import { archiveJourney } from './timeline';
+import { recordWeekly, weekOf } from './weekly';
+import { WEEKLY_BONUS } from '../data/weekly';
 
 // ---------- Megaprojetos ----------
 export const megaprojectsUnlocked = (s: GameState) => !!s.upgrades.megaEngineering;
@@ -81,11 +84,14 @@ export function buildMegaStage(prev: GameState, id: string): GameState | null {
 // ---------- Ascensão ----------
 export const ascensionUnlocked = (s: GameState) => !!s.upgrades.ascensionProject || s.ascension.count > 0;
 export const pendingAscension = (s: GameState) =>
-  Math.floor(ascensionGain(s.stats.earned) * (1 + 0.3 * (s.transcendence.perks.seedAsc ?? 0)));
+  Math.floor(ascensionGain(s.stats.earned) * (1 + 0.3 * (s.transcendence.perks.seedAsc ?? 0)) * (s.weekly.active !== null ? WEEKLY_BONUS : 1));
 export const canAscend = (s: GameState) => !!s.upgrades.ascensionProject && pendingAscension(s) > 0;
 
 /** Recomeça a jornada mantendo Dados de Ascensão, melhorias permanentes, catálogo e opções. */
-/** `next`: desafio escolhido para a próxima jornada (null/omitido = jornada normal). Ascender com um desafio cumprido o conclui. */
+/**
+ * `next`: desafio escolhido para a próxima jornada (null/omitido = jornada normal; 'weekly' = desafio da semana de `now`).
+ * Ascender com um desafio cumprido o conclui.
+ */
 export function ascend(prev: GameState, now = Date.now(), next: string | null = null): GameState | null {
   if (!canAscend(prev)) return null;
   const gainPts = pendingAscension(prev);
@@ -122,8 +128,21 @@ export function ascend(prev: GameState, now = Date.now(), next: string | null = 
   const done = [...prev.challenges.done];
   if (prev.challenges.active && challengeMet(prev) && !done.includes(prev.challenges.active)) done.push(prev.challenges.active);
   s.challenges = { active: next && CHALLENGE_BY_ID[next] && !done.includes(next) ? next : null, done };
+  keepLegacy(prev, s);
+  s.weekly = {
+    active: next === 'weekly' ? weekOf(now) : null,
+    records: prev.weekly.active !== null ? recordWeekly(prev.weekly.records, prev.weekly.active, Math.round(prev.stats.playTime)) : prev.weekly.records.map(r => ({ ...r })),
+  };
   applyStartBonuses(s);
   return s;
+}
+
+/** O que atravessa qualquer recomeço: conselho, relíquias, diretivas e a linha do tempo das jornadas. */
+function keepLegacy(prev: GameState, s: GameState) {
+  s.crew = { xp: { ...prev.crew.xp }, active: [...prev.crew.active] };
+  s.relics = [...prev.relics];
+  s.directives = prev.directives.map(d => ({ ...d, when: { ...d.when }, then: { ...d.then }, fired: 0 }));
+  s.timeline = archiveJourney(prev);
 }
 
 /** Bônus de início de jornada vindos das melhorias permanentes. */
@@ -273,6 +292,8 @@ export function transcend(prev: GameState, now = Date.now()): GameState | null {
   s.integrity = { ...prev.integrity };                             // a marca de save modificado também
   s.flags = prev.flags.filter(f => f.startsWith('ending-'));      // a escolha final vale para sempre
   s.challenges = { active: null, done: [...prev.challenges.done] };
+  keepLegacy(prev, s);
+  s.weekly = { active: null, records: prev.weekly.records.map(r => ({ ...r })) };
   s.stats.lifetimeEarned = prev.stats.lifetimeEarned + prev.stats.earned;
   s.stats.contractsDone = prev.stats.contractsDone;
   s.stats.eventsSeen = prev.stats.eventsSeen;

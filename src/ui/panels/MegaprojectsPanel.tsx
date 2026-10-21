@@ -7,6 +7,7 @@ import { fmt } from '../../game/engine/format';
 import { Icon } from '../Icon';
 import { Tx } from '../../i18n/Tx';
 import { t } from '../../i18n';
+import { RaceCard } from './RaceCard';
 
 function MegaCard({ mp }: { mp: MegaprojectDef }) {
   const game = useGame(s => s.game);
@@ -70,6 +71,7 @@ export function MegaprojectsPanel() {
       <p className="hint">
         <Tx k="Obras colossais com bônus permanentes nesta jornada. Os materiais são entregues aos poucos: cada contribuição envia o que houver em estoque. O <b>Núcleo Estelar</b> nunca termina." />
       </p>
+      <RaceCard />
       {MEGAPROJECTS.map(mp => <MegaCard key={mp.id} mp={mp} />)}
     </div>
   );

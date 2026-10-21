@@ -7,6 +7,7 @@ import { BuildingList, BuyAmountPicker, CostList } from './BuildingsPanel';
 import { REPEATABLES, repeatableCost } from '../../game/data/repeatables';
 import { t } from '../../i18n';
 import { useSpotTarget } from '../spotlight';
+import { DoctrinesSection } from './DoctrinesSection';
 
 const PHASES: Record<number, string> = {
   1: 'Fase 1 · Sobrevivência industrial', 2: 'Fase 2 · Autossuficiência energética', 3: 'Fase 3 · Indústria avançada',
@@ -29,6 +30,7 @@ export function UpgradesPanel() {
   return (
     <div className="panel-body">
       {game.upgrades.lab && <><BuyAmountPicker /><BuildingList category="science" title={t('Laboratórios · geram ciência')} /></>}
+      <DoctrinesSection />
       <h4 className="section">{t('Árvore de pesquisa')}</h4>
       {available.length === 0 && <p className="hint">{t('Nenhuma pesquisa disponível agora. Expanda a operação para liberar novas.')}</p>}
       {phases.map(p => (

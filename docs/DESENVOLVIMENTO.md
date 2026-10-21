@@ -78,6 +78,15 @@ os painéis e o conselheiro funcionam a partir desses dados.
 | Salvamento seguro: backup, exportar/importar, recuperação | — | `engine/save.ts`, `ui/panels/OptionsPanel.tsx` |
 | Dicas de primeira vez | `data/tips.ts` | `ui/Tips.tsx` |
 | Efeitos sonoros (Web Audio, sem arquivos) | — | `src/audio/` (sfx.ts, music.ts) |
+| Doutrinas: 3 eixos, uma escolha por jornada | `data/doctrines.ts` | `engine/doctrines.ts`, `ui/panels/DoctrinesSection.tsx` |
+| Diretivas "se … então …" (rodam dentro da simulação, também offline) | — | `engine/directives.ts`, `ui/panels/DirectivesSection.tsx` |
+| Conselho: conselheiros com nível permanente | `data/crew.ts` | `engine/crew.ts`, `ui/panels/CrewSection.tsx` |
+| Sítios de anomalia, escavações e relíquias | `data/relics.ts` | `engine/digs.ts`, `ui/panels/DigBox.tsx` |
+| Linha do tempo das jornadas (marcos e curva de créditos) | `data/timeline.ts` | `engine/timeline.ts`, `ui/panels/JourneysSection.tsx` |
+| Corrida pelo Portal estelar contra a facção mais fria | `data/race.ts` | `engine/race.ts`, `ui/panels/RaceCard.tsx` |
+| Desafio da semana (regra sorteada pela data) | `data/weekly.ts` | `engine/weekly.ts`, `ui/panels/AscensionPanel.tsx` |
+| Fissuras (sequência depois de um ponto brilhante) | `data/balance.ts` | `engine/economy.ts`, `render/GameScene.ts` |
+| Planejador de cadeia | — | `engine/planner.ts`, `ui/panels/PlannerSection.tsx` |
 
 ### O jogo é infinito
 

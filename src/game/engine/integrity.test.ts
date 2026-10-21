@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { newGame, SAVE_VERSION } from './state';
+import { newGame, SAVE_VERSION, SIGNED_SINCE } from './state';
 import { parseSave, saveSignature, serialize } from './save';
 import { ascend } from './progression';
 
@@ -34,7 +34,7 @@ describe('integridade do save', () => {
   it('saves antigos, de antes da assinatura, são aceitos sem marca', () => {
     const d = JSON.parse(serialize(game()));
     delete d.sig;
-    d.version = SAVE_VERSION - 1;
+    d.version = SIGNED_SINCE - 1;
     expect(saveSignature(JSON.stringify(d))).toBe('legacy');
     expect(parseSave(JSON.stringify(d))!.integrity.tampered).toBe(false);
   });

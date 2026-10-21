@@ -81,6 +81,7 @@ function render(data, w, label, comps, ids, box) {
 }
 
 const sheetCache = new Map();
+const maskCache = new Map();
 async function loadSheet(key) {
   if (sheetCache.has(key)) return sheetCache.get(key);
   const { data, info } = await sharp(path.join(ROOT, 'Assets', man.sheets[key])).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -113,8 +114,15 @@ async function extractItem(item) {
     await img.jpeg({ quality: 88 }).toFile(path.join(dir, item.name + '.jpg'));
     return [item.name];
   }
-  const rect = item.rect ? [item.rect[0], item.rect[1], item.rect[0] + item.rect[2], item.rect[1] + item.rect[3]] : [0, 0, sh.w, sh.h];
-  const bg = magentaMask(sh.data, sh.w, sh.h, item.key || man.key || {});
+  // Limitado à prancha: um retângulo que passa da borda fazia o preenchimento girar para sempre fora da imagem.
+  const rect = item.rect
+    ? [Math.max(0, item.rect[0]), Math.max(0, item.rect[1]), Math.min(sh.w, item.rect[0] + item.rect[2]), Math.min(sh.h, item.rect[1] + item.rect[3])]
+    : [0, 0, sh.w, sh.h];
+  // A máscara do fundo é a mesma para todos os itens de uma prancha: calculada uma vez só (antes era por item, e demorava minutos).
+  const maskKey = `${item.sheet}|${JSON.stringify(item.key || man.key || {})}`;
+  let bg = maskCache.get(maskKey);
+  if (!bg) { bg = magentaMask(sh.data, sh.w, sh.h, item.key || man.key || {}); maskCache.set(maskKey, bg); }
+  if (item.silhouette) { bg = new Uint8Array(sh.w * sh.h); }
   if (item.silhouette) for (let i = 0; i < sh.w * sh.h; i++) {
     const avg = (sh.data[i * 4] + sh.data[i * 4 + 1] + sh.data[i * 4 + 2]) / 3;
     bg[i] = avg > 70 ? 1 : 0;           // só o preto da silhueta conta
@@ -161,14 +169,18 @@ if (di > 0) {
 }
 
 // ---------- Execução ----------
+// --only <regex>: recorta só os sprites cujo nome casa (ex.: --only "^(base-|fx-)"), sem refazer o resto.
+const oi = process.argv.indexOf('--only');
+const only = oi > 0 ? new RegExp(process.argv[oi + 1]) : null;
+const wanted = (name) => !only || [name].flat().some(n => n && only.test(n));
 let count = 0;
-for (const item of man.items || []) { count += (await extractItem(item)).length; }
+for (const item of man.items || []) { if (wanted(item.name)) count += (await extractItem(item)).length; }
 for (const g of man.grids || []) {
   const sh = await loadSheet(g.sheet);
   const [ax, ay, aw, ah] = g.area || [0, 0, sh.w, sh.h];
   const cw = aw / g.cols, ch = ah / g.rows, ins = g.inset ?? 0;
   for (const [k, name] of g.names.entries()) {
-    if (!name) continue;
+    if (!name || !wanted(name)) continue;
     const col = k % g.cols, row = Math.floor(k / g.cols);
     const insB = Array.isArray(g.insetB) ? g.insetB[row] : (g.insetB ?? ins);
     const rect = [Math.round(ax + col * cw + ins), Math.round(ay + row * ch + ins), Math.round(cw - 2 * ins), Math.round(ch - ins - insB)];
@@ -180,6 +192,7 @@ for (const g of man.grids || []) {
 // Faixas de quadros: cada centro x gera um quadro  <prefix>-1, <prefix>-2, …
 for (const s of man.strips || []) {
   for (const [k, cx] of s.xCenters.entries()) {
+    if (!wanted(`${s.prefix}-${k + 1}`)) continue;
     const rect = [Math.round(cx - s.cellW / 2), s.y[0], s.cellW, s.y[1] - s.y[0]];
     count += (await extractItem({ ...s, name: `${s.prefix}-${k + 1}`, rect })).length;
   }
@@ -188,6 +201,7 @@ for (const s of man.strips || []) {
 const ART = path.join(ROOT, 'public/assets/art');
 fs.mkdirSync(ART, { recursive: true });
 for (const p of man.photos || []) {
+  if (only) continue;
   await sharp(path.join(ROOT, 'Assets', p.file)).resize({ width: p.width, height: p.height, fit: 'cover', position: 'center' }).jpeg({ quality: 86 }).toFile(path.join(ART, p.out));
 }
 console.log(`${count} sprites (fundo magenta) extraídos para public/assets/sprites`);

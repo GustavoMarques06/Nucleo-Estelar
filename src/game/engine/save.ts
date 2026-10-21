@@ -1,4 +1,4 @@
-import type { Buff, Category, Effect, GameState, Location, LocationType, ResId, Specialization } from '../types';
+import type { Buff, BuildingId, Category, Directive, DirectiveDo, DirectiveWhen, Effect, GameState, JourneyRecord, Location, LocationType, ResId, Specialization } from '../types';
 import { RES_IDS, RESOURCES } from '../data/resources';
 import { BUILDINGS, BUILDING_IDS } from '../data/buildings';
 import { UPGRADES } from '../data/upgrades';
@@ -26,6 +26,15 @@ import { newGame, SAVE_VERSION, SIGNED_SINCE } from './state';
 import { checkSignature, withSignature } from './integrity';
 import { terraformable, uniqueName } from './expansion';
 import { PROTECTABLE, THROTTLE_STEPS, prioritizable, throttleable } from './energy';
+import { DOCTRINE_AXES } from '../data/doctrines';
+import { DIRECTIVE_MAX, validDo, validWhen } from './directives';
+import { CREW, CREW_BY_ID, CREW_MAX_LEVEL, crewXpFor } from '../data/crew';
+import { crewSeats } from './crew';
+import { DIG_MAX, DIG_STAGES, RELIC_BY_ID } from '../data/relics';
+import { hasAnomaly } from './digs';
+import { PAST_MAX, SAMPLE_EVERY, SAMPLE_MAX, TIMELINE_MARKS } from '../data/timeline';
+import { RACE_DELAY_MAX } from '../data/race';
+import { WEEKLY_RECORDS_MAX } from '../data/weekly';
 
 const KEY = 'nucleo-estelar/save';
 const BACKUP_KEY = KEY + '.bak';            // cópia de segurança (a cada ~10 min)
@@ -68,6 +77,25 @@ function parseLocation(x: unknown): Location | null {
     } : null,
   };
 }
+
+function parseWhen(x: unknown): DirectiveWhen | null {
+  const d = obj(x), kind = str(d.kind);
+  const w = (kind === 'above' || kind === 'below' ? { kind, res: str(d.res) as ResId, frac: num(d.frac, 0, 1) } : { kind }) as DirectiveWhen;
+  return validWhen(w) ? w : null;
+}
+
+function parseDo(x: unknown): DirectiveDo | null {
+  const d = obj(x), kind = str(d.kind);
+  const a = (kind === 'sell' ? { kind, res: str(d.res) as ResId } : { kind, building: str(d.building) as BuildingId, value: num(d.value, 0, 1) }) as DirectiveDo;
+  return validDo(a) ? a : null;
+}
+
+const markMap = (x: unknown): Record<string, number> => {
+  const d = obj(x), out: Record<string, number> = {};
+  for (const m of TIMELINE_MARKS) if (typeof d[m.id] === 'number') out[m.id] = num(d[m.id], -1, 1e9);
+  return out;
+};
+const samples = (x: unknown, max: number) => arr(x).slice(0, max).map(v => num(v, -1, 1000));
 
 function parseBuff(x: unknown): Buff | null {
   const d = obj(x);
@@ -239,6 +267,46 @@ export function parseSave(raw: string): GameState | null {
     if (v > 0) s.ascension.perks[id] = v;
   }
 
+  // Doutrinas, diretivas, escavações, relíquias, linha do tempo, corrida e semana (versão 16).
+  const doc = obj(d.doctrines);
+  for (const a of DOCTRINE_AXES) if (a.options.some(o => o.id === doc[a.id])) s.doctrines[a.id] = doc[a.id] as string;
+  s.directives = arr(d.directives).slice(0, DIRECTIVE_MAX).flatMap(x => {
+    const r = obj(x), when = parseWhen(r.when), then = parseDo(r.then);
+    return when && then ? [{ id: str(r.id, 'd'), when, then, on: r.on !== false, fired: Math.floor(num(r.fired, 0, 1e12)) } as Directive] : [];
+  }).filter((x, i, all) => all.findIndex(o => o.id === x.id) === i);
+  const locIds = new Set(s.locations.map(l => l.id));
+  s.dug = [...new Set(arr(d.dug).map(x => str(x)).filter(id => locIds.has(id)))];
+  s.digs = arr(d.digs).slice(0, DIG_MAX).flatMap(x => {
+    const g = obj(x), loc = s.locations.find(l => l.id === str(g.locId));
+    if (!loc || !hasAnomaly(loc) || s.dug.includes(loc.id)) return [];
+    const total = num(g.total, 1, 1e5);
+    return [{ locId: loc.id, stage: Math.floor(num(g.stage, 0, DIG_STAGES.length - 1)), remaining: num(g.remaining, 0, total), total }];
+  }).filter((x, i, all) => all.findIndex(o => o.locId === x.locId) === i);
+  s.relics = [...new Set(arr(d.relics).map(x => str(x)).filter(id => id in RELIC_BY_ID))];
+  const tl = obj(d.timeline);
+  s.timeline = {
+    marks: markMap(tl.marks),
+    samples: samples(tl.samples, SAMPLE_MAX),
+    past: arr(tl.past).slice(-PAST_MAX).map((x): JourneyRecord => {
+      const j = obj(x);
+      return { n: Math.floor(num(j.n, 0, 1e6)), time: num(j.time, 0, 1e9), earned: num(j.earned), marks: markMap(j.marks), samples: samples(j.samples, SAMPLE_MAX + 1) };
+    }),
+  };
+  const race = obj(d.race);
+  if (str(race.faction) in FACTION_BY_ID) {
+    s.race = { faction: str(race.faction), progress: num(race.progress, 0, 1), result: race.result === 'won' || race.result === 'lost' ? race.result : null, delays: Math.floor(num(race.delays, 0, RACE_DELAY_MAX)) };
+  }
+  const wk = obj(d.weekly);
+  s.weekly = {
+    active: typeof wk.active === 'number' && Number.isFinite(wk.active) ? Math.floor(num(wk.active, 0, 1e6)) : null,
+    records: arr(wk.records).slice(-WEEKLY_RECORDS_MAX).map(x => { const r = obj(x); return { week: Math.floor(num(r.week, 0, 1e6)), time: num(r.time, 0, 1e9) }; })
+      .filter((r, i, all) => all.findIndex(o => o.week === r.week) === i),
+  };
+
+  const crew = obj(d.crew), xp = obj(crew.xp);
+  for (const c of CREW) { const v = num(xp[c.id], 0, crewXpFor(CREW_MAX_LEVEL)); if (v > 0) s.crew.xp[c.id] = v; }
+  s.crew.active = [...new Set(arr(crew.active).map(x => str(x)))].filter(id => id in CREW_BY_ID && s.story.includes(CREW_BY_ID[id].joins)).slice(0, crewSeats(s));
+
   s.stats.totalMined = num(stats.totalMined);
   s.stats.earned = num(stats.earned);
   s.stats.lifetimeEarned = num(stats.lifetimeEarned);
@@ -260,6 +328,11 @@ export function parseSave(raw: string): GameState | null {
   if (d.version < 7) s.goals = [...new Set([...s.goals, ...GOALS.filter(g => { const p = g.progress(s); return p.cur >= p.target; }).map(g => g.id)])];
   // Quem já jogava antes do diário não recebe a história inteira de uma vez: o que a partida já cumpre vira "lido".
   if (d.version < 14) s.story = [...new Set([...s.story, ...STORY.filter(e => e.when(s)).map(e => e.id)])];
+  // Saves de antes da linha do tempo: o que já aconteceu fica "sem registro" (−1) em vez de ganhar a hora de agora.
+  if (d.version < 16) {
+    for (const m of TIMELINE_MARKS) if (m.when(s)) s.timeline.marks[m.id] = -1;
+    s.timeline.samples = Array.from({ length: Math.min(SAMPLE_MAX, Math.floor(s.stats.playTime / SAMPLE_EVERY)) }, () => -1);
+  }
   s.savedAt = num(d.savedAt, 0, 8.64e15) || Date.now();
   // Integridade: a marca é permanente; uma assinatura que não confere marca agora.
   const prevMark = obj(d.integrity);

@@ -18,6 +18,7 @@ import { Icon } from '../Icon';
 import { Tx } from '../../i18n/Tx';
 import { CostList } from './BuildingsPanel';
 import { CrisisBox, RoutesBox } from './ColonyExtras';
+import { DigBox } from './DigBox';
 import { t } from '../../i18n';
 
 export function Yields({ y }: { y: Amounts }) {
@@ -160,6 +161,7 @@ export function LocationCard({ loc }: { loc: Location }) {
         </div>
       )}
       <p className="hint spec-desc">{t(SPECIALIZATIONS.find(sp => sp.id === (loc.outpost?.spec ?? spec))?.desc ?? '')}</p>
+      <DigBox loc={loc} />
     </article>
   );
 }

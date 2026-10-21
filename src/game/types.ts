@@ -214,6 +214,34 @@ export interface AscensionState {
   perks: Record<string, number>;
 }
 
+// ---------- Doutrinas, diretivas, conselho, escavações, linha do tempo, corrida e semana ----------
+/** Diretiva: uma regra "se … então …" que a base cumpre sozinha (pesquisa IA operacional). */
+export type DirectiveWhen =
+  | { kind: 'above'; res: ResId; frac: number }        // estoque acima desta fração do armazém
+  | { kind: 'below'; res: ResId; frac: number }        // estoque abaixo desta fração do armazém
+  | { kind: 'energyShort' }                            // falta energia
+  | { kind: 'energySpare' };                           // sobra pelo menos 20% de energia
+export type DirectiveDo =
+  | { kind: 'sell'; res: ResId }                       // vende o que passar de metade do armazém
+  | { kind: 'throttle'; building: BuildingId; value: number };   // muda o ritmo de uma estrutura
+export interface Directive { id: string; when: DirectiveWhen; then: DirectiveDo; on: boolean; fired: number }
+
+/** Conselho: segundos que cada conselheiro já passou na ativa (o nível sai daí; permanente) e quem está na ativa. */
+export interface CrewState { xp: Record<string, number>; active: string[] }
+
+/** Escavação num sítio de anomalia: `stage` etapas concluídas; `remaining` > 0 = etapa em andamento. */
+export interface Dig { locId: string; stage: number; remaining: number; total: number }
+
+/** Uma jornada registrada: duração, créditos, quando cada marco chegou e a curva de créditos (log10, a cada amostra). */
+export interface JourneyRecord { n: number; time: number; earned: number; marks: Record<string, number>; samples: number[] }
+export interface TimelineState { marks: Record<string, number>; samples: number[]; past: JourneyRecord[] }
+
+/** Corrida pelo Portal estelar contra a facção rival (progresso 0–1 dela). */
+export interface RaceState { faction: string; progress: number; result: 'won' | 'lost' | null; delays: number }
+
+/** Desafio da semana: a semana cuja regra vale na jornada atual (null = nenhuma) e os melhores tempos. */
+export interface WeeklyState { active: number | null; records: { week: number; time: number }[] }
+
 /** Estado persistente (o que vai para o salvamento). */
 export interface GameState {
   version: number;
@@ -262,6 +290,15 @@ export interface GameState {
   eventTimer: number;              // segundos até o próximo evento
   ascension: AscensionState;
   challenges: { active: string | null; done: string[] };   // desafio da jornada atual e os já concluídos (permanentes)
+  doctrines: Record<string, string>;       // doutrina escolhida em cada eixo nesta jornada
+  directives: Directive[];                 // regras de automação (ficam entre jornadas)
+  crew: CrewState;                         // conselheiros (permanente)
+  digs: Dig[];                             // escavações em andamento
+  dug: string[];                           // locais já escavados nesta jornada
+  relics: string[];                        // relíquias encontradas (permanentes)
+  timeline: TimelineState;                 // marcos e curva desta jornada e das anteriores
+  race: RaceState | null;                  // corrida pelo Portal estelar (desta jornada)
+  weekly: WeeklyState;
   stats: {
     totalMined: number;
     produced: Partial<Record<ResId, number>>;
@@ -312,4 +349,6 @@ export interface TickReport {
   population: { cap: number; status: PopStatus; foodNeed: number };
   finishedExpeditions: string[];   // ids de locais descobertos neste passo
   finishedTerraforms: string[];    // ids de locais cuja terraformação subiu de nível neste passo
+  relics: string[];                // relíquias achadas nas escavações neste passo
+  race: 'won' | 'lost' | null;     // a corrida pelo Portal terminou neste passo
 }

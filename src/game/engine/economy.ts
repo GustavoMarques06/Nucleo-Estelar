@@ -17,12 +17,16 @@ import { isHigh, marketFactor, marketUnlocked, quoteSale, saturationOf, unitPric
 import { recover } from '../data/market';
 import { payUpkeep, upkeepBreakdown, upkeepRatio } from './upkeep';
 import { FACTIONS, tierOf } from '../data/factions';
-import { activeMix, autoDeposit, drain, extractionRate } from './deposit';
+import { activeMix, autoDeposit, drain, extractionRate, freeVein } from './deposit';
 import { advanceFactions } from './factions';
 import { challengeBlocks } from './challenges';
 import { addProduced, gain } from './stock';
 import { dayFactor } from './daylight';
 import { advanceOverclock } from './energy';
+import { runDirectives } from './directives';
+import { advanceCrew } from './crew';
+import { advanceDigs } from './digs';
+import { advanceRace } from './race';
 
 const EPS = 1e-9;
 const zero = () => Object.fromEntries(RES_IDS.map(r => [r, 0])) as Record<ResId, number>;
@@ -382,7 +386,16 @@ export function simulate(prev: GameState, dt: number, opts: { flows?: boolean } 
   autoLaunch(s, m);
   t.track?.('expansion');
   runTimers(s, dt);
+  advanceCrew(s, dt);
+  const relics = advanceDigs(s, dt);
+  const race = advanceRace(s, dt);
+  t.track?.('expansion');
   runAutosell(t);
+  runDirectives(s, {
+    caps: t.caps, energy: { ratio: grid.ratio, supply: grid.supply, demand: raw.demand },
+    sell: (res, units) => { const earned = sellUnits(s, m, res, units); gain(s, 'credits', earned, Infinity); return earned; },
+  });
+  t.track?.('trade');
   if (dt > 0) payUpkeep(s, upkeep.total, dt);
   t.track?.('upkeep');
 
@@ -397,7 +410,7 @@ export function simulate(prev: GameState, dt: number, opts: { flows?: boolean } 
     for (const src of FLOW_SOURCES) for (const r of Object.keys(flows[src]) as ResId[]) flows[src][r] = flows[src][r]! / dt;
   }
   const energy = { supply: grid.supply, demand: raw.demand, ratio: grid.ratio, charge: grid.charge, chargeCap: grid.chargeCap, fromBattery: grid.fromBattery, day: dayFactor(s.stats.playTime), converted };
-  return { state: s, report: { delta, flows, upkeep: { rate: upkeep.total, debt: s.debt, ratio: t.upkeepRatio }, status: t.status, energy, workforce: workforce(s), population, finishedExpeditions, finishedTerraforms } };
+  return { state: s, report: { delta, flows, upkeep: { rate: upkeep.total, debt: s.debt, ratio: t.upkeepRatio }, status: t.status, energy, workforce: workforce(s), population, finishedExpeditions, finishedTerraforms, relics, race } };
 }
 
 /** Retira `total` unidades da jazida na mão (cliques e pontos brilhantes): os cliques nunca alcançam um veio restrito. */
@@ -441,6 +454,26 @@ export function goldenStrike(prev: GameState): { state: GameState; gained: Amoun
   const m = getModifiers(s);
   const gained = extractManual(s, m, strikeAmount(s, m));
   return { state: s, gained };
+}
+
+/** Fissura que se abre depois de um ponto brilhante: três rachaduras seguidas, cada uma rende mais que a anterior. */
+const FISSURE_STEPS = [0.5, 1, 2] as const;
+
+export function fissureStrike(prev: GameState, step: number): { state: GameState; gained: Amounts } {
+  const k = FISSURE_STEPS[step];
+  if (k === undefined) return { state: prev, gained: {} };
+  const s = cloneState(prev);
+  const m = getModifiers(s);
+  const gained = extractManual(s, m, strikeAmount(s, m) * k);
+  return { state: s, gained };
+}
+
+/** Fissura completa: com Geologia, um veio de presente (se couber); senão, mais uma leva de minério. */
+export function fissureFinale(prev: GameState): { state: GameState; vein: boolean; gained: Amounts } {
+  const vein = freeVein(prev);
+  if (vein) return { state: vein, vein: true, gained: {} };
+  const r = fissureStrike(prev, 2);
+  return { ...r, vein: false };
 }
 
 export function sell(prev: GameState, res: ResId): { state: GameState; earned: number } {
