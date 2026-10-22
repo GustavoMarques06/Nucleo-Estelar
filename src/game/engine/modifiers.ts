@@ -16,6 +16,7 @@ import { colonyCount } from '../selectors';
 import { dayFactor } from './daylight';
 import { linkDemand } from './grid';
 import { civBonus } from './civilization';
+import { civHousing } from './aptitude';
 import { doctrineEffects } from './doctrines';
 import { crewEffects } from './crew';
 import { weeklyEffects } from './weekly';
@@ -244,6 +245,8 @@ export function housingCap(s: GameState, m = getModifiers(s)): number {
   for (const b of BUILDINGS) if (b.housing) cap += b.housing * s.buildings[b.id] * milestoneOf(m, b.id);
   // Colônias terraformadas também recebem moradores.
   for (const l of s.locations) if (l.outpost?.terra) cap += 30 * l.outpost.terra * l.richness;
+  // Colônias com propósito Civilização são cidades.
+  for (const l of s.locations) cap += civHousing(l);
   return cap * m.popCap;
 }
 

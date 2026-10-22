@@ -132,7 +132,7 @@ export interface Settings {
 
 // ---------- Expansão ----------
 export type LocationType = 'rocky' | 'ice' | 'desert' | 'ocean' | 'jungle' | 'volcanic' | 'alien' | 'gas' | 'metallic' | 'crystal';
-export type Specialization = 'mining' | 'agriculture' | 'science' | 'industry' | 'commerce';
+export type Specialization = 'mining' | 'agriculture' | 'science' | 'industry' | 'commerce' | 'civilization';
 
 export interface Outpost {
   level: number;

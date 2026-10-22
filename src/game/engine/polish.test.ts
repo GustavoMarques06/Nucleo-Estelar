@@ -22,6 +22,7 @@ import { PERKS } from '../data/ascension';
 import { MINERALS } from '../data/minerals';
 import { REPEATABLES } from '../data/repeatables';
 import { TIPS } from '../data/tips';
+import { CAPITAL_SPRITES, TERRA_SPRITES } from './expansion';
 import type { GameState } from '../types';
 
 const SPRITES = path.resolve(__dirname, '../../../public/assets/sprites');
@@ -137,6 +138,8 @@ describe('integridade dos dados', () => {
     ...EVENTS.map(e => ['evento ' + e.id, e.sprite] as [string, string]),
     ...MEGAPROJECTS.flatMap(m => (m.endless ? [m.endless(0), m.endless(30)] : m.stages).map((st, i) => [`mega ${m.id}#${i}`, st.sprite] as [string, string])),
     ...LOCATION_TYPES.flatMap(t => t.sprites.map(sp => ['local ' + t.type, sp] as [string, string])),
+    ...Object.entries(TERRA_SPRITES).flatMap(([type, list]) => list!.map(sp => ['terraformado ' + type, sp] as [string, string])),
+    ...CAPITAL_SPRITES.map(sp => ['capital', sp] as [string, string]),
     ...STAR_PERKS.map(p => ['semente ' + p.id, p.icon] as [string, string]),
     ...PERKS.map(p => ['ascensão ' + p.id, p.icon] as [string, string]),
     ...MINERALS.map(m => ['mineral ' + m.id, m.sprite] as [string, string]),

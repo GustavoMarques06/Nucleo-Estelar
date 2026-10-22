@@ -417,7 +417,7 @@ export const useGame = create<Store>()((set, get) => {
       commit(establishOutpost(get().game, locId, spec, byInfluence), () => { events.emit({ type: 'outpost' }); get().toast('Colônia fundada!'); });
     },
     upgradeOutpost(locId) { commit(upgradeOutpost(get().game, locId), () => events.emit({ type: 'outpost' })); },
-    setSpecialization(locId, spec) { commit(setSpecialization(get().game, locId, spec)); },
+    setSpecialization(locId, spec) { commit(setSpecialization(get().game, locId, spec), () => get().toast('Colônia reconvertida.')); },
 
     buildMega(id) {
       const was = get().game.transcendence.unlocked;

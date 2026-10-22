@@ -1,6 +1,6 @@
 // Jogador automático usado para calibrar e testar a progressão (não faz parte do jogo).
 // Joga de forma razoável, não ótima: se ele avança, um jogador atento também avança.
-import type { BuildingId, GameState, ResId, Specialization } from '../types';
+import type { BuildingId, GameState, Location, ResId, Specialization } from '../types';
 import { BUILDINGS, BUILDING_BY_ID } from '../data/buildings';
 import { UPGRADES } from '../data/upgrades';
 import { LOCATION_BY_TYPE } from '../data/locations';
@@ -11,6 +11,7 @@ import { canAfford, unitCost } from './costs';
 import { capsOf, energyBalance, getModifiers, isBuildingUnlocked, isUpgradeVisible, upgradeRequirementsMet, workforce } from './modifiers';
 import { canLaunch, canTerraform, establishOutpost, launchExpedition, outpostUpgradeCost, startTerraform, upgradeOutpost } from './expansion';
 import { canFulfillQuest, canGift, canLobby, fulfillQuest, giveGift, lobbyFaction } from './factions';
+import { aptitudeOf, bestSpec } from './aptitude';
 import { activeDecree, canEnact, enactDecree } from './decrees';
 import { canAskHelp, crisisCost, resolveCrisis, spawnCrisis } from './crises';
 import { canOpenRoute, openRoute, routeScore } from './routes';
@@ -43,11 +44,12 @@ const PRODUCERS: Partial<Record<ResId, BuildingId[]>> = {
 };
 const ENERGY: BuildingId[] = ['fusion', 'orbitalCollector', 'fission', 'solar'];
 
-function specFor(type: keyof typeof LOCATION_BY_TYPE): Specialization {
-  const y = LOCATION_BY_TYPE[type].yields;
-  if (y.exotic) return 'mining';
-  if (y.science) return 'science';
-  return 'commerce';
+/** A preferência de sempre (minério raro → mineração, ciência → ciência, senão comércio), se o mundo for apto a ela. */
+function specFor(loc: Location): Specialization {
+  const y = LOCATION_BY_TYPE[loc.type].yields;
+  const want: Specialization = y.exotic ? 'mining' : y.science ? 'science' : 'commerce';
+  const apt = aptitudeOf(loc, want);
+  return apt && apt !== 'poor' ? want : bestSpec(loc);
 }
 
 /** Memória do bot entre rodadas: quantas vezes esperou juntar recursos para cada estrutura nova. */
@@ -84,7 +86,7 @@ function botAct(s: GameState, report: TickReport | null, waiting: Waiting, prosp
   // Expansão
   if (canLaunch(s).ok) s = launchExpedition(s) ?? s;
   for (const loc of s.locations) {
-    if (!loc.outpost) s = establishOutpost(s, loc.id, specFor(loc.type)) ?? s;
+    if (!loc.outpost) s = establishOutpost(s, loc.id, specFor(loc)) ?? s;
     else if (canAfford(s, outpostUpgradeCost(loc)) && s.resources.credits > 3 * (outpostUpgradeCost(loc).credits ?? 0)) s = upgradeOutpost(s, loc.id) ?? s;
   }
   // O Núcleo Estelar (infinito) só depois de liberar a Ascensão: ele consome ciência sem limite.

@@ -358,7 +358,7 @@ export class GameScene {
       const { at: [u, v], size } = this.slot(s.id);
       s.sprite.position.set(this.asteroid.x + (u + 0.02) * A, this.asteroid.y + (v - size * 0.72) * A);
       s.sprite.zIndex = 9_000;
-      s.sprite.scale.set((A * 0.075) / s.sprite.texture.width);
+      s.sprite.scale.set((A * 0.11) / s.sprite.texture.width);      // o quadro é mais largo que o puff de fumaça
     }
     this.layoutBaseDecor();
   }
@@ -457,12 +457,17 @@ export class GameScene {
     if (this.asteroid.texture !== tierTex) this.asteroid.texture = tierTex;
     if (layer !== this.layer) { this.layer = layer; this.slots = slotLayout(layer); this.layout(); }
     const baseScale0 = this.asteroidWidth / this.asteroid.texture.width;
+    // O clique amassa o asteroide e tudo que está em cima dele (estruturas, colonos, animações): mesmo centro, mesma escala.
+    this.base.pivot.set(this.asteroid.x, this.asteroid.y);
+    this.base.position.set(this.asteroid.x, this.asteroid.y);
     if (this.squish > 0) {
       this.squish = Math.max(0, this.squish - dt * 6);
       const k = 1 - Math.sin(this.squish * Math.PI) * 0.04;
       this.asteroid.scale.set(baseScale0 * (2 - k), baseScale0 * k);
+      this.base.scale.set(2 - k, k);
     } else {
       this.asteroid.scale.set(baseScale0);
+      this.base.scale.set(1);
     }
     if (!reduce) {
       this.planet.rotation = Math.sin(t * 0.05) * 0.02;
@@ -1209,7 +1214,7 @@ export class GameScene {
         k++;
       }
       if (e.x === undefined) this.squish = 1;
-      else { this.oneShot(ROCKCHIP_FRAMES, x, y + this.asteroidWidth * 0.02, this.asteroidWidth * 0.07, 0.35, 0.3); if (Math.random() < 0.35) this.puff('fx-dust', x, y); }
+      else { this.oneShot(ROCKCHIP_FRAMES, x, y + this.asteroidWidth * 0.02, this.asteroidWidth * 0.09, 0.35, 0.3); if (Math.random() < 0.35) this.puff('fx-dust', x, y); }
     } else if (e.type === 'sold') {
       this.floatText(`+${fmt(e.earned)}`, 'icon-credits', W * 0.5, H * 0.25);
       if (!useGame.getState().game.settings.reduceMotion && this.ships.length < 3) {

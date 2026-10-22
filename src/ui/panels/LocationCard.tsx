@@ -3,14 +3,15 @@ import type { Amounts, Location, ResId, Specialization } from '../../game/types'
 import { useGame } from '../../game/store';
 import { RESOURCES } from '../../game/data/resources';
 import { BALANCE } from '../../game/data/balance';
-import { LOCATION_BY_TYPE, SPECIALIZATIONS } from '../../game/data/locations';
+import { APTITUDE_NAME, LOCATION_BY_TYPE, SPECIALIZATIONS } from '../../game/data/locations';
+import { aptitudeOf, civHousing, locationTraits, specFit, specOptions } from '../../game/engine/aptitude';
 import { FACTION_BY_ID, TREATY_AT } from '../../game/data/factions';
 import { MINERAL_BY_ID } from '../../game/data/minerals';
 import { canAfford } from '../../game/engine/costs';
 import { getModifiers } from '../../game/engine/modifiers';
 import {
   LINK_BONUS, MAX_TERRA, canTerraform, isDisputed, linkCost, linkDemand, linkLoss, linkUnlocked, locationSprite, outpostCost, outpostUpgradeCost, outpostYield,
-  terraformCost, terraformDuration, terraformable,
+  reconvertCost, reconvertLevels, terraformCost, terraformDuration, terraformable,
 } from '../../game/engine/expansion';
 import { fmt, fmtDuration } from '../../game/engine/format';
 import { artUrl } from '../../assets';
@@ -90,12 +91,77 @@ function LinkBox({ loc }: { loc: Location }) {
   );
 }
 
+/** Traços do planeta (sorteados pela semente): o que o torna diferente dos outros do mesmo tipo. */
+function Traits({ loc }: { loc: Location }) {
+  return (
+    <p className="traits">
+      {locationTraits(loc).map(tr => (
+        <span key={tr.id} className="trait" title={t(tr.desc)}>{t(tr.name)} <small>{t(tr.desc)}</small></span>
+      ))}
+    </p>
+  );
+}
+
+/** Lista dos propósitos que este mundo aceita, com aptidão e prévia da produção no nível atual (ou 1). */
+function PurposePicker({ loc, value, onPick, exclude }: { loc: Location; value: Specialization | null; onPick: (sp: Specialization) => void; exclude?: Specialization }) {
+  const game = useGame(s => s.game);
+  const m = getModifiers(game);
+  const level = loc.outpost?.level ?? 1;
+  return (
+    <div className="purposes" role="radiogroup" aria-label={t('Propósito')}>
+      {specOptions(loc).filter(sp => sp !== exclude).map(sp => {
+        const def = SPECIALIZATIONS.find(d => d.id === sp)!;
+        const apt = aptitudeOf(loc, sp)!;
+        const outpost = { level, spec: sp, terra: loc.outpost?.terra ?? 0, terraRemaining: 0, terraTotal: 0 };
+        const y = outpostYield({ ...loc, outpost }, m, game);
+        const housing = civHousing({ ...loc, outpost });
+        return (
+          <button key={sp} type="button" role="radio" aria-checked={value === sp} className={`purpose ${value === sp ? 'sel' : ''}`} onClick={() => onPick(sp)}>
+            <span className="purpose-head">
+              <Icon name={def.icon} size={22} /> {t(def.name)}
+              <span className={`apt apt-${apt}`} title={t('Aptidão deste mundo')}>{t(APTITUDE_NAME[apt])} ×{fmt(specFit(loc, sp))}</span>
+            </span>
+            <Yields y={y} />
+            {housing > 0 && <span className="hint">{t('Moradia +{n}', { n: fmt(housing) })}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Reconversão: muda o propósito pagando caro e perdendo parte dos níveis. */
+function Reconvert({ loc }: { loc: Location }) {
+  const game = useGame(s => s.game);
+  const setSpec = useGame(s => s.setSpecialization);
+  const [open, setOpen] = useState(false);
+  const [pick, setPick] = useState<Specialization | null>(null);
+  const o = loc.outpost!;
+  const cost = reconvertCost(loc);
+  const lose = reconvertLevels(loc);
+  if (specOptions(loc).length < 2) return null;
+  if (!open) return <button className="btn" onClick={() => setOpen(true)}>{t('Reconverter colônia…')}</button>;
+  return (
+    <div className="reconvert">
+      <h4 className="section sub">{t('Reconverter colônia')}</h4>
+      <p className="hint">{lose > 0 ? t('Mudar de propósito custa caro e a colônia volta {n} nível(is) (para o nível {l}).', { n: lose, l: o.level - lose }) : t('Mudar de propósito custa caro.')}</p>
+      <PurposePicker loc={loc} value={pick} onPick={setPick} exclude={o.spec} />
+      <div className="loc-actions">
+        <button className="btn buy" disabled={!pick || !canAfford(game, cost)} onClick={() => { if (pick) { setSpec(loc.id, pick); setOpen(false); setPick(null); } }}>
+          {t('Reconverter')} <CostList cost={cost} have={game.resources} />
+        </button>
+        <button className="btn" onClick={() => { setOpen(false); setPick(null); }}>{t('Cancelar')}</button>
+      </div>
+    </div>
+  );
+}
+
 export function LocationCard({ loc }: { loc: Location }) {
   const game = useGame(s => s.game);
   const establish = useGame(s => s.establishOutpost);
   const upgrade = useGame(s => s.upgradeOutpost);
-  const setSpec = useGame(s => s.setSpecialization);
-  const [spec, setLocalSpec] = useState<Specialization>('mining');
+  // Sem escolha prévia: o jogador decide o propósito antes de fundar.
+  const [spec, setLocalSpec] = useState<Specialization | null>(null);
   const def = LOCATION_BY_TYPE[loc.type];
   const m = getModifiers(game);
   const mineral = MINERAL_BY_ID[loc.mineral];
@@ -103,8 +169,10 @@ export function LocationCard({ loc }: { loc: Location }) {
   const disputed = isDisputed(game, loc);
   const cost = outpostCost(game, loc);
   const influenceCost = outpostCost(game, loc, true);
-  // Prévia da produção com a especialização escolhida (nível 1) antes de fundar.
-  const preview = outpostYield({ ...loc, outpost: loc.outpost ?? { level: 1, spec, terra: 0, terraRemaining: 0, terraTotal: 0 } }, m, game);
+  // Colônia fundada: a produção real. Antes de fundar: só o que o mundo rende sozinho (cada propósito mostra a sua prévia).
+  const preview = loc.outpost ? outpostYield(loc, m, game) : {};
+  const current = loc.outpost ? SPECIALIZATIONS.find(sp => sp.id === loc.outpost!.spec) : null;
+  const currentApt = loc.outpost ? aptitudeOf(loc, loc.outpost.spec) : null;
 
   return (
     <article className="loc-card">
@@ -118,6 +186,7 @@ export function LocationCard({ loc }: { loc: Location }) {
           <Yields y={preview} />
         </div>
       </div>
+      <Traits loc={loc} />
       {claim && !loc.outpost && (
         <p className={`status ${disputed ? 'sev-warn' : 'sev-ok'} claim`} style={{ borderColor: claim.color }}>
           {disputed
@@ -127,15 +196,18 @@ export function LocationCard({ loc }: { loc: Location }) {
       )}
       {loc.outpost ? (
         <>
+          {current && currentApt && (
+            <p className="purpose-now">
+              <Icon name={current.icon} size={22} /> {t('Propósito')}: <b>{t(current.name)}</b>
+              <span className={`apt apt-${currentApt}`}>{t(APTITUDE_NAME[currentApt])} ×{fmt(specFit(loc, current.id))}</span>
+              {civHousing(loc) > 0 && <span className="hint"> · {t('Moradia +{n}', { n: fmt(civHousing(loc)) })}</span>}
+            </p>
+          )}
           <div className="loc-actions">
-            <label className="spec">{t('Especialização')}
-              <select value={loc.outpost.spec} onChange={e => setSpec(loc.id, e.target.value as Specialization)}>
-                {SPECIALIZATIONS.map(sp => <option key={sp.id} value={sp.id}>{t(sp.name)}</option>)}
-              </select>
-            </label>
             <button className="btn buy" disabled={!canAfford(game, outpostUpgradeCost(loc))} onClick={() => upgrade(loc.id)}>
               {t('Ampliar colônia')} <CostList cost={outpostUpgradeCost(loc)} have={game.resources} />
             </button>
+            <Reconvert loc={loc} />
           </div>
           <LinkBox loc={loc} />
           <CrisisBox loc={loc} />
@@ -143,24 +215,25 @@ export function LocationCard({ loc }: { loc: Location }) {
           <Terraform loc={loc} />
         </>
       ) : (
-        <div className="loc-actions">
-          <label className="spec">{t('Especialização')}
-            <select value={spec} onChange={e => setLocalSpec(e.target.value as Specialization)}>
-              {SPECIALIZATIONS.map(sp => <option key={sp.id} value={sp.id}>{t(sp.name)}</option>)}
-            </select>
-          </label>
-          <button className="btn buy" disabled={!canAfford(game, cost)} onClick={() => establish(loc.id, spec)}>
-            {disputed ? t('Fundar (disputa)') : t('Fundar colônia')} <CostList cost={cost} have={game.resources} />
-          </button>
-          {disputed && game.upgrades.embassies && (
-            <button className="btn buy" disabled={!canAfford(game, influenceCost)} onClick={() => establish(loc.id, spec, true)}
-              title={t('Resolve a disputa na diplomacia: sem taxa extra e sem esfriar a relação.')}>
-              {t('Fundar via influência')} <CostList cost={influenceCost} have={game.resources} />
+        <>
+          <h4 className="section sub">{t('O que este planeta será?')}</h4>
+          <p className="hint">{t('Escolha o propósito antes de fundar. Depois, só dá para mudar com uma reconversão cara.')}</p>
+          <PurposePicker loc={loc} value={spec} onPick={setLocalSpec} />
+          <div className="loc-actions">
+            <button className="btn buy" disabled={!spec || !canAfford(game, cost)} onClick={() => spec && establish(loc.id, spec)}
+              title={spec ? undefined : t('Escolha um propósito primeiro.')}>
+              {disputed ? t('Fundar (disputa)') : t('Fundar colônia')} <CostList cost={cost} have={game.resources} />
             </button>
-          )}
-        </div>
+            {disputed && game.upgrades.embassies && (
+              <button className="btn buy" disabled={!spec || !canAfford(game, influenceCost)} onClick={() => spec && establish(loc.id, spec, true)}
+                title={t('Resolve a disputa na diplomacia: sem taxa extra e sem esfriar a relação.')}>
+                {t('Fundar via influência')} <CostList cost={influenceCost} have={game.resources} />
+              </button>
+            )}
+          </div>
+        </>
       )}
-      <p className="hint spec-desc">{t(SPECIALIZATIONS.find(sp => sp.id === (loc.outpost?.spec ?? spec))?.desc ?? '')}</p>
+      {(loc.outpost?.spec ?? spec) && <p className="hint spec-desc">{t(SPECIALIZATIONS.find(sp => sp.id === (loc.outpost?.spec ?? spec))?.desc ?? '')}</p>}
       <DigBox loc={loc} />
     </article>
   );

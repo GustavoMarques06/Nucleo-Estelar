@@ -53,6 +53,16 @@ describe('salvamento seguro', () => {
     expect(store.getItem('nucleo-estelar/save.corrupt')).toBe('{isso nao e json');
   });
 
+  it('depois de recuperar pelo backup, o save ilegível não substitui o backup bom', () => {
+    const a = newGame(0); a.resources.credits = 7;
+    saveGame(a); saveGame(a);                         // cria o backup
+    store.setItem('nucleo-estelar/save', '{isso nao e json');
+    store.setItem('nucleo-estelar/save.bak-at', '0');  // backup antigo: o próximo salvamento renovaria
+    const r = loadGame()!;
+    saveGame(r.state);
+    expect(loadBackup()!.resources.credits).toBe(7);
+  });
+
   it('save de uma versão futura nunca é sobrescrito sem deixar cópia', () => {
     const future = JSON.stringify({ ...JSON.parse(serialize(newGame(0))), version: 999 });
     store.setItem('nucleo-estelar/save', future);

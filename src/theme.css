@@ -1293,3 +1293,23 @@ body.reduce-motion .map-view .map-icon::before { animation: none; }
 .map-view .map-aurora.ringed .map-label { display: none; }
 .map-view .map-aurora-label { position: absolute; z-index: 4; transform: translateX(-50%); pointer-events: none; }
 .map-view.no-labels .map-aurora-label { display: none; }
+
+/* ---------- Propósito das colônias ---------- */
+.traits { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 10px 2px; }
+.trait { border: 1px solid var(--hud-line); background: rgba(0, 229, 255, .06); padding: 1px 8px; font-size: 17px; color: var(--c-accent); }
+.trait small { color: var(--c-neutral); font-size: 15px; margin-left: 4px; }
+.purposes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin: 4px 10px 6px; }
+.purpose { display: grid; gap: 2px; text-align: left; padding: 6px 8px; background: rgba(4, 8, 22, .6); border: 1px solid var(--hud-line); color: inherit; font: inherit; cursor: pointer; }
+.purpose:hover { border-color: var(--c-accent); }
+.purpose:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 1px; }
+.purpose.sel { border-color: var(--c-gold); box-shadow: 0 0 10px rgba(255, 212, 71, .35); background: rgba(255, 212, 71, .07); }
+.purpose-head { display: flex; align-items: center; gap: 6px; font-size: 19px; }
+.apt { margin-left: auto; font-size: 15px; padding: 0 6px; border: 1px solid currentColor; white-space: nowrap; }
+.apt-great { color: var(--c-ok); }
+.apt-good { color: var(--c-accent); }
+.apt-poor { color: var(--c-warm); }
+.purpose-now { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 6px 10px 0; }
+.purpose-now .apt { margin-left: 4px; }
+.reconvert { margin: 6px 0 0; padding-top: 4px; border-top: 1px solid var(--hud-line); width: 100%; }
+@media (max-width: 860px) { .purposes { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 420px) { .purposes { grid-template-columns: 1fr; } }

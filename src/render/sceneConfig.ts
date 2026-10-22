@@ -176,14 +176,16 @@ export const LOADER_SPRITE = 'drone-transport';
 export interface Overlay { id: BuildingId; prefix: string; frames: number; size: number; dx: number; dy: number; speed: number; anchor?: [number, number] }
 export const OVERLAYS: Overlay[] = [
   { id: 'deepDrill', prefix: 'anim-drill', frames: 8, size: 0.07, dx: 0.0, dy: 0.01, speed: 0.18 },
-  { id: 'crusher', prefix: 'anim-beam', frames: 8, size: 0.08, dx: 0.03, dy: -0.01, speed: 0.15 },
-  { id: 'foundry', prefix: 'anim-forge', frames: 4, size: 0.05, dx: 0, dy: 0.0, speed: 0.12 },
-  { id: 'refineryComplex', prefix: 'anim-forge', frames: 4, size: 0.06, dx: 0, dy: 0.0, speed: 0.12 },
+  // O raio bate no canto inferior esquerdo do quadro: a âncora fica no ponto de impacto.
+  { id: 'crusher', prefix: 'anim-beam', frames: 8, size: 0.08, dx: 0.03, dy: -0.01, speed: 0.15, anchor: [0.1, 0.9] },
+  // Forja e fumaça são jatos verticais (quadro alto e estreito): saem da base do quadro.
+  { id: 'foundry', prefix: 'anim-forge', frames: 4, size: 0.035, dx: 0, dy: 0.0, speed: 0.12, anchor: [0.5, 1] },
+  { id: 'refineryComplex', prefix: 'anim-forge', frames: 4, size: 0.04, dx: 0, dy: 0.0, speed: 0.12, anchor: [0.5, 1] },
   { id: 'fission', prefix: 'anim-reactor', frames: 6, size: 0.03, dx: 0.02, dy: -0.02, speed: 0.1 },
   { id: 'fusion', prefix: 'anim-reactor', frames: 6, size: 0.035, dx: 0.02, dy: -0.02, speed: 0.12 },
-  { id: 'industrialComplex', prefix: 'anim-smokeb', frames: 6, size: 0.05, dx: 0.02, dy: -0.08, speed: 0.09, anchor: [0.5, 1] },
-  { id: 'chemicalPlant', prefix: 'anim-smokeb', frames: 6, size: 0.045, dx: 0.02, dy: -0.07, speed: 0.1, anchor: [0.5, 1] },
-  { id: 'foundry', prefix: 'anim-smokeb', frames: 6, size: 0.04, dx: 0.0, dy: -0.07, speed: 0.08, anchor: [0.5, 1] },
+  { id: 'industrialComplex', prefix: 'anim-smokeb', frames: 6, size: 0.04, dx: 0.02, dy: -0.08, speed: 0.09, anchor: [0.5, 1] },
+  { id: 'chemicalPlant', prefix: 'anim-smokeb', frames: 6, size: 0.036, dx: 0.02, dy: -0.07, speed: 0.1, anchor: [0.5, 1] },
+  { id: 'foundry', prefix: 'anim-smokeb', frames: 6, size: 0.032, dx: 0.0, dy: -0.07, speed: 0.08, anchor: [0.5, 1] },
 ];
 /** Faíscas de rocha quando o jogador extrai na mão; andaime quando uma estrutura é construída. */
 export const ROCKCHIP_FRAMES = Array.from({ length: 6 }, (_, i) => `anim-rockchip-${i + 1}`);
@@ -201,7 +203,7 @@ export const BUILDING_IDS_ART: BuildingId[] = ['miner', 'solar', 'refinery', 'st
 const TIER_SPRITES = BUILDING_IDS_ART.flatMap(id => BUILDING_TIERS.map(t => `${BUILDINGS.find(b => b.id === id)!.sprite}${t.suffix}`));
 export const BACKDROP = 'bg-nebula-blue';
 
-export const SMOKE_FRAMES = frames('anim-smoke', 6);
+export const SMOKE_FRAMES = frames('anim-smoke', 7);
 export const FLASH_FRAMES = frames('anim-flash', 6);
 
 export const COLONIST_FRAMES = ['char-colonist-walk-1', 'char-colonist-walk-2'];

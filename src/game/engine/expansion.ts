@@ -10,11 +10,13 @@ import { crisisFactor } from './crises';
 import { routeInfo } from './routes';
 import { LINK_BONUS, linkDemand, linkLoss } from './grid';
 import { challengeBlocks } from './challenges';
+import { aptitudeOf, specFit } from './aptitude';
 import { t } from '../../i18n';
 
 /** Gera um local a partir da semente: mesmas regras, variações controladas (GDD, seção 8). */
 /** `depth` = quantos locais já foram descobertos: quanto mais fundo no espaço, mais rico e mais distante. */
-export function generateLocation(seed: number, richnessMult = 1, depth = 0): Location {
+/** `taken` = sprites já no mapa: o sorteio pula para a próxima aparência livre do tipo (só repete quando acabam). */
+export function generateLocation(seed: number, richnessMult = 1, depth = 0, taken: readonly string[] = []): Location {
   const r = rng(seed * 7919 + 13);
   const total = LOCATION_TYPES.reduce((a, t) => a + t.weight, 0);
   let pick = r() * total, def = LOCATION_TYPES[0];
@@ -24,7 +26,7 @@ export function generateLocation(seed: number, richnessMult = 1, depth = 0): Loc
     seed,
     name: nameFor(r),
     type: def.type,
-    sprite: def.sprites[Math.floor(r() * def.sprites.length)],
+    sprite: pickSprite(def.sprites, Math.floor(r() * def.sprites.length), taken),
     richness: Math.round((0.6 + r() * 1.2) * richnessMult * (1 + 0.06 * depth) * 100) / 100,
     distance: 1 + Math.floor(r() * 5) + Math.floor(depth / 8),
     mineral: def.minerals[Math.floor(r() * def.minerals.length)],
@@ -32,6 +34,30 @@ export function generateLocation(seed: number, richnessMult = 1, depth = 0): Loc
     claimedBy: r() < 0.3 ? FACTIONS[Math.floor(r() * FACTIONS.length)].id : null,
     outpost: null,
   };
+}
+
+/** A partir do sorteado, a primeira aparência que ninguém usa; se todas já estão no mapa, a menos usada. */
+function pickSprite(sprites: readonly string[], start: number, taken: readonly string[]): string {
+  const uses = (sp: string) => taken.filter(x => x === sp).length;
+  let best = sprites[start], bestUses = uses(best);
+  for (let k = 1; k < sprites.length && bestUses > 0; k++) {
+    const sp = sprites[(start + k) % sprites.length], u = uses(sp);
+    if (u < bestUses) { best = sp; bestUses = u; }
+  }
+  return best;
+}
+
+/**
+ * Locais de saves antigos (sorteados com repetição, ou antes de existirem mais aparências): quem repete a aparência de
+ * um local anterior do mesmo tipo passa para uma livre. Quem já é único fica como está.
+ */
+export function spreadSprites(locations: Location[]): void {
+  const taken: string[] = [];
+  for (const l of locations) {
+    const list = LOCATION_BY_TYPE[l.type].sprites;
+    if (taken.includes(l.sprite)) l.sprite = pickSprite(list, Math.max(0, list.indexOf(l.sprite)), taken);
+    taken.push(l.sprite);
+  }
 }
 
 export const expeditionsUnlocked = (s: GameState) => !!s.upgrades.exploration;
@@ -86,7 +112,7 @@ export function advanceExpeditions(s: GameState, m: Modifiers, dt: number): stri
   // A velocidade nunca deixa a viagem durar menos que o mínimo (o total já é medido sem a velocidade).
   for (const e of s.expeditions) e.remaining -= dt * Math.min(m.expeditionSpeed, e.total / MIN_EXPEDITION_SECONDS);
   for (const e of s.expeditions.filter(e => e.remaining <= 0)) {
-    const loc = generateLocation(e.seed, m.richness, s.locations.length);
+    const loc = generateLocation(e.seed, m.richness, s.locations.length, s.locations.map(l => l.sprite));
     loc.name = uniqueName(s.locations.map(l => l.name), loc.name);
     s.locations.push(loc);
     if (!s.discovered.includes(loc.mineral)) s.discovered.push(loc.mineral);
@@ -118,6 +144,7 @@ export function outpostUpgradeCost(loc: Location): Amounts {
 export function establishOutpost(prev: GameState, locId: string, spec: Specialization, byInfluence = false): GameState | null {
   const i = prev.locations.findIndex(l => l.id === locId);
   if (i < 0 || prev.locations[i].outpost || challengeBlocks(prev, 'outpost')) return null;
+  if (!aptitudeOf(prev.locations[i], spec)) return null;          // propósito que este mundo não aceita
   const cost = outpostCost(prev, prev.locations[i], byInfluence);
   if (!canAfford(prev, cost)) return null;
   const s = cloneState(prev);
@@ -165,11 +192,26 @@ export function linkColony(prev: GameState, locId: string): GameState | null {
   return s;
 }
 
+// ---------- Reconversão ----------
+/** Níveis que a colônia perde ao mudar de propósito: um quarto (pelo menos 1), nunca abaixo do nível 1. */
+export const reconvertLevels = (loc: Location) => {
+  const l = loc.outpost?.level ?? 1;
+  return Math.min(l - 1, Math.max(1, Math.round(l * 0.25)));
+};
+
+/** Mudar de propósito custa 1,5× a próxima ampliação: a escolha da fundação pesa. */
+export const reconvertCost = (loc: Location): Amounts => scaleCost(outpostUpgradeCost(loc), 1.5);
+
 export function setSpecialization(prev: GameState, locId: string, spec: Specialization): GameState | null {
   const loc = prev.locations.find(l => l.id === locId);
-  if (!loc?.outpost || loc.outpost.spec === spec) return null;
+  if (!loc?.outpost || loc.outpost.spec === spec || !aptitudeOf(loc, spec)) return null;
+  const cost = reconvertCost(loc);
+  if (!canAfford(prev, cost)) return null;
   const s = cloneState(prev);
-  s.locations.find(l => l.id === locId)!.outpost!.spec = spec;
+  payCost(s, cost);
+  const o = s.locations.find(l => l.id === locId)!.outpost!;
+  o.level -= reconvertLevels(loc);
+  o.spec = spec;
   return s;
 }
 
@@ -182,12 +224,15 @@ export function outpostYield(loc: Location, m: Modifiers, s?: GameState, power =
   const y: Amounts = {};
   for (const [r, v] of Object.entries(LOCATION_BY_TYPE[loc.type].yields)) y[r as ResId] = (v ?? 0) * k;
   const add = (r: ResId, v: number) => { y[r] = (y[r] ?? 0) + v; };
+  // `f` = aptidão do mundo × traços do planeta: escala só o bônus do propósito (f = 1 é o valor da descrição).
+  const f = specFit(loc, spec);
   switch (spec) {
-    case 'mining': for (const r of Object.keys(y) as ResId[]) if (r !== 'science') y[r]! *= 1.6; break;
-    case 'agriculture': add('food', 2 * level); if (y.water) y.water *= 1.5; break;
-    case 'science': if (y.science) y.science *= 1.5; add('science', 0.8 * level); break;
-    case 'industry': add('alloys', 1 * level); add('components', 0.15 * level); break;
-    case 'commerce': add('credits', 15 * level); break;
+    case 'mining': for (const r of Object.keys(y) as ResId[]) if (r !== 'science') y[r]! *= 1 + 0.6 * f; break;
+    case 'agriculture': add('food', 2 * level * f); if (y.water) y.water *= 1 + 0.5 * f; break;
+    case 'science': if (y.science) y.science *= 1 + 0.5 * f; add('science', 0.8 * level * f); break;
+    case 'industry': add('alloys', 1 * level * f); add('components', 0.15 * level * f); break;
+    case 'commerce': add('credits', 15 * level * f); break;
+    case 'civilization': add('credits', 6 * level * f); break;          // a moradia entra em housingCap
   }
   // Mundos já terraformados cultivam alimento por conta própria.
   if (terra >= 3) add('food', 4 * loc.richness * (terra - 2));
@@ -201,18 +246,23 @@ export function outpostYield(loc: Location, m: Modifiers, s?: GameState, power =
 export const MAX_TERRA = 5;
 const NON_TERRAFORMABLE: LocationType[] = ['gas', 'metallic', 'crystal'];
 export const terraformable = (loc: Location) => !NON_TERRAFORMABLE.includes(loc.type);
-/** Mundo-jardim de cada tipo: a terraformação completa mantém a cara do mundo de origem. */
-const TERRA_SPRITE: Partial<Record<LocationType, string>> = {
-  rocky: 'planet-terra-rocky', ice: 'planet-terra-ice', desert: 'planet-terra-desert', ocean: 'planet-terra-ocean',
-  jungle: 'planet-terra-jungle', volcanic: 'planet-terra-volcanic', alien: 'planet-terra-alien',
+/** Mundos-jardim de cada tipo: a terraformação completa mantém a cara do mundo de origem. */
+export const TERRA_SPRITES: Partial<Record<LocationType, string[]>> = {
+  rocky: ['planet-terra-rocky', 'planet-terra-rocky-b'], ice: ['planet-terra-ice', 'planet-terra-ice-b'],
+  desert: ['planet-terra-desert', 'planet-terra-desert-b'], ocean: ['planet-terra-ocean', 'planet-terra-ocean-b'],
+  jungle: ['planet-terra-jungle', 'planet-terra-jungle-b'], volcanic: ['planet-terra-volcanic', 'planet-terra-volcanic-b'],
+  alien: ['planet-terra-alien', 'planet-terra-alien-b'],
 };
+export const CAPITAL_SPRITES = ['planet-capital', 'planet-capital-b'];
 /** Colônia terraformada a partir deste nível vira um mundo-capital (luzes de cidade e anel de estações). */
 export const CAPITAL_LEVEL = 15;
 export function locationSprite(loc: Location): string {
   const o = loc.outpost;
   if (!o || o.terra < MAX_TERRA) return loc.sprite;
-  if (o.level >= CAPITAL_LEVEL) return 'planet-capital';
-  return TERRA_SPRITE[loc.type] ?? 'planet-terra-garden';
+  // A variação vem da semente: a mesma colônia sempre tem a mesma cara.
+  const of = (list: string[]) => list[Math.abs(loc.seed) % list.length];
+  if (o.level >= CAPITAL_LEVEL) return of(CAPITAL_SPRITES);
+  return of(TERRA_SPRITES[loc.type] ?? ['planet-terra-garden']);
 }
 
 /** Custo do PRÓXIMO nível. Cresce 1,9× por nível e fica dentro da capacidade típica do armazém. */

@@ -24,7 +24,8 @@ import { KEEP_STEPS, SELL_FLOORS } from '../data/market';
 import { BALANCE } from '../data/balance';
 import { newGame, SAVE_VERSION, SIGNED_SINCE } from './state';
 import { checkSignature, withSignature } from './integrity';
-import { terraformable, uniqueName } from './expansion';
+import { spreadSprites, terraformable, uniqueName } from './expansion';
+import { aptitudeOf, bestSpec } from './aptitude';
 import { PROTECTABLE, THROTTLE_STEPS, prioritizable, throttleable } from './energy';
 import { DOCTRINE_AXES } from '../data/doctrines';
 import { DIRECTIVE_MAX, validDo, validWhen } from './directives';
@@ -128,6 +129,10 @@ export function parseSave(raw: string): GameState | null {
   for (const l of s.locations) { l.name = uniqueName(names, l.name); names.push(l.name); }
   // Gigantes gasosos e asteroides não são terraformáveis: um save editado não consegue mudar isso.
   for (const l of s.locations) if (l.outpost && !terraformable(l)) { l.outpost.terra = 0; l.outpost.terraRemaining = 0; l.outpost.terraTotal = 0; }
+  // Mapas antigos repetiam planetas: as repetições passam para as aparências livres do tipo.
+  spreadSprites(s.locations);
+  // Colônia de save antigo com um propósito que o seu mundo não aceita mais: passa para o mais apto dali.
+  for (const l of s.locations) if (l.outpost && !aptitudeOf(l, l.outpost.spec)) l.outpost.spec = bestSpec(l);
   const dep = obj(d.deposit);
   s.deposit.veins = arr(dep.veins).slice(0, 20).flatMap(x => {
     const v = obj(x), mix = obj(v.mix);
@@ -378,7 +383,8 @@ export function saveGame(s: GameState): boolean {
     const prev = localStorage.getItem(KEY);
     localStorage.setItem(KEY, text);
     const at = Number(localStorage.getItem(BACKUP_AT_KEY) ?? 0);
-    if (prev && Date.now() - at >= BACKUP_EVERY_MS) {
+    // Um save principal ilegível (o que fez o jogo recorrer ao backup) não pode tomar o lugar do backup bom.
+    if (prev && Date.now() - at >= BACKUP_EVERY_MS && parseSave(prev)) {
       try { localStorage.setItem(BACKUP_KEY, prev); localStorage.setItem(BACKUP_AT_KEY, String(Date.now())); } catch { /* o save principal já foi */ }
     }
     return true;

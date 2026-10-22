@@ -16,7 +16,7 @@ export function colonyProduces(loc: Location): ResId[] {
     case 'agriculture': out.add('food'); break;
     case 'science': out.add('science'); break;
     case 'industry': out.add('alloys'); out.add('components'); break;
-    case 'commerce': out.add('credits'); break;
+    case 'commerce': case 'civilization': out.add('credits'); break;
   }
   return [...out];
 }

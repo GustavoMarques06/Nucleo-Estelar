@@ -143,6 +143,11 @@ async function extractItem(item) {
   }
   const r = render(sh.data, sh.w, label, comps, ids, item.keepSize ? [rect[0], rect[1], rect[2] - 1, rect[3] - 1] : null);
   if (item.silhouette) for (let k = 0; k < r.out.length; k += 4) if (r.out[k + 3]) { r.out[k] = r.out[k + 1] = r.out[k + 2] = 255; }
+  // depurple: vidro que a IA pintou "deixando ver" o fundo magenta fica roxo; puxa esses tons para o azul.
+  if (item.depurple) for (let k = 0; k < r.out.length; k += 4) {
+    const [cr, cg, cb] = [r.out[k], r.out[k + 1], r.out[k + 2]];
+    if (r.out[k + 3] && cr > cg + 20 && cb > cg + 20) r.out[k] = cg;
+  }
   // circle: o objeto é redondo; apaga o que sobrar fora do círculo inscrito (fundo que a IA pintou em vez do magenta).
   if (item.circle) {
     const rad = Math.min(r.w, r.h) / 2 + 1, cx = r.w / 2, cy = r.h / 2;
@@ -223,7 +228,7 @@ for (const s of man.strips || []) {
 const ART = path.join(ROOT, 'public/assets/art');
 fs.mkdirSync(ART, { recursive: true });
 for (const p of man.photos || []) {
-  if (only) continue;
+  if (!wanted(p.out.replace(/\.jpg$/, ''))) continue;
   await sharp(path.join(ROOT, 'Assets', p.file)).resize({ width: p.width, height: p.height, fit: 'cover', position: 'center' }).jpeg({ quality: 86 }).toFile(path.join(ART, p.out));
 }
 console.log(`${count} sprites (fundo magenta) extraídos para public/assets/sprites`);

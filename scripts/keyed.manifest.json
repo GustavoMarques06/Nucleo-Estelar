@@ -63,7 +63,27 @@
     "mega-extras": "mega-extras.jpg",
     "revisao-recursos": "revisao-recursos.jpg",
     "revisao-cenas": "revisao-cenas.jpg",
-    "revisao-greve": "revisao-greve.jpg"
+    "revisao-greve": "revisao-greve.jpg",
+    "revisao2-icones": "revisao2-icones.jpg",
+    "revisao2-planetas": "revisao2-planetas.jpg",
+    "revisao2-dyson": "revisao2-dyson.jpg",
+    "revisao2-anim": "revisao2-anim.jpg",
+    "revisao2-anim-beam": "revisao2-anim-beam.jpg",
+    "revisao2-anim-rockchip": "revisao2-anim-rockchip.jpg",
+    "revisao2-anim-forge": "revisao2-anim-forg.jpg",
+    "revisao2-anim-reactor": "revisao2-anim-reactor.jpg",
+    "revisao2-anim-smokeb": "revisao2-anim-smokeb.jpg",
+    "planetas2-rochoso": "planetas2-rochoso.jpg",
+    "planetas2-gelado": "planetas2-gelado.jpg",
+    "planetas2-deserto": "planetas2-deserto.jpg",
+    "planetas2-ocean": "planetas2-ocean.jpg",
+    "planetas2-selva": "planetas2-selva.jpg",
+    "planetas2-vulcanico": "planetas2-vulcanico.jpg",
+    "planetas2-alienigena": "planetas2-alienigena.jpg",
+    "planetas2-gasoso": "planetas2-gasoso.jpg",
+    "planetas2-asteroides": "planetas2-asteroides.jpg",
+    "planetas2-terra-a": "planetas2-terra-a.jpg",
+    "planetas2-terra-b": "planetas2-terra-b.jpg"
   },
   "items": [
     {
@@ -191,42 +211,12 @@
       "maxSize": 256
     },
     {
-      "name": "bg-stars-far",
-      "sheet": "fundos",
-      "crop": [
-        2,
-        2,
-        481,
-        236
-      ]
-    },
-    {
       "name": "bg-nebula-blue-small",
       "sheet": "fundos",
       "crop": [
         972,
         2,
         482,
-        236
-      ]
-    },
-    {
-      "name": "bg-nebula-blue",
-      "sheet": "fundos",
-      "crop": [
-        2,
-        242,
-        724,
-        236
-      ]
-    },
-    {
-      "name": "bg-nebula-purple",
-      "sheet": "fundos",
-      "crop": [
-        730,
-        242,
-        724,
         236
       ]
     },
@@ -1773,6 +1763,1618 @@
         "fringePasses": 3
       },
       "minFrac": 0.002
+    },
+    {
+      "name": "ore-gold",
+      "sheet": "revisao2-icones",
+      "rect": [
+        30,
+        250,
+        280,
+        250
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.003
+    },
+    {
+      "name": "star-white-dwarf",
+      "sheet": "revisao2-icones",
+      "rect": [
+        340,
+        290,
+        180,
+        180
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.003
+    },
+    {
+      "name": "region-system",
+      "sheet": "revisao2-icones",
+      "rect": [
+        580,
+        250,
+        250,
+        260
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005
+    },
+    {
+      "name": "region-belt",
+      "sheet": "revisao2-icones",
+      "rect": [
+        845,
+        255,
+        265,
+        260
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005
+    },
+    {
+      "name": "raw-brown-chunk",
+      "sheet": "revisao2-icones",
+      "rect": [
+        1120,
+        255,
+        260,
+        250
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.003
+    },
+    {
+      "name": "planet-ringed",
+      "sheet": "revisao2-planetas",
+      "rect": [
+        25,
+        160,
+        460,
+        440
+      ],
+      "maxSize": 320,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005
+    },
+    {
+      "name": "planet-moon",
+      "sheet": "revisao2-planetas",
+      "rect": [
+        495,
+        165,
+        430,
+        430
+      ],
+      "maxSize": 256,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.003
+    },
+    {
+      "name": "vein-violet-big",
+      "sheet": "revisao2-planetas",
+      "rect": [
+        975,
+        155,
+        385,
+        445
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 1
+      },
+      "minFrac": 0.003
+    },
+    {
+      "name": "mega-dyson-1",
+      "sheet": "revisao2-dyson",
+      "rect": [
+        55,
+        85,
+        610,
+        660
+      ],
+      "maxSize": 384,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002
+    },
+    {
+      "name": "mega-dyson-2",
+      "sheet": "revisao2-dyson",
+      "rect": [
+        735,
+        55,
+        650,
+        660
+      ],
+      "maxSize": 384,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002
+    },
+    {
+      "name": "anim-smoke-1",
+      "sheet": "revisao2-anim",
+      "rect": [
+        30,
+        30,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smoke-2",
+      "sheet": "revisao2-anim",
+      "rect": [
+        370,
+        30,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smoke-3",
+      "sheet": "revisao2-anim",
+      "rect": [
+        720,
+        30,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smoke-4",
+      "sheet": "revisao2-anim",
+      "rect": [
+        1065,
+        30,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smoke-5",
+      "sheet": "revisao2-anim",
+      "rect": [
+        37,
+        390,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smoke-6",
+      "sheet": "revisao2-anim",
+      "rect": [
+        367,
+        390,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smoke-7",
+      "sheet": "revisao2-anim",
+      "rect": [
+        708,
+        390,
+        320,
+        335
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-beam-1",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        28,
+        33,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-2",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        374,
+        33,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-3",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        720,
+        33,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-4",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        1060,
+        33,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-5",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        28,
+        403,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-6",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        374,
+        403,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-7",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        720,
+        403,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-beam-8",
+      "sheet": "revisao2-anim-beam",
+      "rect": [
+        1060,
+        403,
+        320,
+        332
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-rockchip-1",
+      "sheet": "revisao2-anim-rockchip",
+      "rect": [
+        20,
+        215,
+        212,
+        300
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-rockchip-2",
+      "sheet": "revisao2-anim-rockchip",
+      "rect": [
+        254,
+        215,
+        212,
+        300
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-rockchip-3",
+      "sheet": "revisao2-anim-rockchip",
+      "rect": [
+        484,
+        215,
+        212,
+        300
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-rockchip-4",
+      "sheet": "revisao2-anim-rockchip",
+      "rect": [
+        715,
+        215,
+        212,
+        300
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-rockchip-5",
+      "sheet": "revisao2-anim-rockchip",
+      "rect": [
+        947,
+        215,
+        212,
+        300
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-rockchip-6",
+      "sheet": "revisao2-anim-rockchip",
+      "rect": [
+        1182,
+        215,
+        212,
+        300
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-forge-1",
+      "sheet": "revisao2-anim-forge",
+      "rect": [
+        19,
+        39,
+        320,
+        678
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-forge-2",
+      "sheet": "revisao2-anim-forge",
+      "rect": [
+        367,
+        39,
+        320,
+        678
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-forge-3",
+      "sheet": "revisao2-anim-forge",
+      "rect": [
+        725,
+        39,
+        320,
+        678
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-forge-4",
+      "sheet": "revisao2-anim-forge",
+      "rect": [
+        1072,
+        39,
+        320,
+        678
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-reactor-1",
+      "sheet": "revisao2-anim-reactor",
+      "rect": [
+        23,
+        186,
+        220,
+        397
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-reactor-2",
+      "sheet": "revisao2-anim-reactor",
+      "rect": [
+        253,
+        186,
+        220,
+        397
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-reactor-3",
+      "sheet": "revisao2-anim-reactor",
+      "rect": [
+        479,
+        186,
+        220,
+        397
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-reactor-4",
+      "sheet": "revisao2-anim-reactor",
+      "rect": [
+        708,
+        186,
+        220,
+        397
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-reactor-5",
+      "sheet": "revisao2-anim-reactor",
+      "rect": [
+        935,
+        186,
+        220,
+        397
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-reactor-6",
+      "sheet": "revisao2-anim-reactor",
+      "rect": [
+        1166,
+        186,
+        220,
+        397
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true,
+      "depurple": true
+    },
+    {
+      "name": "anim-smokeb-1",
+      "sheet": "revisao2-anim-smokeb",
+      "rect": [
+        0,
+        33,
+        237,
+        702
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smokeb-2",
+      "sheet": "revisao2-anim-smokeb",
+      "rect": [
+        230,
+        33,
+        237,
+        702
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smokeb-3",
+      "sheet": "revisao2-anim-smokeb",
+      "rect": [
+        467,
+        33,
+        237,
+        702
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smokeb-4",
+      "sheet": "revisao2-anim-smokeb",
+      "rect": [
+        707,
+        33,
+        237,
+        702
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smokeb-5",
+      "sheet": "revisao2-anim-smokeb",
+      "rect": [
+        940,
+        33,
+        237,
+        702
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "anim-smokeb-6",
+      "sheet": "revisao2-anim-smokeb",
+      "rect": [
+        1178,
+        20,
+        237,
+        702
+      ],
+      "maxSize": 128,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.0005,
+      "keepSize": true
+    },
+    {
+      "name": "planet-rocky-rust",
+      "sheet": "planetas2-rochoso",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-rocky-basalt",
+      "sheet": "planetas2-rochoso",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-rocky-strata",
+      "sheet": "planetas2-rochoso",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-rocky-impact",
+      "sheet": "planetas2-rochoso",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ice-deep",
+      "sheet": "planetas2-gelado",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ice-geyser",
+      "sheet": "planetas2-gelado",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ice-dirty",
+      "sheet": "planetas2-gelado",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ice-aurora",
+      "sheet": "planetas2-gelado",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-desert-salt",
+      "sheet": "planetas2-deserto",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-desert-red",
+      "sheet": "planetas2-deserto",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-desert-glass",
+      "sheet": "planetas2-deserto",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-desert-dry",
+      "sheet": "planetas2-deserto",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ocean-storm",
+      "sheet": "planetas2-ocean",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ocean-shallow",
+      "sheet": "planetas2-ocean",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ocean-dark",
+      "sheet": "planetas2-ocean",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-ocean-volcanic",
+      "sheet": "planetas2-ocean",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-jungle-wet",
+      "sheet": "planetas2-selva",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-jungle-swamp",
+      "sheet": "planetas2-selva",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-jungle-autumn",
+      "sheet": "planetas2-selva",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-jungle-mountains",
+      "sheet": "planetas2-selva",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-volcanic-blue",
+      "sheet": "planetas2-vulcanico",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-volcanic-cooling",
+      "sheet": "planetas2-vulcanico",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-volcanic-lava-ocean",
+      "sheet": "planetas2-vulcanico",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-volcanic-sulfur",
+      "sheet": "planetas2-vulcanico",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-alien-coral",
+      "sheet": "planetas2-alienigena",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-alien-spores",
+      "sheet": "planetas2-alienigena",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.2,
+        "minRB": 225,
+        "fringeFactor": 0.15,
+        "fringePasses": 2
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-alien-circuit",
+      "sheet": "planetas2-alienigena",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-alien-eyes",
+      "sheet": "planetas2-alienigena",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-gas-emerald",
+      "sheet": "planetas2-gasoso",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-gas-amber",
+      "sheet": "planetas2-gasoso",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-gas-pale",
+      "sheet": "planetas2-gasoso",
+      "rect": [
+        704,
+        120,
+        343,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-gas-ringed-violet",
+      "sheet": "planetas2-gasoso",
+      "rect": [
+        1049,
+        120,
+        359,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "asteroid-metallic-spiral",
+      "sheet": "planetas2-asteroides",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "asteroid-metallic-holed",
+      "sheet": "planetas2-asteroides",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "asteroid-crystal-green",
+      "sheet": "planetas2-asteroides",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "asteroid-crystal-gold",
+      "sheet": "planetas2-asteroides",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-rocky-b",
+      "sheet": "planetas2-terra-a",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-ice-b",
+      "sheet": "planetas2-terra-a",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-desert-b",
+      "sheet": "planetas2-terra-a",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-ocean-b",
+      "sheet": "planetas2-terra-a",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-jungle-b",
+      "sheet": "planetas2-terra-b",
+      "rect": [
+        0,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-volcanic-b",
+      "sheet": "planetas2-terra-b",
+      "rect": [
+        352,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-terra-alien-b",
+      "sheet": "planetas2-terra-b",
+      "rect": [
+        704,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
+    },
+    {
+      "name": "planet-capital-b",
+      "sheet": "planetas2-terra-b",
+      "rect": [
+        1056,
+        120,
+        352,
+        528
+      ],
+      "maxSize": 192,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.01
     }
   ],
   "grids": [
@@ -2128,7 +3730,7 @@
         null,
         null,
         "star-blue-giant",
-        "star-white-dwarf",
+        null,
         null,
         "star-orange"
       ],
@@ -2151,8 +3753,8 @@
         null,
         null,
         null,
-        "region-belt",
-        "region-system"
+        null,
+        null
       ],
       "silhouette": true,
       "minFrac": 0.1
@@ -2295,8 +3897,8 @@
       },
       "minFrac": 0.002,
       "names": [
-        "mega-dyson-1",
-        "mega-dyson-2",
+        null,
+        null,
         "mega-dyson-3",
         "mega-dyson-4",
         null,
@@ -2438,101 +4040,6 @@
     },
     {
       "sheet": "anim",
-      "prefix": "anim-beam",
-      "y": [
-        82,
-        166
-      ],
-      "xCenters": [
-        64,
-        192,
-        320,
-        448,
-        576,
-        704,
-        832,
-        960
-      ],
-      "cellW": 126,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
-      "prefix": "anim-forge",
-      "y": [
-        166,
-        246
-      ],
-      "xCenters": [
-        64,
-        192,
-        320,
-        448
-      ],
-      "cellW": 126,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
-      "prefix": "anim-smoke",
-      "y": [
-        196,
-        288
-      ],
-      "xCenters": [
-        557,
-        643,
-        729,
-        818,
-        904,
-        986
-      ],
-      "cellW": 84,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
-      "prefix": "anim-smokeb",
-      "y": [
-        248,
-        334
-      ],
-      "xCenters": [
-        42,
-        128,
-        213,
-        298,
-        383,
-        469
-      ],
-      "cellW": 84,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
-      "prefix": "anim-reactor",
-      "y": [
-        334,
-        416
-      ],
-      "xCenters": [
-        42,
-        128,
-        213,
-        298,
-        383,
-        469
-      ],
-      "cellW": 84,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
       "prefix": "anim-construct",
       "y": [
         416,
@@ -2545,25 +4052,6 @@
         298,
         383,
         469
-      ],
-      "cellW": 84,
-      "minFrac": 0.01,
-      "maxSize": 128
-    },
-    {
-      "sheet": "anim",
-      "prefix": "anim-rockchip",
-      "y": [
-        420,
-        506
-      ],
-      "xCenters": [
-        554,
-        640,
-        725,
-        810,
-        896,
-        981
       ],
       "cellW": 84,
       "minFrac": 0.01,
@@ -2600,6 +4088,21 @@
       "out": "social-preview.jpg",
       "width": 1200,
       "height": 630
+    },
+    {
+      "file": "revisao2-fundo-azul.jpg",
+      "out": "bg-nebula-blue.jpg",
+      "width": 1584
+    },
+    {
+      "file": "revisao2-fundo-violet.jpg",
+      "out": "bg-nebula-purple.jpg",
+      "width": 1376
+    },
+    {
+      "file": "revisao2-fundo-estrelas.jpg",
+      "out": "bg-stars-far.jpg",
+      "width": 1376
     }
   ]
 }
