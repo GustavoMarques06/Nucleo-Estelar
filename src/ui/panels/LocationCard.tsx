@@ -178,7 +178,7 @@ export function LocationCard({ loc }: { loc: Location }) {
     <article className="loc-card">
       {def.terrain && <div className="loc-terrain" style={{ backgroundImage: `url(${artUrl(def.terrain)})` }} />}
       <div className="loc-body">
-        <Icon name={locationSprite(loc)} size={64} className="card-art" />
+        <Icon name={locationSprite(loc, game.locations)} size={64} className="card-art" />
         <div className="card-main">
           <h3>{loc.name} {loc.outpost && <span className="count">{t('nível {n}', { n: loc.outpost.level })}</span>}</h3>
           <p className="desc">{t('{tipo} · riqueza ×{r} · distância {d}', { tipo: t(def.name), r: loc.richness.toFixed(2), d: loc.distance })}</p>

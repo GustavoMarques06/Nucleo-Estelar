@@ -151,8 +151,18 @@ describe('integridade dos dados', () => {
   });
 
   it('todas as paisagens e fundos citados existem em public/assets/art', () => {
-    const arts = [...LOCATION_TYPES.map(t => t.terrain).filter((x): x is string => !!x), 'bg-nebula-blue', 'scene-system-map', 'scene-system-map-b', 'scene-galaxy-map', 'loading-art', 'social-preview'];
+    const arts = [...LOCATION_TYPES.map(t => t.terrain).filter((x): x is string => !!x), 'bg-nebula-blue', 'scene-system-map', 'scene-system-map-b', 'scene-galaxy-map', 'loading-art', 'loading-art-portrait', 'social-preview'];
     for (const a of arts) expect(fs.existsSync(path.join(ART, a + '.jpg')), a).toBe(true);
+  });
+
+  it('todo ícone e imagem citados no index.html e no manifesto existem', () => {
+    const root = path.resolve(__dirname, '../../..');
+    const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+    const refs = [...html.matchAll(/(?:href|content)="\.\/([^"]+\.(?:png|jpg|webmanifest))"/g)].map(m => m[1]);
+    const manifest = JSON.parse(fs.readFileSync(path.join(root, 'public/manifest.webmanifest'), 'utf8')) as { icons: { src: string }[] };
+    refs.push(...manifest.icons.map(i => i.src));
+    expect(refs.length).toBeGreaterThan(5);
+    for (const r of refs) expect(fs.existsSync(path.join(root, 'public', r)), r).toBe(true);
   });
 
   it('o guia cobre todos os sistemas principais e não tem texto vazio', () => {

@@ -55,7 +55,7 @@ export function MapPanel({ onOpenMap }: { onOpenMap: () => void }) {
               const claim = l.claimedBy ? FACTION_BY_ID[l.claimedBy] : null;
               return (
                 <button key={l.id} className={`loc-row ${selected === l.id ? 'sel' : ''}`} onClick={() => select(l.id)}>
-                  <Icon name={locationSprite(l)} size={28} />
+                  <Icon name={locationSprite(l, game.locations)} size={28} />
                   <span className="loc-row-name">{l.name}</span>
                   <small>{t(LOCATION_BY_TYPE[l.type].name)}</small>
                   {claim && !l.outpost && <i className="faction-dot" style={{ background: claim.color }} title={t(claim.name)} />}

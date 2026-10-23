@@ -870,7 +870,7 @@ export class GameScene {
     if (!loc) { useGame.getState().setSceneView('base'); return; }
     const reduce = game.settings.reduceMotion;
     const t = this.time;
-    const name = locationSprite(loc);
+    const name = locationSprite(loc, game.locations);
     if (name !== this.locSprite) {
       const tex = this.tex[name];
       if (tex) { this.locSprite = name; this.locPlanet.texture = tex; this.locPlanet.visible = true; this.layoutLoc(); }
@@ -1016,7 +1016,7 @@ export class GameScene {
       this.skyKey = key;
       const civ = !!game.upgrades.habitats || game.resources.population >= 1;
       const dist = (p: { x: number; y: number }) => Math.hypot(p.x - from.x, p.y - from.y);
-      const cands = game.locations.map((l, i) => ({ name: locationSprite(l), pos: nodePosition(i), id: l.id })).filter(c => c.id !== selfId);
+      const cands = game.locations.map((l, i) => ({ name: locationSprite(l, game.locations), pos: nodePosition(i), id: l.id })).filter(c => c.id !== selfId);
       if (selfId !== null && civ) cands.push({ name: auroraName, pos: AURORA_POS, id: 'aurora' });
       const near = cands.sort((a, b) => dist(a.pos) - dist(b.pos)).slice(0, 3);
       const bodies = [...(withSun ? [{ name: sunName, pos: { x: 0, y: 0 }, sun: true }] : []), ...near.map(c => ({ name: c.name, pos: c.pos, sun: false }))];

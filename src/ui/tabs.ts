@@ -1,7 +1,7 @@
 import type { Category } from '../game/types';
 
 export type TabId = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
-  | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
+  | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'records' | 'options';
 
 /** Aba onde cada categoria de estruturas aparece. */
 export const CATEGORY_TAB: Record<Category, TabId> = {

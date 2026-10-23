@@ -31,12 +31,28 @@ describe('leitura do save: dados impossíveis são consertados', () => {
 
   it('terraformado mostra o jardim do seu tipo; de nível alto, o mundo-capital', () => {
     const ocean = colony(6, 'ocean');
-    expect(TERRA_SPRITES.ocean).toContain(locationSprite(ocean));
-    expect(locationSprite(ocean)).toBe(locationSprite(ocean));          // a mesma colônia, sempre a mesma cara
+    expect(TERRA_SPRITES.ocean).toContain(locationSprite(ocean, [ocean]));
+    expect(locationSprite(ocean, [ocean])).toBe(locationSprite(ocean, [ocean]));          // a mesma colônia, sempre a mesma cara
     ocean.outpost!.level = CAPITAL_LEVEL;
-    expect(CAPITAL_SPRITES).toContain(locationSprite(ocean));
+    expect(CAPITAL_SPRITES).toContain(locationSprite(ocean, [ocean]));
     ocean.outpost!.terra = 2;
-    expect(locationSprite(ocean)).toBe(ocean.sprite);
+    expect(locationSprite(ocean, [ocean])).toBe(ocean.sprite);
+  });
+
+  it('o império tem uma capital só: a de maior nível (no empate, a mais antiga); as outras ficam com a cara do tipo', () => {
+    const all = [colony(10, 'ocean'), colony(11, 'ice'), colony(12, 'jungle'), colony(13, 'rocky')];
+    all.forEach(l => { l.outpost!.level = 19; });
+    all[2].outpost!.level = 22;
+    all[3].outpost!.terra = 2;                                         // ainda não terraformada
+    const looks = all.map(l => locationSprite(l, [...all]));
+    expect(looks.filter(n => CAPITAL_SPRITES.includes(n))).toHaveLength(1);
+    expect(CAPITAL_SPRITES).toContain(looks[2]);
+    expect(TERRA_SPRITES.ocean).toContain(looks[0]);
+    expect(TERRA_SPRITES.ice).toContain(looks[1]);
+    all[2].outpost!.level = 19;                                        // empate: a mais antiga
+    expect(CAPITAL_SPRITES).toContain(locationSprite(all[0], [...all]));
+    all.forEach(l => { l.outpost!.level = CAPITAL_LEVEL - 1; });      // ninguém chegou ao nível: sem capital
+    expect([...all].map(l => locationSprite(l, [...all])).some(n => CAPITAL_SPRITES.includes(n))).toBe(false);
   });
 
   it('mapa de save antigo com planetas repetidos ganha as aparências livres', () => {
@@ -50,7 +66,7 @@ describe('leitura do save: dados impossíveis são consertados', () => {
   });
 
   it('terraformados e capitais variam entre colônias', () => {
-    const terra = new Set(Array.from({ length: 20 }, (_, i) => locationSprite(colony(100 + i, 'ocean'))));
+    const terra = new Set(Array.from({ length: 20 }, (_, i) => colony(100 + i, 'ocean')).map((l, _, all) => locationSprite(l, all)));
     expect(terra.size).toBe(TERRA_SPRITES.ocean!.length);
   });
 

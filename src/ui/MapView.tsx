@@ -218,7 +218,7 @@ export function MapView({ onPick, onAurora, onMega }: { onPick?: () => void; onA
                 onClick={() => { select(l.id); onPick?.(); }} title={`${l.name}${claim ? ` · ${t('reivindicado: {nome}', { nome: t(claim.name) })}` : ''}`}>
                 {/* Os selos (nível, crise, sítio) ficam presos ao ícone, não à largura do nome. */}
                 <span className="map-icon">
-                  <Icon name={locationSprite(l)} size={icon} />
+                  <Icon name={locationSprite(l, game.locations)} size={icon} />
                   {l.outpost && <span className="map-badge">{l.outpost.level}</span>}
                   {crisis && <span className="map-alert" aria-label={t('crise ativa')}>!</span>}
                   {digsUnlocked(game) && hasAnomaly(l) && !game.dug.includes(l.id) && (

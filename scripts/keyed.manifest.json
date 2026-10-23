@@ -83,7 +83,12 @@
     "planetas2-gasoso": "planetas2-gasoso.jpg",
     "planetas2-asteroides": "planetas2-asteroides.jpg",
     "planetas2-terra-a": "planetas2-terra-a.jpg",
-    "planetas2-terra-b": "planetas2-terra-b.jpg"
+    "planetas2-terra-b": "planetas2-terra-b.jpg",
+    "logo2-simbolo": "logo-simbolo.jpg",
+    "logo2-letreiro": "pedidoB.jpg",
+    "logo2-favicon": "logo-favicon.jpg",
+    "loading2-paisagem": "loading-paisagem.jpg",
+    "loading2-retrato": "loading-retrato.jpg"
   },
   "items": [
     {
@@ -151,22 +156,6 @@
         384
       ],
       "maxSize": 256
-    },
-    {
-      "name": "logo-wide",
-      "sheet": "logo-wide",
-      "maxSize": 512,
-      "minFrac": 0.01,
-      "key": {
-        "bgFactor": 0.62,
-        "fringeFactor": 0.8,
-        "fringePasses": 3
-      }
-    },
-    {
-      "name": "favicon-core",
-      "sheet": "favicon-b",
-      "maxSize": 64
     },
     {
       "name": "ui-toast-info",
@@ -3375,6 +3364,77 @@
         "fringePasses": 3
       },
       "minFrac": 0.01
+    },
+    {
+      "name": "logo-symbol",
+      "sheet": "logo2-simbolo",
+      "rect": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "maxSize": 512,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002
+    },
+    {
+      "name": "logo-letters",
+      "sheet": "logo2-letreiro",
+      "rect": [
+        600,
+        0,
+        1192,
+        592
+      ],
+      "maxSize": 1024,
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.0005
+    },
+    {
+      "name": "logo-favicon-src",
+      "sheet": "logo2-favicon",
+      "rect": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "key": {
+        "bgFactor": 0.62,
+        "fringeFactor": 0.8,
+        "fringePasses": 3
+      },
+      "minFrac": 0.002,
+      "keepSize": true
+    },
+    {
+      "name": "loading-art",
+      "sheet": "loading2-paisagem",
+      "crop": [
+        0,
+        124,
+        1376,
+        520
+      ]
+    },
+    {
+      "name": "loading-art-portrait",
+      "sheet": "loading2-retrato",
+      "crop": [
+        0,
+        184,
+        768,
+        1020
+      ]
     }
   ],
   "grids": [
@@ -4078,17 +4138,6 @@
     }
   ],
   "photos": [
-    {
-      "file": "pedido5-p7.jpg",
-      "out": "loading-art.jpg",
-      "width": 1376
-    },
-    {
-      "file": "pedido5-p6.jpg",
-      "out": "social-preview.jpg",
-      "width": 1200,
-      "height": 630
-    },
     {
       "file": "revisao2-fundo-azul.jpg",
       "out": "bg-nebula-blue.jpg",

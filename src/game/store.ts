@@ -77,6 +77,9 @@ interface Store {
   selectedLoc: string | null;     // local selecionado no mapa (interface; não salvo)
   selectedMega: string | null;    // megaprojeto escolhido no mapa: a aba Megaprojetos mostra só ele (interface; não salvo)
   saveError: boolean;             // o navegador recusou o último salvamento
+  inactive: boolean;              // o jogo foi aberto em outra aba: esta não simula nem salva (interface; não salvo)
+  setInactive(v: boolean): void;
+  reloadFromSave(): void;
   storyQueue: string[];           // registros do diário esperando para serem mostrados (interface; não salvo)
   sceneView: SceneView;           // o que a cena mostra: o asteroide (mineração) ou o planeta dos colonos (interface; não salvo)
   setSceneView(v: SceneView): void;
@@ -162,6 +165,9 @@ const zeroRates = () => Object.fromEntries(RES_IDS.map(r => [r, 0])) as Record<R
 let toastId = 0;
 const toastTimers = new Map<number, ReturnType<typeof setTimeout>>();
 const MAX_TOASTS = 4;
+/** Intervalo a partir do qual o jogo trata a pausa como ausência (5 min). Abas em segundo plano recebem no máximo
+ *  um tique por minuto e continuam contando como jogo aberto. */
+export const ABSENCE_SECONDS = 300;
 let lastSample = 0;
 
 export const useGame = create<Store>()((set, get) => {
@@ -186,6 +192,18 @@ export const useGame = create<Store>()((set, get) => {
     selectedLoc: null,
     selectedMega: null,
     saveError: false,
+    inactive: false,
+    setInactive(v) {
+      // Antes de pausar, grava o que tem: a outra aba vai carregar daqui.
+      if (v && !get().inactive) get().save();
+      set({ inactive: v });
+    },
+    reloadFromSave() {
+      const loaded = loadGame();
+      if (!loaded) return;
+      const { state, summary } = applyOffline(loaded.state);
+      set({ game: state, report: null, ...(summary ? { offline: summary } : {}) });
+    },
     storyQueue: [],
     sceneView: 'base',
     setSceneView(v) { if (get().sceneView !== v) set({ sceneView: v }); },
@@ -210,6 +228,15 @@ export const useGame = create<Store>()((set, get) => {
     },
 
     advance(dt) {
+      if (get().inactive) return;           // outra aba está jogando
+      // Intervalo muito longo (computador suspenso com o jogo aberto) é ausência: mesmas regras do jogo fechado
+      // (ritmo reduzido, limite de horas) e a mesma tela de "bem-vindo de volta". Antes rendia como jogo aberto.
+      if (dt > ABSENCE_SECONDS) {
+        const now = Date.now();
+        const { state, summary } = applyOffline({ ...get().game, savedAt: now - dt * 1000 }, now);
+        set({ game: state, ...(summary ? { offline: summary } : {}) });
+        dt = 1;                    // segue com um passo normal: conquistas, objetivos e história conferem o novo estado
+      }
       // Abas em segundo plano recebem intervalos atrasados: simula em blocos de até 1 s.
       let remaining = Math.min(dt, BALANCE.offlineCapSeconds);
       let game = get().game;
@@ -593,6 +620,7 @@ export const useGame = create<Store>()((set, get) => {
     },
 
     save() {
+      if (get().inactive) return false;         // outra aba está jogando: gravar aqui apagaria o progresso dela
       const ok = saveGame(get().game);
       const failedBefore = get().saveError;
       if (ok === failedBefore) set({ saveError: !ok });

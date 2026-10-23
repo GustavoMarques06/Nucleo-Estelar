@@ -254,14 +254,33 @@ export const TERRA_SPRITES: Partial<Record<LocationType, string[]>> = {
   alien: ['planet-terra-alien', 'planet-terra-alien-b'],
 };
 export const CAPITAL_SPRITES = ['planet-capital', 'planet-capital-b'];
-/** Colônia terraformada a partir deste nível vira um mundo-capital (luzes de cidade e anel de estações). */
+/** Nível mínimo para uma colônia terraformada virar o mundo-capital (luzes de cidade e anel de estações). */
 export const CAPITAL_LEVEL = 15;
-export function locationSprite(loc: Location): string {
+
+/**
+ * O império tem UMA capital: a colônia terraformada de maior nível (a partir de CAPITAL_LEVEL); no empate, a mais
+ * antiga. As outras mantêm a cara de mundo-jardim do seu tipo. Guardado por lista: o mapa pergunta para cada local.
+ */
+const capitalCache = new WeakMap<readonly Location[], string | null>();
+export function capitalId(all: readonly Location[]): string | null {
+  if (capitalCache.has(all)) return capitalCache.get(all)!;
+  let best: Location | null = null;
+  for (const l of all) {
+    const o = l.outpost;
+    if (o && o.terra >= MAX_TERRA && o.level >= CAPITAL_LEVEL && (!best || o.level > best.outpost!.level)) best = l;
+  }
+  const id = best?.id ?? null;
+  capitalCache.set(all, id);
+  return id;
+}
+
+/** Aparência do local no mapa e nas cenas. `all` = todos os locais da jornada (para saber qual é a capital). */
+export function locationSprite(loc: Location, all: readonly Location[]): string {
   const o = loc.outpost;
   if (!o || o.terra < MAX_TERRA) return loc.sprite;
   // A variação vem da semente: a mesma colônia sempre tem a mesma cara.
   const of = (list: string[]) => list[Math.abs(loc.seed) % list.length];
-  if (o.level >= CAPITAL_LEVEL) return of(CAPITAL_SPRITES);
+  if (capitalId(all) === loc.id) return of(CAPITAL_SPRITES);
   return of(TERRA_SPRITES[loc.type] ?? ['planet-terra-garden']);
 }
 

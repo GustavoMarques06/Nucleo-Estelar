@@ -22,7 +22,8 @@ export const offlineCap = (s: GameState) => BALANCE.offlineCapSeconds + getModif
  * Datas no futuro (relógio alterado) contam como zero.
  */
 export function applyOffline(s: GameState, now = Date.now(), steps = 400): { state: GameState; summary: OfflineSummary | null } {
-  const raw = Math.max(0, (now - s.savedAt) / 1000);
+  // Data inválida conta como ausência zero: um NaN aqui contaminaria o estado inteiro.
+  const raw = Number.isFinite(s.savedAt) && Number.isFinite(now) ? Math.max(0, (now - s.savedAt) / 1000) : 0;
   const cap = offlineCap(s);
   const seconds = Math.min(cap, raw);
   if (seconds < 30) return { state: { ...s, savedAt: now }, summary: null };

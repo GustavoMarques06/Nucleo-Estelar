@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useGame } from '../../game/store';
 import { PERKS, perkCost } from '../../game/data/ascension';
 import { CHALLENGES } from '../../game/data/challenges';
-import { canAscend, pendingAscension } from '../../game/engine/progression';
+import { canAscend, pendingAscension, transcendenceVisible } from '../../game/engine/progression';
+import { TranscendencePanel } from './TranscendencePanel';
 import { activeChallenge, challengeMet, challengesUnlocked, deadlineLeft } from '../../game/engine/challenges';
 import { fmt, fmtDuration } from '../../game/engine/format';
 import { locale, t } from '../../i18n';
@@ -176,5 +177,30 @@ export function AscensionPanel() {
 
       {confirming && <ConfirmAscend gain={gain} onCancel={() => setConfirming(false)} onGo={next => { setConfirming(false); ascend(next); }} />}
     </div>
+  );
+}
+
+export type LegacyView = 'ascension' | 'transcendence';
+
+/** Os recomeços numa aba só: a Ascensão e, perto do fim, a Transcendência (a segunda camada). */
+export function LegacyPanel({ view, onView }: { view: LegacyView; onView: (v: LegacyView) => void }) {
+  const game = useGame(s => s.game);
+  const showTr = transcendenceVisible(game);
+  const cur = showTr ? view : 'ascension';
+  return (
+    <>
+      {showTr && (
+        <div className="panel-body legacy-switch">
+          <div className="subtabs" role="tablist">
+            {(['ascension', 'transcendence'] as LegacyView[]).map(v => (
+              <button key={v} role="tab" aria-selected={cur === v} className={`btn small ${cur === v ? 'active' : ''}`} onClick={() => onView(v)}>
+                <Icon name={v === 'ascension' ? 'icon-star' : 'star-white-dwarf'} size={18} /> {t(v === 'ascension' ? 'Ascensão' : 'Transcendência')}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {cur === 'ascension' ? <AscensionPanel /> : <TranscendencePanel />}
+    </>
   );
 }

@@ -259,6 +259,8 @@ export function checkAchievements(prev: GameState): { state: GameState; unlocked
 
 // ---------- Fim de jogo: Transcendência ----------
 export const endingReached = (s: GameState) => s.transcendence.unlocked;
+/** A Transcendência aparece (na aba de Ascensão) a partir do 5º estágio do Núcleo Estelar, antes mesmo de liberar. */
+export const transcendenceVisible = (s: GameState) => endingReached(s) || (s.megaprojects.core ?? 0) >= 5;
 
 export const pendingSeeds = (s: GameState) =>
   transcendGain(s.ascension.total + pendingAscension(s), s.megaprojects.core ?? 0, s.megaprojects.singularity ?? 0);

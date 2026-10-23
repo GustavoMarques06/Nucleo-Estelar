@@ -25,10 +25,17 @@ export function Splash({ ready }: { ready: boolean }) {
   }, [done]);
 
   if (gone) return null;
+  const base = import.meta.env.BASE_URL;
   return (
     <div className={`splash ${done ? 'out' : ''}`} role="status" aria-label={t('Carregando')}>
-      <div className="splash-art">
-        <img src={`${import.meta.env.BASE_URL}assets/art/loading-art.jpg`} alt="" draggable={false} />
+      {/* A ilustração não tem texto nem interface: o logo e a barra vêm por cima (traduzidos e em qualquer tela). */}
+      <picture className="splash-scene">
+        <source media="(orientation: portrait)" srcSet={`${base}assets/art/loading-art-portrait.jpg`} />
+        <img src={`${base}assets/art/loading-art.jpg`} alt="" draggable={false} />
+      </picture>
+      <img className="splash-logo" src={`${base}assets/sprites/logo-wide.png`} alt={t('Núcleo Estelar')} draggable={false} />
+      <div className="splash-load">
+        <span className="splash-label">{t('Carregando…')}</span>
         <div className="splash-bar"><div className="splash-fill" style={{ width: `${progress}%` }} /></div>
       </div>
     </div>

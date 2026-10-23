@@ -9,7 +9,7 @@ import { startGameLoop } from './game/loop';
 import { UPGRADES } from './game/data/upgrades';
 import { canAfford } from './game/engine/costs';
 import { isUpgradeVisible } from './game/engine/modifiers';
-import { ascensionUnlocked, endingReached } from './game/engine/progression';
+import { ascensionUnlocked, transcendenceVisible } from './game/engine/progression';
 import { startAudio } from './audio';
 import { TopBar } from './ui/TopBar';
 import { SceneView } from './ui/SceneView';
@@ -22,12 +22,11 @@ import { OptionsPanel } from './ui/panels/OptionsPanel';
 import { CivilizationPanel } from './ui/panels/CivilizationPanel';
 import { ExpansionPanel } from './ui/panels/ExpansionPanel';
 import { MegaprojectsPanel } from './ui/panels/MegaprojectsPanel';
-import { AscensionPanel } from './ui/panels/AscensionPanel';
+import { LegacyPanel, type LegacyView } from './ui/panels/AscensionPanel';
 import { RecordsPanel } from './ui/panels/RecordsPanel';
 import { MapPanel } from './ui/panels/MapPanel';
 import { DiplomacyPanel } from './ui/panels/DiplomacyPanel';
 import { FinancePanel } from './ui/panels/FinancePanel';
-import { TranscendencePanel } from './ui/panels/TranscendencePanel';
 import { DronesSection } from './ui/panels/DronesSection';
 import { DepositSection } from './ui/panels/DepositSection';
 import { DirectivesSection } from './ui/panels/DirectivesSection';
@@ -35,7 +34,7 @@ import { PlannerSection } from './ui/panels/PlannerSection';
 import { doctrinePending } from './game/engine/doctrines';
 import { MapView } from './ui/MapView';
 import { EndingModal } from './ui/EndingModal';
-import { OfflineModal, StoryModal, Toasts } from './ui/Overlays';
+import { InactiveTabModal, OfflineModal, StoryModal, Toasts } from './ui/Overlays';
 import { Buffs, EventCard } from './ui/EventCard';
 import { Icon } from './ui/Icon';
 import { Splash } from './ui/Splash';
@@ -49,7 +48,7 @@ import { SceneSwitch } from './ui/SceneSwitch';
 import { FloatWindow } from './ui/FloatWindow';
 
 type Tab = 'mining' | 'industry' | 'energy' | 'logistics' | 'research' | 'civilization' | 'commerce' | 'finance'
-  | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'transcendence' | 'records' | 'options';
+  | 'expansion' | 'map' | 'diplomacy' | 'megaprojects' | 'ascension' | 'records' | 'options';
 
 interface TabDef { id: Tab; label: string; icon: string; visible?: (s: GameState) => boolean }
 
@@ -75,14 +74,14 @@ const GROUPS: { label: string; tabs: TabDef[] }[] = [
     { id: 'megaprojects', label: 'Megaprojetos', icon: 'mega-dyson-4', visible: s => !!s.upgrades.fusion },
   ] },
   { label: 'Legado', tabs: [
-    { id: 'ascension', label: 'Ascensão', icon: 'icon-star', visible: s => ascensionUnlocked(s) || !!s.upgrades.megaEngineering },
-    { id: 'transcendence', label: 'Transcendência', icon: 'star-white-dwarf', visible: s => endingReached(s) || (s.megaprojects.core ?? 0) >= 5 },
+    // Ascensão e Transcendência ficam juntas: as duas são recomeços com moeda e melhorias permanentes.
+    { id: 'ascension', label: 'Ascensão', icon: 'icon-star', visible: s => ascensionUnlocked(s) || !!s.upgrades.megaEngineering || transcendenceVisible(s) },
     { id: 'records', label: 'Registro', icon: 'icon-trophy' },
     { id: 'options', label: 'Opções', icon: 'nav-options' },
   ] },
 ];
 
-function Panel({ tab, onHelp, onOpenMap }: { tab: Tab; onHelp: () => void; onOpenMap: () => void }) {
+function Panel({ tab, onHelp, onOpenMap, legacy, onLegacy }: { tab: Tab; onHelp: () => void; onOpenMap: () => void; legacy: LegacyView; onLegacy: (v: LegacyView) => void }) {
   switch (tab) {
     case 'mining': return <div className="panel-body"><DepositSection /><BuildingsPanel category="mining" intro={t('Extração de matéria-prima: minério e água.')} /></div>;
     case 'industry': return <><BuildingsPanel category="industry" intro={t('Transforma matéria-prima em produtos de maior valor.')} /><div className="panel-body planner-wrap"><PlannerSection /></div></>;
@@ -95,9 +94,8 @@ function Panel({ tab, onHelp, onOpenMap }: { tab: Tab; onHelp: () => void; onOpe
     case 'expansion': return <ExpansionPanel />;
     case 'map': return <MapPanel onOpenMap={onOpenMap} />;
     case 'diplomacy': return <DiplomacyPanel />;
-    case 'transcendence': return <TranscendencePanel />;
     case 'megaprojects': return <MegaprojectsPanel />;
-    case 'ascension': return <AscensionPanel />;
+    case 'ascension': return <LegacyPanel view={legacy} onView={onLegacy} />;
     case 'records': return <RecordsPanel />;
     case 'options': return <OptionsPanel onShowShortcuts={onHelp} />;
   }
@@ -105,6 +103,7 @@ function Panel({ tab, onHelp, onOpenMap }: { tab: Tab; onHelp: () => void; onOpe
 
 export function App() {
   const [tab, setTab] = useState<Tab>('mining');
+  const [legacy, setLegacy] = useState<LegacyView>('ascension');
   // Pesquisa e Mapa abrem em janela flutuante por cima do jogo. A Pesquisa deixa o painel lateral na aba em que
   // estava; o Mapa leva o painel para a aba Mapa, onde aparecem os detalhes do planeta escolhido na janela.
   const [win, setWin] = useState<'research' | 'map' | null>(null);
@@ -184,7 +183,7 @@ export function App() {
       </main>
       <section className="panel" id="painel" tabIndex={-1} aria-label={t(current.label)}>
         <h2 className="panel-title"><Icon name={current.icon} size={28} />{t(current.label)}</h2>
-        <Panel tab={current.id} onHelp={() => setHelp(true)} onOpenMap={() => setWin('map')} />
+        <Panel tab={current.id} onHelp={() => setHelp(true)} onOpenMap={() => setWin('map')} legacy={legacy} onLegacy={setLegacy} />
       </section>
       {win === 'research' && <FloatWindow title={t('Pesquisa')} icon="nav-research" onClose={() => setWin(null)}><UpgradesPanel /></FloatWindow>}
       {win === 'map' && (
@@ -196,9 +195,10 @@ export function App() {
       <Toasts />
       <Splash ready={sceneReady || focus} />
       <OfflineModal />
+      <InactiveTabModal />
       <StoryModal />
       {help && <ShortcutsHelp onClose={() => setHelp(false)} />}
-      <EndingModal onTranscend={() => setTab('transcendence')} />
+      <EndingModal onTranscend={() => { setLegacy('transcendence'); setTab('ascension'); }} />
     </div>
   );
 }

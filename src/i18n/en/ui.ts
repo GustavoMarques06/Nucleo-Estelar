@@ -741,4 +741,8 @@ export const UI: Record<string, string> = {
   "Ótimo": "Great",
   "Bom": "Good",
   "Fraco": "Poor",
+  "Jogo aberto em outra aba": "Game open in another tab",
+  "Para não perder progresso, só uma aba joga por vez. Esta ficou pausada e o seu jogo continua na outra.": "To avoid losing progress, only one tab plays at a time. This one is paused and your game continues in the other.",
+  "Jogar aqui": "Play here",
+  "Carregando…": "Loading…",
 };

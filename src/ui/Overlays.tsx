@@ -8,6 +8,7 @@ import { t, tp } from '../i18n';
 import { BALANCE } from '../game/data/balance';
 import { Icon } from './Icon';
 import { useDialog } from './useDialog';
+import { takeOver } from '../game/loop';
 
 export function Toasts() {
   const toasts = useGame(s => s.toasts);
@@ -19,6 +20,21 @@ export function Toasts() {
           <span>{x.text}</span>{x.count > 1 && <span className="n">{x.count}×</span>}
         </div>
       ))}
+    </div>
+  );
+}
+
+/** O jogo foi aberto em outra aba: esta pausou (e não salva) para não apagar o progresso da outra. */
+export function InactiveTabModal() {
+  const inactive = useGame(s => s.inactive);
+  if (!inactive) return null;
+  return (
+    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="inactive-title">
+      <div className="modal-box offline-box">
+        <h2 id="inactive-title">{t('Jogo aberto em outra aba')}</h2>
+        <p className="away">{t('Para não perder progresso, só uma aba joga por vez. Esta ficou pausada e o seu jogo continua na outra.')}</p>
+        <button className="btn primary big" onClick={takeOver}>{t('Jogar aqui')}</button>
+      </div>
     </div>
   );
 }

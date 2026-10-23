@@ -133,13 +133,16 @@ export const FX_SPRITES = ['fx-crack', 'fx-dust', 'fx-sparks', 'fx-crater', 'fx-
 export const CIV_BUILDINGS: BuildingId[] = ['habitat', 'residential', 'hydroponics', 'hospital', 'university', 'arcology', 'market', 'embassy'];
 /** Posições sobre o disco do planeta, em frações do diâmetro, a partir do centro (como os SLOTS do asteroide). */
 export const CIV_SLOTS: Partial<Record<BuildingId, { at: [number, number][]; thresholds: number[]; size: number }>> = {
-  habitat: { at: [[-0.12, 0.06], [0.1, 0.14], [-0.26, 0.2], [0.22, -0.02], [-0.04, -0.16]], thresholds: [1, 6, 15, 30, 60], size: 0.13 },
+  // Limites calibrados para uma jornada completa (antes, o 5º habitat e a 2ª/3ª arcologia quase nunca apareciam).
+  habitat: { at: [[-0.12, 0.06], [0.1, 0.14], [-0.26, 0.2], [0.22, -0.02], [-0.04, -0.16]], thresholds: [1, 5, 12, 25, 45], size: 0.13 },
   residential: { at: [[0.29, 0.14], [-0.3, 0.02], [0.02, 0.3]], thresholds: [1, 10, 30], size: 0.13 },
   hydroponics: { at: [[-0.32, 0.25], [0.15, 0.32]], thresholds: [1, 12], size: 0.12 },
   hospital: { at: [[0.18, -0.2]], thresholds: [1], size: 0.11 },
   university: { at: [[-0.2, -0.12]], thresholds: [1], size: 0.12 },
-  arcology: { at: [[0.0, -0.02], [0.3, -0.2], [-0.33, -0.18]], thresholds: [1, 5, 15], size: 0.08 },
+  arcology: { at: [[0.0, -0.02], [0.3, -0.2], [-0.33, -0.18]], thresholds: [1, 2, 4], size: 0.08 },
   market: { at: [[0.02, 0.16]], thresholds: [1], size: 0.11 },
+  // A embaixada também tem prédio no planeta (além da estação em órbita), com as versões maiores conforme a quantidade.
+  embassy: { at: [[-0.14, 0.33]], thresholds: [1], size: 0.11 },
 };
 /** Aparência do planeta conforme a era (índice = era − 1; sem colonos ainda usa a primeira). Arte: Assets/planeta-fases*.jpg. */
 export const CIV_PLANETS = ['aurora-1', 'aurora-2', 'aurora-3', 'aurora-4', 'aurora-5', 'aurora-6', 'aurora-7'];
